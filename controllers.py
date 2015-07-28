@@ -21,13 +21,14 @@ class CoreController(object):
         context = PluginController.execute_callbacks(action=Action.PRE_CREATE, context=self.context, *args, **kwargs)
 
         if len(context.disagreement_reasons) > 0:
-            raise Exception('\n/!\ Plugin stopped execution due to the following reasons:\n%s' % context.disagreement_reasons)
-
-        # Merge object from each context here...
+            raise Exception('\n/!\ Plugin stopped before execution due to the following reasons:\n%s' % context.disagreement_reasons)
 
         ModelController.create(msg='Christophe')
 
-        PluginController.execute_callbacks(action=Action.POST_CREATE, context=self.context, *args, **kwargs)
+        context = PluginController.execute_callbacks(action=Action.POST_CREATE, context=self.context, *args, **kwargs)
+
+        if len(context.disagreement_reasons) > 0:
+            raise Exception('\n/!\ Plugin stopped after execution due to the following reasons:\n%s' % context.disagreement_reasons)
 
 
 class PluginController(object):
