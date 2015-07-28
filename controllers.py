@@ -2,17 +2,18 @@
 
 import gevent
 
-from utils import Action
+from utils import Action, GAContext
+from gaexceptions import InternalInconsistencyException
 
 
 class CoreController(object):
     """
 
     """
-    def __init__(self, context):
+    def __init__(self, session, request):
         """
         """
-        self.context = context
+        self.context = GAContext(session=session, request=request)
 
     def do_the_job(self, *args, **kwargs):
         """
@@ -53,7 +54,7 @@ class PluginController(object):
 
         """
         if action not in cls._callbacks:
-            raise Exception('Trying to register a callback with unknown action %s' % action)
+            raise InternalInconsistencyException('Trying to register a callback with unknown action %s' % action)
 
         cls._callbacks[action].append(callback)
 
@@ -64,10 +65,10 @@ class PluginController(object):
 
         """
         if action not in cls._callbacks:
-            raise Exception('Trying to remove a callback with unknown action %s' % action)
+            raise InternalInconsistencyException('Trying to remove a callback with unknown action %s' % action)
 
         if callback not in cls._callbacks[action]:
-            raise Exception('Trying to remove an unknown callback %s' % callback)
+            raise InternalInconsistencyException('Trying to remove an unknown callback %s' % callback)
 
         cls._callbacks[action].remove(callback)
 
@@ -77,7 +78,7 @@ class PluginController(object):
 
         """
         if action not in cls._callbacks:
-            raise Exception('Trying to execute callbacks for unknown action %s' % action)
+            raise InternalInconsistencyException('Trying to execute callbacks for unknown action %s' % action)
 
         jobs = [gevent.spawn(callback, context=context.copy(), *args, **kwargs) for callback in cls._callbacks[action]]
         gevent.joinall(jobs, timeout=cls.timeout)

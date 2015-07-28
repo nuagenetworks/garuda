@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from copy import deepcopy
+from uuid import uuid4
 
 
 class DisagreementReason(object):
@@ -17,6 +20,43 @@ class DisagreementReason(object):
         """
         return '<DisagreementReason> (origin=%s, reason=%s, suggestion=%s)' % (self.origin, self.reason, self.suggestion)
 
+
+class GASession(object):
+    """
+
+    """
+    def __init__(self):
+        """
+
+        """
+        self.uuid = uuid4().hex
+        self.resource = None
+        self.user = None
+
+
+class GARequest(object):
+    """
+
+    """
+    def __init__(self, method, url, data, headers={}, cookies=None):
+        """
+        """
+        self.method = method
+        self.url = url
+        self.data = data
+        self.headers = headers
+        self.cookies = cookies
+
+class GAResponse(object):
+    """
+
+    """
+    def __init__(self, status_code, data, headers={}):
+        """
+        """
+        self.status_code = status_code
+        self.data = data
+        self.headers = headers
 
 class GAContext(object):
     """
