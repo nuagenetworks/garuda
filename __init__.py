@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 
 
-from controllers import ModelController, PluginsManager, CoreController
-from utils import Action, GAContext, DisagreementReason, GASession, GARequest
-from plugins import ReaderPlugin
+from controllers import ModelController, PluginsManager, OperationsManager, CoreController
+from utils import GAContext, DisagreementReason, GASession, GARequest
+from plugins import ReaderPlugin, AnotherPlugin
 
 
 
 plugin = ReaderPlugin()
+anotherplugin = AnotherPlugin()
 
 # Register plugin
 PluginsManager.register_plugin(plugin)
+PluginsManager.register_plugin(anotherplugin)
 
 class Resource(object):
 
@@ -29,5 +31,9 @@ session.user = 'me'
 session.data = {}
 session.action = 'create'
 
+# Orechestrator
 core = CoreController(session=session, request=request)
-core.do_read_operation()
+
+# Will be a separated worker later, launched by the core controller
+operation = OperationsManager(context=core.context)
+operation.do_read_operation()

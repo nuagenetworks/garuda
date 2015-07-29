@@ -153,3 +153,40 @@ class ReaderPlugin(AbstractPlugin):
         """
         print 'ReaderPlugin end_read_operation'
         return context
+
+
+class AnotherPlugin(AbstractPlugin):
+    """
+
+    """
+
+    def begin_read_operation(self, context):
+        """
+        Called once at the very beginning of a Read Operation.
+        """
+        print 'AnotherPlugin begin_read_operation'
+
+        return context
+
+    def should_perform_read(self, context):
+        """
+        Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
+        If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
+        """
+        print 'AnotherPlugin should_perform_read'
+        return context
+
+    def preprocess_read(self, context):
+        """
+        Give the plugin a chance to modify the object that is about to be sent back to the client.
+        All modifications will be merged after all Plugins preprocessing.
+        """
+        print 'AnotherPlugin preprocess_read'
+        return context
+
+    def end_read_operation(self, context):
+        """
+        Called once at the very end of a Read Operation
+        """
+        print 'AnotherPlugin end_read_operation'
+        return context

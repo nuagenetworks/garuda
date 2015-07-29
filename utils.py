@@ -88,12 +88,4 @@ class GAContext(object):
             # TODO: Merge context object here...
             # Add the conflict in disagreement_reasons
 
-
-class Action(object):
-    """
-
-    """
-    PRE_CREATE  = 0
-    POST_CREATE = 1
-    PRE_UPDATE  = 2
-    POST_UPDATE = 3
+            # Merge user_info
