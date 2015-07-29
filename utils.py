@@ -32,13 +32,15 @@ class GASession(object):
         self.uuid = uuid4().hex
         self.resource = None
         self.user = None
+        self.data = {}
+        self.action = None
 
 
 class GARequest(object):
     """
 
     """
-    def __init__(self, method, url, data, headers={}, cookies=None):
+    def __init__(self, method, url, data={}, headers={}, cookies=None):
         """
         """
         self.method = method

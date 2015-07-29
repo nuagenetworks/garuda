@@ -5,6 +5,9 @@ import gevent
 from utils import Action, GAContext
 from gaexceptions import InternalInconsistencyException
 
+READ_OPERATIONS_METHODS = ['GET', 'HEAD', 'OPTIONS']
+WRITE_OPERATIONS_METHODS = ['POST', 'PUT', 'DELETE']
+
 
 class CoreController(object):
     """
@@ -15,72 +18,61 @@ class CoreController(object):
         """
         self.context = GAContext(session=session, request=request)
 
-    def do_the_job(self, *args, **kwargs):
+    def do_read_operation(self, *args, **kwargs):
         """
 
         """
-        context = PluginController.execute_callbacks(action=Action.PRE_CREATE, context=self.context, *args, **kwargs)
+        plugins = PluginsManager.plugins_for_context(context=self.context)
 
-        if len(context.disagreement_reasons) > 0:
-            raise Exception('\n/!\ Plugin stopped before execution due to the following reasons:\n%s' % context.disagreement_reasons)
-
-        ModelController.create(msg='Christophe')
-
-        context = PluginController.execute_callbacks(action=Action.POST_CREATE, context=self.context, *args, **kwargs)
-
-        if len(context.disagreement_reasons) > 0:
-            raise Exception('\n/!\ Plugin stopped after execution due to the following reasons:\n%s' % context.disagreement_reasons)
+        self.context = PluginsManager.perform_delegate(delegate='begin_read_operation', context=self.context.copy(), plugins=plugins, *args, **kwargs)
 
 
-class PluginController(object):
+        self.context = PluginsManager.perform_delegate(delegate='should_perform_read', context=self.context.copy(), plugins=plugins, *args, **kwargs)
+
+
+        if len(self.context.disagreement_reasons) > 0:
+            raise Exception('\n/!\ Plugin stopped in `should_perform_read` due to the following reasons:\n%s' % self.context.disagreement_reasons)
+
+        self.context = PluginsManager.perform_delegate(delegate='preprocess_read', context=self.context.copy(), plugins=plugins, *args, **kwargs)
+
+        ModelController.read()
+
+        self.context = PluginsManager.perform_delegate(delegate='end_read_operation', context=self.context.copy(), plugins=plugins, *args, **kwargs)
+
+
+class PluginsManager(object):
     """
 
     """
     timeout = 2
-    _callbacks = None
-
-    def _initialize_(f):
-        def wrapper(cls, *args, **kwargs):
-            if cls._callbacks is None:
-                cls._callbacks = {Action.PRE_CREATE: [], Action.POST_CREATE: [], Action.PRE_UPDATE: [], Action.POST_UPDATE: []}
-
-            return f(cls, *args, **kwargs)
-        return wrapper
+    _plugins = []
 
     @classmethod
-    @_initialize_
-    def register_callback(cls, action, callback):
+    def register_plugin(cls, plugin):
         """
 
         """
-        if action not in cls._callbacks:
-            raise InternalInconsistencyException('Trying to register a callback with unknown action %s' % action)
-
-        cls._callbacks[action].append(callback)
+        cls._plugins.append(plugin)
 
     @classmethod
-    @_initialize_
-    def remove_callback(cls, action, callback):
+    def unregister_plugin(cls, plugin):
         """
 
         """
-        if action not in cls._callbacks:
-            raise InternalInconsistencyException('Trying to remove a callback with unknown action %s' % action)
-
-        if callback not in cls._callbacks[action]:
-            raise InternalInconsistencyException('Trying to remove an unknown callback %s' % callback)
-
-        cls._callbacks[action].remove(callback)
+        cls._plugins.remove(plugin)
 
     @classmethod
-    def execute_callbacks(cls, action, context, *args, **kwargs):
+    def plugins_for_context(cls, context):
         """
 
         """
-        if action not in cls._callbacks:
-            raise InternalInconsistencyException('Trying to execute callbacks for unknown action %s' % action)
+        return [plugin for plugin in cls._plugins if plugin.is_listening(rest_name=context.session.resource.rest_name, action=context.session.action)]
 
-        jobs = [gevent.spawn(callback, context=context.copy(), *args, **kwargs) for callback in cls._callbacks[action]]
+    @classmethod
+    def perform_delegate(cls, delegate, context, plugins, *args, **kwargs):
+        """
+        """
+        jobs = [gevent.spawn(getattr(plugin, delegate), context=context.copy(), *args, **kwargs) for plugin in plugins]
         gevent.joinall(jobs, timeout=cls.timeout)
 
         context.merge_contexts([job.value for job in jobs])
@@ -93,8 +85,15 @@ class ModelController(object):
 
     """
     @classmethod
-    def create(cls, *args, **kwargs):
+    def write(cls, *args, **kwargs):
         """
 
         """
-        print '** Let the police do the job **'
+        print '** Let the police write the job **'
+
+    @classmethod
+    def read(cls, *args, **kwargs):
+        """
+
+        """
+        print '** Let the police read the job **'

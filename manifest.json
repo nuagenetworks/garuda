@@ -1,0 +1,14 @@
+{
+    "information":
+    {
+        "name": "Subnet Manager Plugin",
+        "identifier": "subnet_manager_plugin",
+        "version": 1.0,
+        "author": "antoine@nuagenetworks.net"
+    },
+    "subscriptions":
+    {
+          "subnet": ["create", "delete"],
+          "subnettemplates": ["create", "update"]
+    }
+}
