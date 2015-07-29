@@ -25,15 +25,15 @@ class GASession(object):
     """
 
     """
-    def __init__(self):
+    def __init__(self, resource=None, user=None, data={}, action=None):
         """
 
         """
         self.uuid = uuid4().hex
-        self.resource = None
-        self.user = None
-        self.data = {}
-        self.action = None
+        self.resource = resource
+        self.user = user
+        self.data = data
+        self.action = action
 
 
 class GARequest(object):
