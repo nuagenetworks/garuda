@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import gevent
+import threading
+
+from flask import Flask, request
+
 from gaexceptions import NotImplementedException
-from utils import GARequest, GASession
+from utils import GARequest, GASession, Resource
 from controllers import CoreController, OperationsManager
 
 
@@ -36,10 +41,6 @@ class CommunicationChannel(object):
 
         """
         raise NotImplementedException('CommunicationChannel should implement push method')
-
-
-from flask import Flask, request
-import threading
 
 
 class StoppableThread(threading.Thread):
@@ -90,13 +91,17 @@ class RESTCommunicationChannel(CommunicationChannel):
         self.thread.stop()
 
     def index(self):
-        """ """
+        """
+        """
+
         ga_request = GARequest(method=request.method, url=request.url, data=request.data, headers=request.headers, cookies=request.cookies)
-        ga_session = GASession()
+        ga_session = GASession(resource=Resource(), user='me', data={}, action='create')
 
         core = CoreController(session=ga_session, request=ga_request)
 
         operation = OperationsManager(context=core.context)
-        operation.do_read_operation()
+        # operation.do_read_operation()
+        greenlet = gevent.spawn(operation.do_read_operation)
+        greenlet.join()
 
         return ga_session.uuid

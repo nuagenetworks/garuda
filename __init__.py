@@ -2,7 +2,7 @@
 
 
 from controllers import ModelController, PluginsManager, OperationsManager, CoreController
-from utils import GAContext, DisagreementReason, GASession, GARequest
+from utils import GAContext, DisagreementReason, GASession, GARequest, Resource
 from plugins import ReaderPlugin, AnotherPlugin
 
 
@@ -14,26 +14,21 @@ anotherplugin = AnotherPlugin()
 PluginsManager.register_plugin(plugin)
 PluginsManager.register_plugin(anotherplugin)
 
-class Resource(object):
 
-    def __init__(self):
-        """
-        TMP
-        """
-        self.rest_name = 'subnet'
+from channels import RESTCommunicationChannel
+from time import sleep
 
+cc = RESTCommunicationChannel()
 
-request = GARequest(method='GET', url='/toto')
+def stop_flask(signal, frame):
+    'CTRL+C captured'
+    cc.stop()
 
-session = GASession()
-session.resource = Resource()
-session.user = 'me'
-session.data = {}
-session.action = 'create'
+import signal
+signal.signal(signal.SIGINT, stop_flask)
 
-# Orechestrator
-core = CoreController(session=session, request=request)
+cc.start()
 
-# Will be a separated worker later, launched by the core controller
-operation = OperationsManager(context=core.context)
-operation.do_read_operation()
+while not cc.thread.stopped():
+    print 'Thread is alive'
+    sleep(5)

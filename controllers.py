@@ -2,6 +2,7 @@
 
 import gevent
 
+from time import sleep
 from utils import GAContext
 from gaexceptions import InternalInconsistencyException
 
@@ -113,11 +114,15 @@ class ModelController(object):
         """
 
         """
-        print '** Let the police write the job **'
+        print '** Let the police start writing the job **'
+        sleep(5)
+        print '** Let the police stop writing the job **'
 
     @classmethod
     def read(cls, *args, **kwargs):
         """
 
         """
-        print '** Let the police read the job **'
+        print '** Let the police start reading the job **'
+        sleep(5)
+        print '** Let the police stop reading the job **'

@@ -89,3 +89,11 @@ class GAContext(object):
             # Add the conflict in disagreement_reasons
 
             # Merge user_info
+
+class Resource(object):
+
+    def __init__(self):
+        """
+        TEMPORARY OBJECT
+        """
+        self.rest_name = 'subnet'
