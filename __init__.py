@@ -30,5 +30,5 @@ signal.signal(signal.SIGINT, stop_flask)
 cc.start()
 
 while not cc.thread.stopped():
-    print 'Thread is alive'
+    print 'Flask is alive !'
     sleep(5)

@@ -4,6 +4,7 @@ import gevent
 import threading
 
 from flask import Flask, request
+from copy import deepcopy
 
 from gaexceptions import NotImplementedException
 from utils import GARequest, GASession, Resource
@@ -87,21 +88,41 @@ class RESTCommunicationChannel(CommunicationChannel):
     def stop(self):
         """
         """
-        print 'stopping...'
+        print 'Stopping...'
         self.thread.stop()
+
+
+    def _extract_data(self, data):
+        """
+
+        """
+        return deepcopy(data)
+
+    def _extract_headers(self, headers):
+        """
+
+        """
+        headers = {}
+
+        for header in request.headers:
+            headers[header[0]] = header[1]
+
+        return headers
 
     def index(self):
         """
         """
+        data = self._extract_data(request.json)
+        headers = self._extract_headers(request.headers)
 
-        ga_request = GARequest(method=request.method, url=request.url, data=request.data, headers=request.headers, cookies=request.cookies)
+        ga_request = GARequest(method=request.method, url=request.url, data=data, headers=headers)
         ga_session = GASession(resource=Resource(), user='me', data={}, action='create')
 
         core = CoreController(session=ga_session, request=ga_request)
 
         operation = OperationsManager(context=core.context)
-        # operation.do_read_operation()
-        greenlet = gevent.spawn(operation.do_read_operation)
-        greenlet.join()
+        operation.do_read_operation()
+        # greenlet = gevent.spawn(operation.do_read_operation)
+        # greenlet.join()
 
         return ga_session.uuid
