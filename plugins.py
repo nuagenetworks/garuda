@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from utils import DisagreementReason
-
 
 class PluginManifest(object):
 
@@ -130,7 +128,7 @@ class ReaderPlugin(AbstractPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         print 'ReaderPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.headers['Host']
-        # context.disagreement_reasons.append(DisagreementReason(origin=self, reason='Something wrong happened', suggestion='Try again after 120s... just kidding'))
+        # context.report_error(status=409, reason='Something wrong happened', suggestion='Try again after 120s... just kidding')
         return context
 
     def preprocess_read(self, context):

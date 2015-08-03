@@ -3,15 +3,12 @@
 import gevent
 
 from time import sleep
-from utils import GAContext
+from utils import GAContext, URLParser
 from channels import RESTCommunicationChannel
+from gaexceptions import ContextException
 
 from collections import namedtuple
 PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
-
-# READ_OPERATIONS_METHODS = ['GET', 'HEAD', 'OPTIONS']
-# WRITE_OPERATIONS_METHODS = ['POST', 'PUT', 'DELETE']
-
 from multiprocessing import Process
 
 
@@ -117,12 +114,21 @@ class CoreController(object):
         # TODO: Indicate what to do in the operation
 
         context = GAContext(session=session, request=request)
-        manager = OperationsManager(context=context)
-        manager.do_read_operation()
+        try:
+            manager = OperationsManager(context=context)
+            manager.run()
+        except ContextException:
+            print context.errors
+            last_error = context.errors[-1]
+            return last_error
 
         # TODO: Create response from context
 
-        return {'status':200, 'data':'ok'}
+        return {'status': 200, 'data': 'ok'}
+
+
+READ_OPERATIONS_METHODS = ['GET', 'HEAD', 'OPTIONS']
+WRITE_OPERATIONS_METHODS = ['POST', 'PUT', 'DELETE']
 
 
 class OperationsManager(object):
@@ -134,24 +140,114 @@ class OperationsManager(object):
         """
         self.context = context
 
-    def do_read_operation(self, *args, **kwargs):
+    def run(self):
+        """
+        """
+        method = self.context.request.method.upper()
+
+        if method in READ_OPERATIONS_METHODS:
+            self._perform_read_operation()
+        else:
+            self._perform_write_operation()
+
+    def _prepare_context_for_read_operation(self):
+        """
+        """
+        url = self.context.request.url
+        parser = URLParser(url)
+        resources = parser.resources
+
+        resource = resources[-1]
+
+        if resource.value is None:
+            # Get All resource.name
+            self.context.action = GAContext.ACTION_READALL
+            if len(resources) == 1:
+                parent = ModelController.get_current_user()
+
+            else:  # Having a parent and a child
+                parent_resource = resources[0]
+                parent = ModelController.get_object(parent_resource.name, parent_resource.value)
+
+                if parent is None:
+                    self.context.report_error(status=404, reason='Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value))
+                    raise ContextException()
+
+            self.context.parent = parent
+            self.context.objects = ModelController.get_objects(parent, resource.name)
+
+        else:
+            # Get a specific resource.name
+            self.context.action = GAContext.ACTION_READ
+            self.context.object = ModelController.get_object(resource.name, resource.value)
+
+    def _perform_read_operation(self):
         """
 
         """
+
+        self._prepare_context_for_read_operation()
+
         plugin_manager = PluginsManager(context=self.context)
 
-        plugin_manager.perform_delegate(delegate='begin_read_operation', *args, **kwargs)
+        plugin_manager.perform_delegate(delegate='begin_read_operation')
 
-        plugin_manager.perform_delegate(delegate='should_perform_read', *args, **kwargs)
+        plugin_manager.perform_delegate(delegate='should_perform_read')
 
-        if len(self.context.disagreement_reasons) > 0:
-            raise Exception('\n/!\ Plugin stopped in `should_perform_read` due to the following reasons:\n%s' % self.context.disagreement_reasons)
+        if len(self.context.errors) > 0:
+            raise ContextException()
 
-        plugin_manager.perform_delegate(delegate='preprocess_read', *args, **kwargs)
+        plugin_manager.perform_delegate(delegate='preprocess_read')
 
         ModelController.read()
 
-        plugin_manager.perform_delegate(delegate='end_read_operation', *args, **kwargs)
+        plugin_manager.perform_delegate(delegate='end_read_operation')
+
+    def _prepare_context_for_write_operation(self):
+        """
+        """
+        method = self.context.request.method.upper()
+        url = self.context.request.url
+        parser = URLParser(url)
+        resources = parser.resources
+
+        if method is 'POST':
+            self.context.action = GAContext.ACTION_CREATE
+        elif method is 'PUT':
+            self.context.action = GAContext.ACTION_UPDATE
+        elif method is 'DELETE':
+            self.context.action = GAContext.ACTION_DELETE
+        else:
+            self.context.report_error(status=409, reason='Unknown ACTION for method %s' % method)
+            raise ContextException()
+
+        resource = resources[-1]
+
+        if self.context.action != GAContext.ACTION_CREATE and resource.value is None:
+            self.context.report_error(status=405, reason='Unable to %s a resource without its identifier' % self.context.action)
+            raise ContextException()
+
+        if len(resources) == 1:
+            parent = None
+
+        else:  # Having a parent and a child
+            parent_resource = resources[0]
+            self.context.parent = ModelController.get_object(parent_resource.name, parent_resource.value)
+
+            if parent is None:
+                self.context.report_error(status=404, reason='Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value))
+                raise ContextException()
+
+        if self.context.action == GAContext.CREATE:
+            self.context.object = ModelController.create_object(resource.name)
+        else:
+            self.context.object = ModelController.get_object(resource.name, resource.value)
+
+    def _perform_write_operation(self):
+        """
+        """
+        self._prepare_context_for_write_operation()
+        pass
 
 
 class PluginsManager(object):
@@ -205,7 +301,8 @@ class PluginsManager(object):
 
         gevent.joinall(jobs, timeout=self.timeout)
 
-        self.context.merge_contexts([job.value for job in jobs])
+        contexts = [job.value for job in jobs]
+        self.context.merge_contexts(contexts)
 
 
 class ModelController(object):
@@ -213,19 +310,37 @@ class ModelController(object):
 
     """
     @classmethod
-    def write(cls, *args, **kwargs):
+    def read(cls, *args, **kwargs):
         """
-
         """
         print '** Let the police...Wait for it...'
-        sleep(5)
+        sleep(2)
         print '...do the job **'
 
     @classmethod
-    def read(cls, *args, **kwargs):
+    def get_objects(self, parent, resource_name):
         """
+        """
+        sleep(1)
+        return [object()]
 
+    @classmethod
+    def get_object(self, resource_name, resource_value):
         """
-        print '** Let the police...Wait for it...'
-        sleep(5)
-        print '...do the job **'
+        """
+        sleep(1)
+        return object()
+
+    @classmethod
+    def create_object(self, resource_name):
+        """
+        """
+        sleep(1)
+        return object()
+
+    @classmethod
+    def save_object(self, object, parent=None):
+        """
+        """
+        sleep(1)
+        return object

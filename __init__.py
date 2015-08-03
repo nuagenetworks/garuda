@@ -2,7 +2,7 @@
 
 
 from controllers import ModelController, PluginsManager, OperationsManager, CoreController
-from utils import GAContext, DisagreementReason, GASession, GARequest, Resource
+from utils import GAContext, GASession, GARequest, Resource
 from plugins import ReaderPlugin, AnotherPlugin
 
 
@@ -29,6 +29,4 @@ signal.signal(signal.SIGINT, stop_garuda)
 core.start()
 
 while core.is_running():
-    sleep(2)
-
-print 'The End'
+    sleep(10)

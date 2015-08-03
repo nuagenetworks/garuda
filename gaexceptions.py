@@ -11,3 +11,6 @@ class InternalInconsistencyException(Exception):
     """
     """
     pass
+
+class ContextException(Exception):
+    pass

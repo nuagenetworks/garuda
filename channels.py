@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request
+from flask import Flask, request, make_response
 from copy import deepcopy
 
 from gaexceptions import NotImplementedException
@@ -56,7 +56,9 @@ class RESTCommunicationChannel(CommunicationChannel):
         self._is_running = False
         self.controller = controller
         self.app = Flask(self.__class__.__name__)
-        self.app.add_url_rule('/', 'index', self.index)
+
+        self.app.add_url_rule('/', 'vsd', self.index, defaults={'path': ''})
+        self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=['GET', 'POST', 'PUT', 'DELETE', 'HEAD'])
         self.start_parameters = kwargs
 
     def start(self):
@@ -99,7 +101,7 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return headers
 
-    def index(self):
+    def index(self, path):
         """
         """
 
@@ -112,8 +114,15 @@ class RESTCommunicationChannel(CommunicationChannel):
         ga_session = GASession(resource=Resource(), user='me', data={}, action='create')
 
         response = self.controller.launch_operation(session=ga_session, request=ga_request)
-        response['data'] = ga_session.uuid
 
         print '--- Response to %s ---' % headers['Host']
 
-        return ga_session.uuid
+        if response['status'] >= 300:
+            http_response = make_response(response['reason'])
+        else:
+            http_response = make_response(response['data'])
+
+        http_response.status_code = response['status']
+        http_response.mimetype = 'application/json'
+
+        return http_response
