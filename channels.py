@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import gevent
-import threading
-
 from flask import Flask, request
 from copy import deepcopy
 
 from gaexceptions import NotImplementedException
 from utils import GARequest, GASession, Resource
-from controllers import CoreController, OperationsManager
 
 
 class CommunicationChannel(object):
@@ -24,6 +20,12 @@ class CommunicationChannel(object):
         """
         """
         raise NotImplementedException('CommunicationChannel should implement stop method')
+
+    def is_running(self):
+        """
+
+        """
+        raise NotImplementedException('CommunicationChannel should implement is running method')
 
     def receive(self):
         """
@@ -44,53 +46,41 @@ class CommunicationChannel(object):
         raise NotImplementedException('CommunicationChannel should implement push method')
 
 
-class StoppableThread(threading.Thread):
-    """
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        super(StoppableThread, self).__init__(*args, **kwargs)
-        self._stop = threading.Event()
-
-    def stop(self):
-        """
-        """
-        self._stop.set()
-
-    def stopped(self):
-        """
-        """
-        return self._stop.isSet()
-
-
 class RESTCommunicationChannel(CommunicationChannel):
     """
 
     """
-    def __init__(self):
+    def __init__(self, controller, **kwargs):
         """
         """
-        self.thread = None
+        self._is_running = False
+        self.controller = controller
         self.app = Flask(self.__class__.__name__)
         self.app.add_url_rule('/', 'index', self.index)
+        self.start_parameters = kwargs
 
-    def start(self, *args, **kwargs):
+    def start(self):
         """
+        """
+        if self.is_running:
+            return
 
-        """
-        self.thread = StoppableThread(target=self.app.run, args=args, kwargs=kwargs)
-        self.thread.daemon = True
-        self.thread.start()
+        self._is_running = True
+        self.app.run(**self.start_parameters)
 
     def stop(self):
         """
         """
-        print 'Stopping...'
-        self.thread.stop()
+        if not self.is_running:
+            return
 
+        self._is_running = False
+
+    @property
+    def is_running(self):
+        """
+        """
+        return self._is_running
 
     def _extract_data(self, data):
         """
@@ -112,17 +102,18 @@ class RESTCommunicationChannel(CommunicationChannel):
     def index(self):
         """
         """
+
         data = self._extract_data(request.json)
         headers = self._extract_headers(request.headers)
+
+        print '--- Request from %s ---' % headers['Host']
 
         ga_request = GARequest(method=request.method, url=request.url, data=data, headers=headers)
         ga_session = GASession(resource=Resource(), user='me', data={}, action='create')
 
-        core = CoreController(session=ga_session, request=ga_request)
+        response = self.controller.launch_operation(session=ga_session, request=ga_request)
+        response['data'] = ga_session.uuid
 
-        operation = OperationsManager(context=core.context)
-        operation.do_read_operation()
-        # greenlet = gevent.spawn(operation.do_read_operation)
-        # greenlet.join()
+        print '--- Response to %s ---' % headers['Host']
 
         return ga_session.uuid

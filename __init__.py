@@ -15,20 +15,21 @@ PluginsManager.register_plugin(plugin)
 PluginsManager.register_plugin(anotherplugin)
 
 
-from channels import RESTCommunicationChannel
+from controllers import CoreController
+import signal
 from time import sleep
 
-cc = RESTCommunicationChannel()
+core = CoreController()
 
-def stop_flask(signal, frame):
-    'CTRL+C captured'
-    cc.stop()
+def stop_garuda(signal, frame):
+    core.stop()
 
-import signal
-signal.signal(signal.SIGINT, stop_flask)
+signal.signal(signal.SIGINT, stop_garuda)
 
-cc.start()
+core.start()
 
-while not cc.thread.stopped():
-    print 'Flask is alive !'
-    sleep(5)
+
+while core.is_running():
+    sleep(2)
+
+print 'The End'

@@ -4,7 +4,7 @@ import gevent
 
 from time import sleep
 from utils import GAContext
-from gaexceptions import InternalInconsistencyException
+from channels import RESTCommunicationChannel
 
 from collections import namedtuple
 PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
@@ -12,15 +12,118 @@ PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
 # READ_OPERATIONS_METHODS = ['GET', 'HEAD', 'OPTIONS']
 # WRITE_OPERATIONS_METHODS = ['POST', 'PUT', 'DELETE']
 
+from multiprocessing import Process
+
+
+class TaskManager(object):
+    """ Multi tasks manager based on Process
+
+    """
+    def __init__(self):
+        """ Initializes a TaskManager
+
+        """
+        self._processes = list()
+
+    def wait_until_exit(self):
+        """ Wait until all tasks are finished.
+
+        """
+        [t.join() for t in self._processes]
+
+        self._processes = list()
+
+    def start_task(self, method, *args, **kwargs):
+        """ Start a task in a separate thread
+
+            Args:
+                method: the method to start in a separate thread
+                args: Accept args/kwargs arguments
+        """
+        process = Process(target=method, args=args, kwargs=kwargs)
+        process.is_daemon = True
+        process.start()
+        self._processes.append(process)
+
+    def has_task_running(self):
+        """ Returns true if one task is running
+        """
+
+        for process in self._processes:
+            if process.is_alive():
+                return True
+
+        return False
+
+    def stop_all_tasks(self):
+        """ Stop all current tasks
+        """
+        for process in self._processes:
+            process.terminate()
+
+        self.wait_until_exit()
+
 
 class CoreController(object):
     """
 
     """
-    def __init__(self, session, request):
+    def __init__(self):
         """
         """
-        self.context = GAContext(session=session, request=request)
+        self._channels = []
+        self._task_manager = TaskManager()
+
+        flask2000 = RESTCommunicationChannel(controller=self, port=2000, debug=True, use_reloader=False)
+        flask3000 = RESTCommunicationChannel(controller=self, port=3000, debug=True, use_reloader=False)
+
+        self.register_channel(flask2000)
+        self.register_channel(flask3000)
+
+    def register_channel(self, channel):
+        """
+        """
+        if channel not in self._channels:
+            self._channels.append(channel)
+
+    def unregister_channel(self, channel):
+        """
+        """
+        if channel in self._channels:
+            self._channels.remove(channel)
+
+    def start(self):
+        """
+        """
+        for channel in self._channels:
+            self._task_manager.start_task(channel.start)
+
+    def is_running(self):
+        """
+        """
+        return self._task_manager.has_task_running()
+
+    def stop(self, signal=None, frame=None):
+        """
+        """
+        self._task_manager.stop_all_tasks()
+
+        for channel in self._channels:
+            channel.stop()
+
+    def launch_operation(self, session, request):
+        """
+        """
+        # TODO: Indicate what to do in the operation
+
+        context = GAContext(session=session, request=request)
+        manager = OperationsManager(context=context)
+        manager.do_read_operation()
+
+        # TODO: Create response from context
+
+        return {'status':200, 'data':'ok'}
+
 
 class OperationsManager(object):
     """
@@ -114,15 +217,15 @@ class ModelController(object):
         """
 
         """
-        print '** Let the police start writing the job **'
+        print '** Let the police...Wait for it...'
         sleep(5)
-        print '** Let the police stop writing the job **'
+        print '...do the job **'
 
     @classmethod
     def read(cls, *args, **kwargs):
         """
 
         """
-        print '** Let the police start reading the job **'
+        print '** Let the police...Wait for it...'
         sleep(5)
-        print '** Let the police stop reading the job **'
+        print '...do the job **'

@@ -1,55 +1,41 @@
 # -*- coding: utf-8 -*-
 
-import json
-
 from utils import DisagreementReason
 
 
 class PluginManifest(object):
 
-    def __init__(self, filepath):
+    def __init__(self, name, subscriptions):
         """
 
         """
-        self.from_manifest(filepath)
+        self.name = name
+        self.subscriptions = subscriptions
 
-    @classmethod
-    def from_manifest(self, filepath):
-        """
-
-        """
-        f = open(filepath, 'r')
-        data = json.loads(f.read())
-        f.close()
-
-        self.name = data['information']['name']
-        self.identifier = data['information']['identifier']
-        self.version = data['information']['version']
-        self.author = data['information']['author']
-
-        self.subscriptions = data['subscriptions']
 
 class AbstractPlugin(object):
     """
 
     """
-    def __init__(self, filepath='manifest.json'):
+    @property
+    def manifest(self):
         """
 
         """
-        self._manifest = PluginManifest(filepath)
+        raise NotImplementedException('Plugin should implement its manifest method')
+
 
     def is_listening(self, rest_name, action=None):
         """
 
         """
-        if self._manifest is None:
+        if self.manifest is None:
             return False
 
-        if rest_name not in self._manifest.subscriptions:
+        if rest_name not in self.manifest.subscriptions:
             return False
 
-        if action and action in self._manifest.subscriptions[rest_name]:
+        if action and action in self.manifest.subscriptions[rest_name]:
             return True
 
         return False
@@ -121,12 +107,20 @@ class ReaderPlugin(AbstractPlugin):
     """
 
     """
+    @property
+    def manifest(self):
+        """
+
+        """
+
+        return PluginManifest(name='Reader Plugin', subscriptions={"subnet": ["create", "delete"], \
+                                                                   "subnettemplates": ["create", "update"]})
 
     def begin_read_operation(self, context):
         """
         Called once at the very beginning of a Read Operation.
         """
-        print 'ReaderPlugin begin_read_operation'
+        print 'ReaderPlugin\t\tbegin_read_operation\t\t(Host=%s)' % context.request.headers['Host']
 
         return context
 
@@ -135,7 +129,7 @@ class ReaderPlugin(AbstractPlugin):
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
-        print 'ReaderPlugin should_perform_read'
+        print 'ReaderPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.headers['Host']
         # context.disagreement_reasons.append(DisagreementReason(origin=self, reason='Something wrong happened', suggestion='Try again after 120s... just kidding'))
         return context
 
@@ -144,14 +138,14 @@ class ReaderPlugin(AbstractPlugin):
         Give the plugin a chance to modify the object that is about to be sent back to the client.
         All modifications will be merged after all Plugins preprocessing.
         """
-        print 'ReaderPlugin preprocess_read'
+        print 'ReaderPlugin\t\tpreprocess_read\t\t(Host=%s)' % context.request.headers['Host']
         return context
 
     def end_read_operation(self, context):
         """
         Called once at the very end of a Read Operation
         """
-        print 'ReaderPlugin end_read_operation'
+        print 'ReaderPlugin\t\tend_read_operation\t\t(Host=%s)' % context.request.headers['Host']
         return context
 
 
@@ -159,12 +153,20 @@ class AnotherPlugin(AbstractPlugin):
     """
 
     """
+    @property
+    def manifest(self):
+        """
+
+        """
+
+        return PluginManifest(name='Another Plugin', subscriptions={"subnet": ["create", "delete"], \
+                                                                    "domain": ["create", "update"]})
 
     def begin_read_operation(self, context):
         """
         Called once at the very beginning of a Read Operation.
         """
-        print 'AnotherPlugin begin_read_operation'
+        print 'AnotherPlugin\t\tbegin_read_operation\t\t(Host=%s)' % context.request.headers['Host']
 
         return context
 
@@ -173,7 +175,7 @@ class AnotherPlugin(AbstractPlugin):
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
-        print 'AnotherPlugin should_perform_read'
+        print 'AnotherPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.headers['Host']
         return context
 
     def preprocess_read(self, context):
@@ -181,12 +183,12 @@ class AnotherPlugin(AbstractPlugin):
         Give the plugin a chance to modify the object that is about to be sent back to the client.
         All modifications will be merged after all Plugins preprocessing.
         """
-        print 'AnotherPlugin preprocess_read'
+        print 'AnotherPlugin\t\tpreprocess_read\t\t(Host=%s)' % context.request.headers['Host']
         return context
 
     def end_read_operation(self, context):
         """
         Called once at the very end of a Read Operation
         """
-        print 'AnotherPlugin end_read_operation'
+        print 'AnotherPlugin\t\tend_read_operation\t\t(Host=%s)' % context.request.headers['Host']
         return context
