@@ -15,29 +15,29 @@ PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
 from multiprocessing import Process
 
 
-class TaskManager(object):
-    """ Multi tasks manager based on Process
+class ProcessManager(object):
+    """ Multi process manager
 
     """
     def __init__(self):
-        """ Initializes a TaskManager
+        """ Initializes a ProcessManager
 
         """
         self._processes = list()
 
     def wait_until_exit(self):
-        """ Wait until all tasks are finished.
+        """ Wait until all process are finished.
 
         """
         [t.join() for t in self._processes]
 
         self._processes = list()
 
-    def start_task(self, method, *args, **kwargs):
-        """ Start a task in a separate thread
+    def start(self, method, *args, **kwargs):
+        """ Start a method in a separate process
 
             Args:
-                method: the method to start in a separate thread
+                method: the method to start in a separate process
                 args: Accept args/kwargs arguments
         """
         process = Process(target=method, args=args, kwargs=kwargs)
@@ -45,8 +45,8 @@ class TaskManager(object):
         process.start()
         self._processes.append(process)
 
-    def has_task_running(self):
-        """ Returns true if one task is running
+    def is_running(self):
+        """ Returns true if one process is running
         """
 
         for process in self._processes:
@@ -55,8 +55,8 @@ class TaskManager(object):
 
         return False
 
-    def stop_all_tasks(self):
-        """ Stop all current tasks
+    def stop_all(self):
+        """ Stop all current processes
         """
         for process in self._processes:
             process.terminate()
@@ -72,7 +72,7 @@ class CoreController(object):
         """
         """
         self._channels = []
-        self._task_manager = TaskManager()
+        self._process_manager = ProcessManager()
 
         flask2000 = RESTCommunicationChannel(controller=self, port=2000, debug=True, use_reloader=False)
         flask3000 = RESTCommunicationChannel(controller=self, port=3000, debug=True, use_reloader=False)
@@ -96,17 +96,17 @@ class CoreController(object):
         """
         """
         for channel in self._channels:
-            self._task_manager.start_task(channel.start)
+            self._process_manager.start(channel.start)
 
     def is_running(self):
         """
         """
-        return self._task_manager.has_task_running()
+        return self._process_manager.is_running()
 
     def stop(self, signal=None, frame=None):
         """
         """
-        self._task_manager.stop_all_tasks()
+        self._process_manager.stop_all()
 
         for channel in self._channels:
             channel.stop()
