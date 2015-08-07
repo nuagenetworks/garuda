@@ -87,7 +87,7 @@ def abort_with_error(code, data):
 def create_response(code, data):
     """
     """
-    response = make_response(data)
+    response = make_response(json.dumps(data))
 
     response.status_code = code
     response.mimetype = 'application/json'
@@ -158,7 +158,6 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         print '--- Request from %s ---' % headers['Host']
 
-        print 'path=%s' % path
         try:
             parser = PathParser()
             resources = parser.parse(path=path)
@@ -186,14 +185,14 @@ class RESTCommunicationChannel(CommunicationChannel):
                 action = GASession.ACTION_READ
 
         ga_request = GARequest(action=action, url=request.url, data=data, headers=headers)
-        ga_session = GASession(resource=Resource(), user='me', data={}, action=action, resources=resources)
+        ga_session = GASession(user='me', data={}, action=action, resources=resources)
 
         response = self.controller.execute(session=ga_session, request=ga_request)
 
         print '--- Response to %s ---' % headers['Host']
 
         if response['status'] >= 400:
-            http_response = create_response(response['status'], response['reason'])
+            http_response = create_response(response['status'], response['errors'])
         else:
             http_response = create_response(response['status'], response['data'])
 

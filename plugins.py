@@ -111,8 +111,8 @@ class ReaderPlugin(AbstractPlugin):
 
         """
 
-        return PluginManifest(name='Reader Plugin', subscriptions={"subnet": ["create", "delete"], \
-                                                                   "subnettemplates": ["create", "update"]})
+        return PluginManifest(name='Reader Plugin', subscriptions={"subnets": ["readall", "delete"], \
+                                                                   "subnettemplates": ["readall", "update"]})
 
     def begin_read_operation(self, context):
         """
@@ -128,7 +128,7 @@ class ReaderPlugin(AbstractPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         print 'ReaderPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.headers['Host']
-        # context.report_error(status=409, reason='Something wrong happened', suggestion='Try again after 120s... just kidding')
+        context.report_error(status=409, property='name', title='name is too long', description='name should have maximum 255 characters')
         return context
 
     def preprocess_read(self, context):
@@ -157,8 +157,8 @@ class AnotherPlugin(AbstractPlugin):
 
         """
 
-        return PluginManifest(name='Another Plugin', subscriptions={"subnet": ["create", "delete"], \
-                                                                    "domain": ["create", "update"]})
+        return PluginManifest(name='Another Plugin', subscriptions={"subnets": ["readall", "delete"], \
+                                                                    "domains": ["readall", "update"]})
 
     def begin_read_operation(self, context):
         """

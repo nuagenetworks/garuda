@@ -17,12 +17,11 @@ class GASession(object):
     ACTION_READ = 'read'
     ACTION_READALL = 'readall'
 
-    def __init__(self, resource=None, user=None, data={}, resources=[], action=None):
+    def __init__(self, user=None, data={}, resources=[], action=None):
         """
 
         """
         self.uuid = uuid4().hex
-        self.resource = resource
         self.user = user
         self.data = data
         self.action = action
@@ -100,12 +99,29 @@ class GAContext(object):
         """
         return len(self._errors)
 
-    def report_error(self, status, reason, suggestion=None):
+    def _error_index(self, property):
         """
         """
-        self._errors.append({'status': status, 'reason': reason, 'suggestion': suggestion})
+        for index, error in enumerate(self._errors):
+            if error['property'] is property:
+                return index
 
-    def clear_errrors(self):
+        return -1
+
+    def report_error(self, status, property, title, description, suggestion=None):
+        """
+        """
+        index = self._error_index(property)
+
+        if index < 0:
+            error = {u'property': property, u'descriptions': []}
+            self._errors.append(error)
+        else:
+            error = self._errors[index]
+
+        error['descriptions'].append({u'title': title, u'description': description, u'suggestion':suggestion, u'status':status})
+
+    def clear_errors(self):
         """
         """
         self._errors = []

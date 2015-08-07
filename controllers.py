@@ -114,13 +114,12 @@ class CoreController(object):
         # TODO: Indicate what to do in the operation
 
         context = GAContext(session=session, request=request)
+
         try:
             manager = OperationsManager(context=context)
             manager.run()
         except ContextException:
-            print context.errors
-            last_error = context.errors[-1]
-            return last_error
+            return {'status': 400, 'errors': context.errors}
 
         # TODO: Create response from context
 
@@ -163,7 +162,8 @@ class OperationsManager(object):
                 parent = ModelController.get_object(parent_resource.name, parent_resource.value)
 
                 if parent is None:
-                    self.context.report_error(status=404, reason='Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value))
+                    description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
+                    self.context.report_error(status=404, property='', title='Object not found', description=description)
                     raise ContextException()
 
             self.context.parent = parent
@@ -202,7 +202,8 @@ class OperationsManager(object):
         resource = resources[-1]
 
         if action != GASession.ACTION_CREATE and resource.value is None:
-            self.context.report_error(status=405, reason='Unable to %s a resource without its identifier' % self.context.action)
+            description = 'Unable to %s a resource without its identifier' % self.context.action
+            self.context.report_error(status=405, property='', title='Action not allowed', description=description)
             raise ContextException()
 
         if len(resources) == 1:
@@ -213,7 +214,8 @@ class OperationsManager(object):
             self.context.parent = ModelController.get_object(parent_resource.name, parent_resource.value)
 
             if parent is None:
-                self.context.report_error(status=404, reason='Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value))
+                description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
+                self.context.report_error(status=404, property='', title='Object not found', description=description)
                 raise ContextException()
 
         if action == GASession.ACTION_CREATE:
@@ -242,8 +244,10 @@ class PluginsManager(object):
         self.timeout = timeout  # Gevent spawn timeout
         self.plugins_contexts = []  # Plugins available for the current context
 
+        resource_name = context.session.resources[-1].name
+
         for plugin in self._plugins:
-            if plugin.is_listening(rest_name=context.session.resource.rest_name, action=context.session.action):
+            if plugin.is_listening(rest_name=resource_name, action=context.session.action):
                 plugin_context = PluginContext(plugin=plugin, context=context.copy())
                 self.plugins_contexts.append(plugin_context)
 
