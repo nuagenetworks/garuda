@@ -3,7 +3,8 @@
 from flask import Flask, request, make_response
 from copy import deepcopy
 
-from gaexceptions import NotImplementedException
+from gaexceptions import NotImplementedException, NotFoundException
+from parser import PathParser
 from utils import GARequest, GASession, Resource
 
 
@@ -44,6 +45,54 @@ class CommunicationChannel(object):
 
         """
         raise NotImplementedException('CommunicationChannel should implement push method')
+
+
+import json
+
+from werkzeug.exceptions import HTTPException
+
+class GarudaHTTPException(HTTPException):
+    """  """
+
+    data = dict()
+
+    def __init__(self, code, data):
+        """ Init """
+
+        super(GarudaHTTPException, self).__init__()
+        self.code = code
+        self.data = data
+
+    def get_body(self, environ):
+        """Get the JSON body."""
+
+        return json.dumps(self.data)
+
+    def get_headers(self, environ):
+        """Get a list of headers."""
+
+        # options_resp = make_default_options_response()
+
+        return [('Content-Type', 'application/json'),
+                ('Content-Length', len(self.get_body(environ))),
+                ('Access-Control-Max-Age', '1')]
+
+
+def abort_with_error(code, data):
+    """
+    """
+    raise GarudaHTTPException(code=code, data=data)
+
+
+def create_response(code, data):
+    """
+    """
+    response = make_response(data)
+
+    response.status_code = code
+    response.mimetype = 'application/json'
+
+    return response
 
 
 class RESTCommunicationChannel(CommunicationChannel):
@@ -92,7 +141,6 @@ class RESTCommunicationChannel(CommunicationChannel):
 
     def _extract_headers(self, headers):
         """
-
         """
         headers = {}
 
@@ -110,19 +158,43 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         print '--- Request from %s ---' % headers['Host']
 
-        ga_request = GARequest(method=request.method, url=request.url, data=data, headers=headers)
-        ga_session = GASession(resource=Resource(), user='me', data={}, action='create')
+        print 'path=%s' % path
+        try:
+            parser = PathParser()
+            resources = parser.parse(path=path)
 
-        response = self.controller.launch_operation(session=ga_session, request=ga_request)
+        except NotFoundException as exception:
+            abort_with_error(code=404, data={u'error_code': 40401, u'message': 'NOT FOUND'})
+
+        resources = parser.resources
+        method = request.method.upper()
+
+        if method is 'POST':
+            action = GASession.ACTION_CREATE
+
+        elif method is 'PUT':
+            action = GASession.ACTION_UPDATE
+
+        elif method is 'DELETE':
+            action = GASession.ACTION_DELETE
+
+        elif method in ['GET', 'OPTIONS', 'HEAD']:
+
+            if resources[-1].value is None:
+                action = GASession.ACTION_READALL
+            else:
+                action = GASession.ACTION_READ
+
+        ga_request = GARequest(action=action, url=request.url, data=data, headers=headers)
+        ga_session = GASession(resource=Resource(), user='me', data={}, action=action, resources=resources)
+
+        response = self.controller.execute(session=ga_session, request=ga_request)
 
         print '--- Response to %s ---' % headers['Host']
 
-        if response['status'] >= 300:
-            http_response = make_response(response['reason'])
+        if response['status'] >= 400:
+            http_response = create_response(response['status'], response['reason'])
         else:
-            http_response = make_response(response['data'])
-
-        http_response.status_code = response['status']
-        http_response.mimetype = 'application/json'
+            http_response = create_response(response['status'], response['data'])
 
         return http_response

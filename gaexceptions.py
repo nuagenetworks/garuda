@@ -12,5 +12,14 @@ class InternalInconsistencyException(Exception):
     """
     pass
 
+
 class ContextException(Exception):
+    """
+    """
+    pass
+
+
+class NotFoundException(Exception):
+    """
+    """
     pass

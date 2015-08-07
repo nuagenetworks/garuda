@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
+from gaexceptions import NotFoundException
 
 GAResource = namedtuple('GAResource', ['name', 'value'])
 
@@ -13,7 +14,25 @@ class PathParser(object):
     """ Parse Path to retrieve resources and values information
 
     """
-    def parse(self, path):
+    def __init__(self):
+        """
+        """
+        self._version = None
+        self._resources = []
+
+    @property
+    def resources(self):
+        """
+        """
+        return self._resources
+
+    @property
+    def version(self):
+        """
+        """
+        return self._version
+
+    def parse(self, path, url_prefix='/nuage/api/', url_version=False):
         """ Parse the path to retrieve information
 
             Args:
@@ -26,8 +45,21 @@ class PathParser(object):
                 [GAResource(name=u'enterprises', value=3), GAResource(name=u'domains', value=None)]
 
         """
+
+        if len(path) == 0:
+            raise NotFoundException()
+
         if path.startswith('/'):
             path = path[1:]
+
+        if path.startswith(url_prefix):
+            path = path[len(url_prefix):]
+
+        if url_version:
+            index = path.index('/')
+
+            self._version = path[:index]
+            path = path[index + 1:]
 
         infos = path.split('/')
 
@@ -45,7 +77,8 @@ class PathParser(object):
 
             index = index + 1
 
-        return result
+        self._resources = result
+        return self._resources
 
     def _get_resource(cls, resource):
         """ Get the resource

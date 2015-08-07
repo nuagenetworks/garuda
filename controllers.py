@@ -3,7 +3,7 @@
 import gevent
 
 from time import sleep
-from utils import GAContext, URLParser
+from utils import GAContext, GASession
 from channels import RESTCommunicationChannel
 from gaexceptions import ContextException
 
@@ -108,7 +108,7 @@ class CoreController(object):
         for channel in self._channels:
             channel.stop()
 
-    def launch_operation(self, session, request):
+    def execute(self, session, request):
         """
         """
         # TODO: Indicate what to do in the operation
@@ -127,10 +127,6 @@ class CoreController(object):
         return {'status': 200, 'data': 'ok'}
 
 
-READ_OPERATIONS_METHODS = ['GET', 'HEAD', 'OPTIONS']
-WRITE_OPERATIONS_METHODS = ['POST', 'PUT', 'DELETE']
-
-
 class OperationsManager(object):
     """
 
@@ -143,9 +139,9 @@ class OperationsManager(object):
     def run(self):
         """
         """
-        method = self.context.request.method.upper()
+        action = self.context.session.action
 
-        if method in READ_OPERATIONS_METHODS:
+        if action is GASession.ACTION_READALL or action is GASession.ACTION_READ:
             self._perform_read_operation()
         else:
             self._perform_write_operation()
@@ -153,15 +149,12 @@ class OperationsManager(object):
     def _prepare_context_for_read_operation(self):
         """
         """
-        url = self.context.request.url
-        parser = URLParser(url)
-        resources = parser.resources
-
+        action = self.context.session.action
+        resources = self.context.session.resources
         resource = resources[-1]
 
-        if resource.value is None:
-            # Get All resource.name
-            self.context.action = GAContext.ACTION_READALL
+        if action == GASession.ACTION_READALL:
+            # Get all resources
             if len(resources) == 1:
                 parent = ModelController.get_current_user()
 
@@ -178,14 +171,12 @@ class OperationsManager(object):
 
         else:
             # Get a specific resource.name
-            self.context.action = GAContext.ACTION_READ
             self.context.object = ModelController.get_object(resource.name, resource.value)
 
     def _perform_read_operation(self):
         """
 
         """
-
         self._prepare_context_for_read_operation()
 
         plugin_manager = PluginsManager(context=self.context)
@@ -206,24 +197,11 @@ class OperationsManager(object):
     def _prepare_context_for_write_operation(self):
         """
         """
-        method = self.context.request.method.upper()
-        url = self.context.request.url
-        parser = URLParser(url)
-        resources = parser.resources
-
-        if method is 'POST':
-            self.context.action = GAContext.ACTION_CREATE
-        elif method is 'PUT':
-            self.context.action = GAContext.ACTION_UPDATE
-        elif method is 'DELETE':
-            self.context.action = GAContext.ACTION_DELETE
-        else:
-            self.context.report_error(status=409, reason='Unknown ACTION for method %s' % method)
-            raise ContextException()
-
+        action = self.context.session.action
+        resources = self.context.session.resources
         resource = resources[-1]
 
-        if self.context.action != GAContext.ACTION_CREATE and resource.value is None:
+        if action != GASession.ACTION_CREATE and resource.value is None:
             self.context.report_error(status=405, reason='Unable to %s a resource without its identifier' % self.context.action)
             raise ContextException()
 
@@ -238,7 +216,7 @@ class OperationsManager(object):
                 self.context.report_error(status=404, reason='Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value))
                 raise ContextException()
 
-        if self.context.action == GAContext.CREATE:
+        if action == GASession.ACTION_CREATE:
             self.context.object = ModelController.create_object(resource.name)
         else:
             self.context.object = ModelController.get_object(resource.name, resource.value)
@@ -343,4 +321,11 @@ class ModelController(object):
         """
         """
         sleep(1)
-        return object
+        return object()
+
+    @classmethod
+    def get_current_user(self):
+        """
+        """
+        sleep(1)
+        return object()
