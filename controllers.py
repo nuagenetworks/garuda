@@ -5,7 +5,7 @@ import gevent
 from time import sleep
 from utils import GAContext, GASession
 from channels import RESTCommunicationChannel
-from gaexceptions import ContextException
+from gaexceptions import ActionNotAllowedException, BadRequestException, NotFoundException
 
 from collections import namedtuple
 PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
@@ -118,12 +118,12 @@ class CoreController(object):
         try:
             manager = OperationsManager(context=context)
             manager.run()
-        except ContextException:
-            return {'status': 400, 'errors': context.errors}
+        except Exception as exc:
+            return {'status': exc.__class__.__name__, 'data': context.errors}
 
         # TODO: Create response from context
 
-        return {'status': 200, 'data': 'ok'}
+        return {'status': 'SUCCESS', 'data': 'ok'}
 
 
 class OperationsManager(object):
@@ -163,7 +163,7 @@ class OperationsManager(object):
 
                 if parent is None:
                     description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
-                    self.context.report_error(status=404, property='', title='Object not found', description=description)
+                    self.context.report_error(property='', title='Object not found', description=description)
                     raise ContextException()
 
             self.context.parent = parent
@@ -186,7 +186,7 @@ class OperationsManager(object):
         plugin_manager.perform_delegate(delegate='should_perform_read')
 
         if len(self.context.errors) > 0:
-            raise ContextException()
+            raise BadRequestException()
 
         plugin_manager.perform_delegate(delegate='preprocess_read')
 
@@ -203,8 +203,8 @@ class OperationsManager(object):
 
         if action != GASession.ACTION_CREATE and resource.value is None:
             description = 'Unable to %s a resource without its identifier' % self.context.action
-            self.context.report_error(status=405, property='', title='Action not allowed', description=description)
-            raise ContextException()
+            self.context.report_error(property='', title='Action not allowed', description=description)
+            raise ActionNotAllowedException()
 
         if len(resources) == 1:
             parent = None
@@ -215,8 +215,8 @@ class OperationsManager(object):
 
             if parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
-                self.context.report_error(status=404, property='', title='Object not found', description=description)
-                raise ContextException()
+                self.context.report_error(property='', title='Object not found', description=description)
+                raise NotFoundException()
 
         if action == GASession.ACTION_CREATE:
             self.context.object = ModelController.create_object(resource.name)

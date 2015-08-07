@@ -3,7 +3,7 @@
 from flask import Flask, request, make_response
 from copy import deepcopy
 
-from gaexceptions import NotImplementedException, NotFoundException
+from gaexceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException
 from parser import PathParser
 from utils import GARequest, GASession, Resource
 
@@ -149,6 +149,34 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return headers
 
+    def make_plugin_response(self, action, response):
+        """
+        """
+        code = 520  # unknown error
+        status = response['status']
+        data = response['data']
+
+        # Success
+        if status is 'SUCCESS':
+            if action is GASession.ACTION_CREATE:
+                code = 201
+            elif data is None or len(data) == 0:
+                code = 204
+            else:
+                code = 200
+
+        # Errors
+        elif status is BadRequestException.__name__:
+            code = 400
+        elif status is NotFoundException.__name__:
+            code = 404
+        elif status is ConflictException.__name__:
+            code = 409
+        elif status is ActionNotAllowedException.__name__:
+            code = 405
+
+        return create_response(code, data)
+
     def index(self, path):
         """
         """
@@ -191,9 +219,5 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         print '--- Response to %s ---' % headers['Host']
 
-        if response['status'] >= 400:
-            http_response = create_response(response['status'], response['errors'])
-        else:
-            http_response = create_response(response['status'], response['data'])
 
-        return http_response
+        return self.make_plugin_response(action=action, response=response)

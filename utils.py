@@ -108,7 +108,7 @@ class GAContext(object):
 
         return -1
 
-    def report_error(self, status, property, title, description, suggestion=None):
+    def report_error(self, property, title, description, suggestion=None):
         """
         """
         index = self._error_index(property)
@@ -119,7 +119,7 @@ class GAContext(object):
         else:
             error = self._errors[index]
 
-        error['descriptions'].append({u'title': title, u'description': description, u'suggestion':suggestion, u'status':status})
+        error['descriptions'].append({u'title': title, u'description': description, u'suggestion':suggestion})
 
     def clear_errors(self):
         """

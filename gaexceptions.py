@@ -13,13 +13,24 @@ class InternalInconsistencyException(Exception):
     pass
 
 
-class ContextException(Exception):
+class NotFoundException(Exception):
     """
     """
     pass
 
 
-class NotFoundException(Exception):
+class BadRequestException(Exception):
+    """
+    """
+    pass
+
+
+class ConflictException(Exception):
+    """
+    """
+    pass
+
+class ActionNotAllowedException(Exception):
     """
     """
     pass

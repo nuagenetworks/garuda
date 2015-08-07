@@ -128,7 +128,7 @@ class ReaderPlugin(AbstractPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         print 'ReaderPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.headers['Host']
-        context.report_error(status=409, property='name', title='name is too long', description='name should have maximum 255 characters')
+        context.report_error(property='name', title='name is too long', description='name should have maximum 255 characters')
         return context
 
     def preprocess_read(self, context):
