@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from controllers import ModelController, PluginsManager, OperationsManager, CoreController
-from utils import GAContext, GASession, GARequest, Resource
+from garuda.controllers import CoreController, PluginsManager
 from plugins import ReaderPlugin, AnotherPlugin
-
 
 
 plugin = ReaderPlugin()
@@ -15,13 +13,15 @@ PluginsManager.register_plugin(plugin)
 PluginsManager.register_plugin(anotherplugin)
 
 
-from controllers import CoreController
 import signal
 from time import sleep
 
 core = CoreController()
 
+
 def stop_garuda(signal, frame):
+    """
+    """
     core.stop()
 
 signal.signal(signal.SIGINT, stop_garuda)

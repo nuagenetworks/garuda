@@ -1,59 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from uuid import uuid4
-
-from gaexceptions import NotFoundException
-
-
-class GASession(object):
-    """
-
-    """
-
-    ACTION_CREATE = 'create'
-    ACTION_UPDATE = 'update'
-    ACTION_DELETE = 'delete'
-    ACTION_READ = 'read'
-    ACTION_READALL = 'readall'
-
-    def __init__(self, user=None, data={}, resources=[], action=None):
-        """
-
-        """
-        self.uuid = uuid4().hex
-        self.user = user
-        self.data = data
-        self.action = action
-        self.resources = resources
-
-
-class GARequest(object):
-    """
-
-    """
-    def __init__(self, action, url, data={}, resources=[], headers={}, cookies=None):
-        """
-        """
-        self.action = action
-        self.url = url
-        self.data = data
-        self.headers = headers
-        self.cookies = cookies
-        self.resources = resources
-
-
-class GAResponse(object):
-    """
-
-    """
-
-    def __init__(self, status, data, headers={}):
-        """
-        """
-        self.status = status
-        self.data = data
-        self.headers = headers
 
 
 class GAContext(object):
@@ -119,20 +66,9 @@ class GAContext(object):
         else:
             error = self._errors[index]
 
-        error['descriptions'].append({u'title': title, u'description': description, u'suggestion':suggestion})
+        error['descriptions'].append({u'title': title, u'description': description, u'suggestion': suggestion})
 
     def clear_errors(self):
         """
         """
         self._errors = []
-
-
-class Resource(object):
-    """
-    """
-    def __init__(self):
-        """
-        TEMPORARY OBJECT
-        """
-        self.rest_name = 'subnet'
-

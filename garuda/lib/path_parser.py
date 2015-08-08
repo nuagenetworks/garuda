@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
-from gaexceptions import NotFoundException
+
+from garuda.exceptions import NotFoundException
 
 GAResource = namedtuple('GAResource', ['name', 'value'])
 
-RESOURCE_MAPPING = {
-    'allalarms': 'alarms'
-}
+RESOURCE_MAPPING = {'allalarms': 'alarms'}
 
 
 class PathParser(object):

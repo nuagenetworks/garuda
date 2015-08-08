@@ -1,98 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import json
+
 from flask import Flask, request, make_response
 from copy import deepcopy
 
-from gaexceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException
-from parser import PathParser
-from utils import GARequest, GASession, Resource
-
-
-class CommunicationChannel(object):
-    """
-
-    """
-    def start(self):
-        """
-        """
-        raise NotImplementedException('CommunicationChannel should implement start method')
-
-    def stop(self):
-        """
-        """
-        raise NotImplementedException('CommunicationChannel should implement stop method')
-
-    def is_running(self):
-        """
-
-        """
-        raise NotImplementedException('CommunicationChannel should implement is running method')
-
-    def receive(self):
-        """
-
-        """
-        raise NotImplementedException('CommunicationChannel should implement receive method')
-
-    def send(self):
-        """
-
-        """
-        raise NotImplementedException('CommunicationChannel should implement send method')
-
-    def push(self):
-        """
-
-        """
-        raise NotImplementedException('CommunicationChannel should implement push method')
-
-
-import json
-
-from werkzeug.exceptions import HTTPException
-
-class GarudaHTTPException(HTTPException):
-    """  """
-
-    data = dict()
-
-    def __init__(self, code, data):
-        """ Init """
-
-        super(GarudaHTTPException, self).__init__()
-        self.code = code
-        self.data = data
-
-    def get_body(self, environ):
-        """Get the JSON body."""
-
-        return json.dumps(self.data)
-
-    def get_headers(self, environ):
-        """Get a list of headers."""
-
-        # options_resp = make_default_options_response()
-
-        return [('Content-Type', 'application/json'),
-                ('Content-Length', len(self.get_body(environ))),
-                ('Access-Control-Max-Age', '1')]
-
-
-def abort_with_error(code, data):
-    """
-    """
-    raise GarudaHTTPException(code=code, data=data)
-
-
-def create_response(code, data):
-    """
-    """
-    response = make_response(json.dumps(data))
-
-    response.status_code = code
-    response.mimetype = 'application/json'
-
-    return response
+from .utils import GarudaHTTPException
+from garuda.exceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException
+from garuda.lib import PathParser
+from garuda.models import GARequest, GASession
+from garuda.models.abstracts import CommunicationChannel
 
 
 class RESTCommunicationChannel(CommunicationChannel):
@@ -149,7 +66,12 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return headers
 
-    def make_plugin_response(self, action, response):
+    def abort_with_error(code, data):
+        """
+        """
+        raise GarudaHTTPException(code=code, data=data)
+
+    def make_channel_response(self, action, response):
         """
         """
         code = 520  # unknown error
@@ -175,7 +97,11 @@ class RESTCommunicationChannel(CommunicationChannel):
         elif status is ActionNotAllowedException.__name__:
             code = 405
 
-        return create_response(code, data)
+        response = make_response(json.dumps(data))
+        response.status_code = code
+        response.mimetype = 'application/json'
+
+        return response
 
     def index(self, path):
         """
@@ -190,8 +116,8 @@ class RESTCommunicationChannel(CommunicationChannel):
             parser = PathParser()
             resources = parser.parse(path=path)
 
-        except NotFoundException as exception:
-            abort_with_error(code=404, data={u'error_code': 40401, u'message': 'NOT FOUND'})
+        except NotFoundException:
+            self.abort_with_error(code=404, data={u'error_code': 40401, u'message': 'NOT FOUND'})
 
         resources = parser.resources
         method = request.method.upper()
@@ -219,5 +145,4 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         print '--- Response to %s ---' % headers['Host']
 
-
-        return self.make_plugin_response(action=action, response=response)
+        return self.make_channel_response(action=action, response=response)

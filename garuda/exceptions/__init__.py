@@ -30,6 +30,7 @@ class ConflictException(Exception):
     """
     pass
 
+
 class ActionNotAllowedException(Exception):
     """
     """
