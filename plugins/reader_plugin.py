@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from garuda.models.abstracts import PluginManifest, AbstractPlugin
+from garuda.models.abstracts import PluginManifest, GAPlugin
 
 
-class ReaderPlugin(AbstractPlugin):
+class ReaderPlugin(GAPlugin):
     """
 
     """

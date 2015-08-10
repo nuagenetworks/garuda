@@ -3,7 +3,7 @@
 from garuda.exceptions import NotImplementedException
 
 
-class AbstractPlugin(object):
+class GAPlugin(object):
     """
 
     """
@@ -37,14 +37,14 @@ class AbstractPlugin(object):
         """
         return context
 
-    def should_perform_read(self, context):
+    def should_perform_read(self, context, object):
         """
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         return context
 
-    def preprocess_read(self, context):
+    def preprocess_read(self, context, object):
         """
         Give the plugin a chance to modify the object that is about to be sent back to the client.
         All modifications will be merged after all Plugins preprocessing.
@@ -52,6 +52,34 @@ class AbstractPlugin(object):
         return context
 
     def end_read_operation(self, context):
+        """
+        Called once at the very end of a Read Operation
+        """
+        return context
+
+    # ReadAll plugins
+
+    def begin_readall_operation(self, context):
+        """
+        Called once at the very beginning of a Read Operation.
+        """
+        return context
+
+    def should_perform_readall(self, context, object):
+        """
+        Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
+        If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
+        """
+        return context
+
+    def preprocess_readall(self, context, object):
+        """
+        Give the plugin a chance to modify the object that is about to be sent back to the client.
+        All modifications will be merged after all Plugins preprocessing.
+        """
+        return context
+
+    def end_readall_operation(self, context):
         """
         Called once at the very end of a Read Operation
         """

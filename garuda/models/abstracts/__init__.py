@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['AbstractPlugin', 'CommunicationChannel', 'PluginManifest']
+__all__ = ['GAPlugin', 'CommunicationChannel', 'PluginManifest']
 
-from .abstract_plugin import AbstractPlugin
+from .plugin import GAPlugin
 from .communication_channel import CommunicationChannel
 from .plugin_manifest import PluginManifest

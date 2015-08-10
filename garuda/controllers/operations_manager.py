@@ -20,43 +20,25 @@ class OperationsManager(object):
         """
         action = self.context.request.action
 
-        if action is GARequest.ACTION_READALL or action is GARequest.ACTION_READ:
+        if action is GARequest.ACTION_READALL:
+            self._perform_readall_operation()
+
+        elif action is GARequest.ACTION_READ:
             self._perform_read_operation()
+
         else:
             self._perform_write_operation()
 
     def _prepare_context_for_read_operation(self):
         """
         """
-        action = self.context.request.action
         resources = self.context.session.resources
         resource = resources[-1]
 
-        if action == GARequest.ACTION_READALL:
-            # Get all resources
-            if len(resources) == 1:
-                # Root parent
-                parent = ModelsController.get_current_user()
-
-            else:  # Having a parent and a child
-                parent_resource = resources[0]
-                parent = ModelsController.get_object(parent_resource.name, parent_resource.value)
-
-                if parent is None:
-                    description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
-                    self.context.report_error(property='', title='Object not found', description=description)
-                    raise NotFoundException()
-
-            self.context.parent = parent
-            self.context.objects = ModelsController.get_objects(parent, resource.name)
-
-        else:
-            # Get a specific resource.name
-            self.context.object = ModelsController.get_object(resource.name, resource.value)
+        self.context.object = ModelsController.get_object(resource.name, resource.value)
 
     def _perform_read_operation(self):
         """
-
         """
         self._prepare_context_for_read_operation()
 
@@ -64,9 +46,8 @@ class OperationsManager(object):
 
         plugin_manager.perform_delegate(delegate='begin_read_operation')
 
-        # Split READ and READALL
         # Manage one object at a time
-        plugin_manager.perform_delegate(delegate='should_perform_read')
+        plugin_manager.perform_delegate(delegate='should_perform_read', object=self.context.object)
 
         if len(self.context.errors) > 0:
             raise BadRequestException()
@@ -74,9 +55,54 @@ class OperationsManager(object):
         plugin_manager.perform_delegate(delegate='preprocess_read')
         # End manage
 
+        plugin_manager.perform_delegate(delegate='end_read_operation')
+
+    def _prepare_context_for_readall_operation(self):
+        """
+        """
+        resources = self.context.session.resources
+        resource = resources[-1]
+
+        if len(resources) == 1:
+            # Root parent
+            parent = ModelsController.get_current_user()
+
+        else:  # Having a parent and a child
+            parent_resource = resources[0]
+            parent = ModelsController.get_object(parent_resource.name, parent_resource.value)
+
+            if parent is None:
+                description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
+                self.context.report_error(property='', title='Object not found', description=description)
+                raise NotFoundException()
+
+        self.context.parent = parent
+        self.context.objects = ModelsController.get_objects(parent, resource.name)
+
+    def _perform_readall_operation(self):
+        """
+        """
+        self._prepare_context_for_read_operation()
+
+        plugin_manager = PluginsManager(context=self.context)
+
+        plugin_manager.perform_delegate(delegate='begin_readall_operation')
+
+        for object in self.context.objects:
+            # Manage one object at a time
+            plugin_manager.perform_delegate(delegate='should_perform_readall', object=object)
+
+            if len(self.context.errors) > 0:
+                raise BadRequestException()
+
+                plugin_manager.perform_delegate(delegate='preprocess_readall', object=object)
+            # End manage
+
         # ModelsController.read()
 
-        plugin_manager.perform_delegate(delegate='end_read_operation')
+        plugin_manager.perform_delegate(delegate='end_readallß_operation')
+
+
 
     def _prepare_context_for_write_operation(self):
         """
@@ -111,4 +137,6 @@ class OperationsManager(object):
         """
         """
         self._prepare_context_for_write_operation()
+
+        # Do a read after all
         pass
