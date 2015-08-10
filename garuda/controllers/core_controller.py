@@ -22,8 +22,8 @@ class CoreController(object):
         self._channels = []
         self._process_manager = ProcessManager()
 
-        flask2000 = RESTCommunicationChannel(controller=self, port=2000, debug=True, use_reloader=False)
-        flask3000 = RESTCommunicationChannel(controller=self, port=3000, debug=True, use_reloader=False)
+        flask2000 = RESTCommunicationChannel(controller=self, port=2000, processes=3, debug=True, use_reloader=False)
+        flask3000 = RESTCommunicationChannel(controller=self, port=3000, processes=3, debug=True, use_reloader=False)
 
         self.register_channel(flask2000)
         # self.register_channel(flask3000)
