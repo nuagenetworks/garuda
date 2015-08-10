@@ -3,6 +3,8 @@
 from time import sleep
 
 
+SLEEP_TIME = 0
+
 class ModelsController(object):
     """
 
@@ -12,40 +14,40 @@ class ModelsController(object):
         """
         """
         print '** Let the police...Wait for it...'
-        sleep(2)
+        sleep(SLEEP_TIME)
         print '...do the job **'
 
     @classmethod
     def get_objects(self, parent, resource_name):
         """
         """
-        sleep(1)
+        sleep(SLEEP_TIME)
         return [object()]
 
     @classmethod
     def get_object(self, resource_name, resource_value):
         """
         """
-        sleep(1)
+        sleep(SLEEP_TIME)
         return object()
 
     @classmethod
     def create_object(self, resource_name):
         """
         """
-        sleep(1)
+        sleep(SLEEP_TIME)
         return object()
 
     @classmethod
     def save_object(self, object, parent=None):
         """
         """
-        sleep(1)
+        sleep(SLEEP_TIME)
         return object()
 
     @classmethod
     def get_current_user(self):
         """
         """
-        sleep(1)
+        sleep(SLEEP_TIME)
         return object()

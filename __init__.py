@@ -29,4 +29,4 @@ signal.signal(signal.SIGINT, stop_garuda)
 core.start()
 
 while core.is_running():
-    sleep(10)
+    sleep(3)

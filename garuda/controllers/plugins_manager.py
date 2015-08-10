@@ -2,6 +2,8 @@
 
 import gevent
 
+
+from garuda.exceptions import InternalInconsistencyException
 from collections import namedtuple
 PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
 
@@ -56,6 +58,8 @@ class PluginsManager(object):
 
             if method:
                 jobs.append(gevent.spawn(method, context=context, *args, **kwargs))
+            else:
+                raise InternalInconsistencyException("%s does not have delegate method %s " % (plugin, delegate))
 
         gevent.joinall(jobs, timeout=self.timeout)
 

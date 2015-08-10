@@ -100,7 +100,7 @@ class OperationsManager(object):
 
         # ModelsController.read()
 
-        plugin_manager.perform_delegate(delegate='end_readallß_operation')
+        plugin_manager.perform_delegate(delegate='end_readall_operation')
 
 
 
