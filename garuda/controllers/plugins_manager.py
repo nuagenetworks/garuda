@@ -20,7 +20,7 @@ class PluginsManager(object):
         self.timeout = timeout  # Gevent spawn timeout
         self.plugins_contexts = []  # Plugins available for the current context
 
-        resource_name = context.session.resources[-1].name
+        resource_name = context.request.resources[-1].name
 
         for plugin in self._plugins:
             if plugin.is_listening(rest_name=resource_name, action=context.request.action):

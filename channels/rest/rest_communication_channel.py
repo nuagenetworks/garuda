@@ -2,8 +2,10 @@
 
 import json
 
-from flask import Flask, request, make_response
 from copy import deepcopy
+from uuid import uuid4
+
+from flask import Flask, request, make_response
 
 from .utils.constants import RESTConstants
 from garuda.exceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException, GAException
@@ -19,6 +21,7 @@ class RESTCommunicationChannel(CommunicationChannel):
     def __init__(self, controller, **kwargs):
         """
         """
+        self._uuid = uuid4().hex
         self._is_running = False
         self.controller = controller
         self.app = Flask(self.__class__.__name__)
@@ -26,6 +29,18 @@ class RESTCommunicationChannel(CommunicationChannel):
         self.app.add_url_rule('/', 'vsd', self.index, defaults={'path': ''})
         self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
+
+    @property
+    def uuid(self):
+        """
+        """
+        return self._uuid
+
+    @property
+    def is_running(self):
+        """
+        """
+        return self._is_running
 
     def start(self):
         """
@@ -43,12 +58,6 @@ class RESTCommunicationChannel(CommunicationChannel):
             return
 
         self._is_running = False
-
-    @property
-    def is_running(self):
-        """
-        """
-        return self._is_running
 
     def _extract_content(self, content):
         """
@@ -139,10 +148,8 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         action = self.determine_action(method, resources)
 
-        ga_request = GARequest(action=action, content=content, parameters=parameters)
-        ga_session = GASession(user='me', resources=resources)
-
-        ga_response = self.controller.execute(session=ga_session, request=ga_request)
+        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self.uuid)
+        ga_response = self.controller.execute(request=ga_request)
 
         print '--- Response to %s ---' % parameters['Host']
 

@@ -2,9 +2,13 @@
 
 from .process_manager import ProcessManager
 from .operations_manager import OperationsManager
+from .session_manager import SessionManager
+
 from channels.rest import RESTCommunicationChannel
 from garuda.models import GAContext, GAResponse
 from garuda.exceptions import GAException
+
+from uuid import uuid4
 
 
 class CoreController(object):
@@ -14,6 +18,7 @@ class CoreController(object):
     def __init__(self):
         """
         """
+        self._uuid = uuid4().hex
         self._channels = []
         self._process_manager = ProcessManager()
 
@@ -22,6 +27,12 @@ class CoreController(object):
 
         self.register_channel(flask2000)
         # self.register_channel(flask3000)
+
+    @property
+    def uuid(self):
+        """
+        """
+        return self._uuid
 
     def register_channel(self, channel):
         """
@@ -54,11 +65,11 @@ class CoreController(object):
         for channel in self._channels:
             channel.stop()
 
-    def execute(self, session, request):
+    def execute(self, request):
         """
         """
-        # TODO: Indicate what to do in the operation
-        # Manage session
+        session_uuid = request.parameters['X-GASession'] if 'X-GASession' in request.parameters else None
+        session = SessionManager.get_session(uuid=session_uuid)
 
         context = GAContext(session=session, request=request)
 

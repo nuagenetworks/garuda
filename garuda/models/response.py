@@ -12,7 +12,13 @@ class GAResponse(object):
     def __init__(self, status, content, parameters={}):
         """
         """
-        self.uuid = uuid4().hex
+        self._uuid = uuid4().hex
         self.status = status
         self.content = content
         self.parameters = parameters
+
+    @property
+    def uuid(self):
+        """
+        """
+        return self._uuid

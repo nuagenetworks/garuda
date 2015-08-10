@@ -32,7 +32,7 @@ class OperationsManager(object):
     def _prepare_context_for_read_operation(self):
         """
         """
-        resources = self.context.session.resources
+        resources = self.context.request.resources
         resource = resources[-1]
 
         self.context.object = ModelsController.get_object(resource.name, resource.value)
@@ -60,7 +60,7 @@ class OperationsManager(object):
     def _prepare_context_for_readall_operation(self):
         """
         """
-        resources = self.context.session.resources
+        resources = self.context.request.resources
         resource = resources[-1]
 
         if len(resources) == 1:
@@ -108,7 +108,7 @@ class OperationsManager(object):
         """
         """
         action = self.context.request.action
-        resources = self.context.session.resources
+        resources = self.context.request.resources
         resource = resources[-1]
 
         if action != GARequest.ACTION_CREATE and resource.value is None:
