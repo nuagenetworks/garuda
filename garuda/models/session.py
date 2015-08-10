@@ -8,18 +8,11 @@ class GASession(object):
 
     """
 
-    ACTION_CREATE = 'create'
-    ACTION_UPDATE = 'update'
-    ACTION_DELETE = 'delete'
-    ACTION_READ = 'read'
-    ACTION_READALL = 'readall'
-
-    def __init__(self, user=None, data={}, resources=[], action=None):
+    def __init__(self, user=None, user_info={}, resources=[]):
         """
 
         """
         self.uuid = uuid4().hex
         self.user = user
-        self.data = data
-        self.action = action
+        self.user_info = user_info
         self.resources = resources

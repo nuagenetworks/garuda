@@ -13,25 +13,29 @@ class InternalInconsistencyException(Exception):
     pass
 
 
-class NotFoundException(Exception):
+class GAException(Exception):
+    pass
+
+
+class NotFoundException(GAException):
     """
     """
     pass
 
 
-class BadRequestException(Exception):
+class BadRequestException(GAException):
     """
     """
     pass
 
 
-class ConflictException(Exception):
+class ConflictException(GAException):
     """
     """
     pass
 
 
-class ActionNotAllowedException(Exception):
+class ActionNotAllowedException(GAException):
     """
     """
     pass

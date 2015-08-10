@@ -6,9 +6,9 @@ from flask import Flask, request, make_response
 from copy import deepcopy
 
 from .utils.constants import RESTConstants
-from garuda.exceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException
+from garuda.exceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException, GAException
 from garuda.lib import PathParser
-from garuda.models import GARequest, GASession
+from garuda.models import GARequest, GASession, GAResponse
 from garuda.models.abstracts import CommunicationChannel
 
 
@@ -24,7 +24,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         self.app = Flask(self.__class__.__name__)
 
         self.app.add_url_rule('/', 'vsd', self.index, defaults={'path': ''})
-        self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
+        self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
 
     def start(self):
@@ -50,34 +50,34 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         return self._is_running
 
-    def _extract_data(self, data):
+    def _extract_content(self, content):
         """
 
         """
-        return deepcopy(data)
+        return deepcopy(content)
 
-    def _extract_headers(self, headers):
+    def _extract_parameters(self, parameters):
         """
         """
-        headers = {}
+        params = {}
 
-        for header in request.headers:
-            headers[header[0]] = header[1]
+        for p in parameters:
+            params[p[0]] = p[1]
 
-        return headers
+        return params
 
     def make_channel_response(self, action, response):
         """
         """
-        code = 520  # unknown error
-        status = response['status']
-        data = response['data']
+        code = 520
+        status = response.status
+        content = response.content
 
         # Success
-        if status == 'SUCCESS':
-            if action is GASession.ACTION_CREATE:
+        if status == GAResponse.STATUS_SUCCESS:
+            if action is GARequest.ACTION_CREATE:
                 code = 201
-            elif data is None or len(data) == 0:
+            elif content is None or len(content) == 0:
                 code = 204
             else:
                 code = 200
@@ -92,7 +92,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         elif status == ActionNotAllowedException.__name__:
             code = 405
 
-        response = make_response(json.dumps(data))
+        response = make_response(json.dumps(content))
         response.status_code = code
         response.mimetype = 'application/json'
 
@@ -102,48 +102,48 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         """
         if method is RESTConstants.HTTP_POST:
-            return GASession.ACTION_CREATE
+            return GARequest.ACTION_CREATE
 
         elif method is RESTConstants.HTTP_PUT:
-            return GASession.ACTION_UPDATE
+            return GARequest.ACTION_UPDATE
 
         elif method is RESTConstants.HTTP_DELETE:
-            return GASession.ACTION_DELETE
+            return GARequest.ACTION_DELETE
 
         elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS, RESTConstants.HTTP_HEAD]:
 
             if resources[-1].value is None:
-                return GASession.ACTION_READALL
+                return GARequest.ACTION_READALL
             else:
-                return GASession.ACTION_READ
+                return GARequest.ACTION_READ
 
-        raise Exception("Unknown action. This should never happen");
+        raise Exception("Unknown action. This should never happen")
 
     def index(self, path):
         """
         """
 
-        data = self._extract_data(request.json)
-        headers = self._extract_headers(request.headers)
+        content = self._extract_content(request.json)
+        parameters = self._extract_parameters(request.headers)
         method = request.method.upper()
 
-        print '--- Request from %s ---' % headers['Host']
+        print '--- Request from %s ---' % parameters['Host']
 
         try:
             parser = PathParser()
             resources = parser.parse(path=path)
 
-        except Exception as exc:
+        except GAException as exc:
             exception_name = exc.__class__.__name__
-            return self.make_channel_response(action=None, response={u'status': exception_name, u'data':{u'description': 'Garuda failed with %s' % exception_name}})
+            return self.make_channel_response(action=None, response=GAResponse(status=exception_name, content={u'description': 'Garuda failed with %s' % exception_name}))
 
         action = self.determine_action(method, resources)
 
-        ga_request = GARequest(action=action, url=request.url, data=data, headers=headers)
-        ga_session = GASession(user='me', data={}, action=action, resources=resources)
+        ga_request = GARequest(action=action, content=content, parameters=parameters)
+        ga_session = GASession(user='me', resources=resources)
 
-        response = self.controller.execute(session=ga_session, request=ga_request)
+        ga_response = self.controller.execute(session=ga_session, request=ga_request)
 
-        print '--- Response to %s ---' % headers['Host']
+        print '--- Response to %s ---' % parameters['Host']
 
-        return self.make_channel_response(action=action, response=response)
+        return self.make_channel_response(action=action, response=ga_response)

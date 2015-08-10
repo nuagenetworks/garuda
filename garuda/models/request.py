@@ -1,16 +1,24 @@
 # -*- coding: utf-8 -*-
 
+from uuid import uuid4
+
 
 class GARequest(object):
     """
 
     """
-    def __init__(self, action, url, data={}, resources=[], headers={}, cookies=None):
+    ACTION_CREATE = 'create'
+    ACTION_UPDATE = 'update'
+    ACTION_DELETE = 'delete'
+    ACTION_READ = 'read'
+    ACTION_READALL = 'readall'
+
+    def __init__(self, action, content={}, resources=[], parameters={}, cookies=None):
         """
         """
+        self.uuid = uuid4().hex
         self.action = action
-        self.url = url
-        self.data = data
-        self.headers = headers
+        self.content = content
+        self.parameters = parameters
         self.cookies = cookies
         self.resources = resources

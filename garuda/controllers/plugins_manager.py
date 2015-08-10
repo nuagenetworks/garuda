@@ -23,7 +23,7 @@ class PluginsManager(object):
         resource_name = context.session.resources[-1].name
 
         for plugin in self._plugins:
-            if plugin.is_listening(rest_name=resource_name, action=context.session.action):
+            if plugin.is_listening(rest_name=resource_name, action=context.request.action):
                 plugin_context = PluginContext(plugin=plugin, context=context.copy())
                 self.plugins_contexts.append(plugin_context)
 

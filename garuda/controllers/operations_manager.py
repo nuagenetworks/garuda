@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from garuda.models import GASession
+from garuda.models import GARequest
 from .models_controller import ModelsController
 from .plugins_manager import PluginsManager
 from garuda.exceptions import NotFoundException, BadRequestException, ActionNotAllowedException
@@ -18,9 +18,9 @@ class OperationsManager(object):
     def run(self):
         """
         """
-        action = self.context.session.action
+        action = self.context.request.action
 
-        if action is GASession.ACTION_READALL or action is GASession.ACTION_READ:
+        if action is GARequest.ACTION_READALL or action is GARequest.ACTION_READ:
             self._perform_read_operation()
         else:
             self._perform_write_operation()
@@ -28,13 +28,14 @@ class OperationsManager(object):
     def _prepare_context_for_read_operation(self):
         """
         """
-        action = self.context.session.action
+        action = self.context.request.action
         resources = self.context.session.resources
         resource = resources[-1]
 
-        if action == GASession.ACTION_READALL:
+        if action == GARequest.ACTION_READALL:
             # Get all resources
             if len(resources) == 1:
+                # Root parent
                 parent = ModelsController.get_current_user()
 
             else:  # Having a parent and a child
@@ -63,25 +64,28 @@ class OperationsManager(object):
 
         plugin_manager.perform_delegate(delegate='begin_read_operation')
 
+        # Split READ and READALL
+        # Manage one object at a time
         plugin_manager.perform_delegate(delegate='should_perform_read')
 
         if len(self.context.errors) > 0:
             raise BadRequestException()
 
         plugin_manager.perform_delegate(delegate='preprocess_read')
+        # End manage
 
-        ModelsController.read()
+        # ModelsController.read()
 
         plugin_manager.perform_delegate(delegate='end_read_operation')
 
     def _prepare_context_for_write_operation(self):
         """
         """
-        action = self.context.session.action
+        action = self.context.request.action
         resources = self.context.session.resources
         resource = resources[-1]
 
-        if action != GASession.ACTION_CREATE and resource.value is None:
+        if action != GARequest.ACTION_CREATE and resource.value is None:
             description = 'Unable to %s a resource without its identifier' % self.context.action
             self.context.report_error(property='', title='Action not allowed', description=description)
             raise ActionNotAllowedException()
@@ -98,7 +102,7 @@ class OperationsManager(object):
                 self.context.report_error(property='', title='Object not found', description=description)
                 raise NotFoundException()
 
-        if action == GASession.ACTION_CREATE:
+        if action == GARequest.ACTION_CREATE:
             self.context.object = ModelsController.create_object(resource.name)
         else:
             self.context.object = ModelsController.get_object(resource.name, resource.value)
