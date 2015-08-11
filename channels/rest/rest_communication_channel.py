@@ -26,6 +26,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         self.controller = controller
         self.app = Flask(self.__class__.__name__)
 
+        self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon)
         self.app.add_url_rule('/', 'vsd', self.index, defaults={'path': ''})
         self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
@@ -75,6 +76,27 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return params
 
+    def _convert_content(self, content):
+        """
+        """
+
+        if type(content) is list:
+            results = []
+
+            for obj in content:
+                if hasattr(obj, 'to_dict'):
+                    results.append(obj.to_dict())
+                else:
+                    results.append(str(content))
+
+            return results
+
+        if hasattr(content, 'to_dict'):
+            return content.to_dict()
+
+        return str(content)
+
+
     def make_channel_response(self, action, response):
         """
         """
@@ -86,10 +108,15 @@ class RESTCommunicationChannel(CommunicationChannel):
         if status == GAResponse.STATUS_SUCCESS:
             if action is GARequest.ACTION_CREATE:
                 code = 201
-            elif content is None or len(content) == 0:
+                content = self._convert_content(content)
+
+            elif content is None or (type(content) is list and len(content) == 0):
                 code = 204
+                content = []
             else:
                 code = 200
+                content = self._convert_content(content)
+
 
         # Errors
         elif status == BadRequestException.__name__:
@@ -100,6 +127,8 @@ class RESTCommunicationChannel(CommunicationChannel):
             code = 409
         elif status == ActionNotAllowedException.__name__:
             code = 405
+
+
 
         response = make_response(json.dumps(content))
         response.status_code = code
@@ -154,3 +183,12 @@ class RESTCommunicationChannel(CommunicationChannel):
         print '--- Response to %s ---' % parameters['Host']
 
         return self.make_channel_response(action=action, response=ga_response)
+
+    def favicon(self):
+        """
+        """
+        response = make_response()
+        response.status_code = 200
+        response.mimetype = 'application/json'
+
+        return response

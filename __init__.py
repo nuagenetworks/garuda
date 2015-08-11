@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from garuda.controllers import CoreController, PluginsManager
 from plugins import ReaderPlugin, AnotherPlugin
 

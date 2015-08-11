@@ -35,12 +35,18 @@ class OperationsManager(object):
         resources = self.context.request.resources
         resource = resources[-1]
 
-        self.context.object = ModelsController.get_object(resource.name, resource.value)
+        model_controller = ModelsController()
+
+        self.context.object = model_controller.get_object(resource.name, resource.value)
 
     def _perform_read_operation(self):
         """
         """
-        self._prepare_context_for_read_operation()
+        try:
+            self._prepare_context_for_read_operation()
+        except NotFoundException as exc:
+            self.context.report_error(property='', title='Object not found', description=exc.message)
+            raise NotFoundException()
 
         plugin_manager = PluginsManager(context=self.context)
 
@@ -62,27 +68,34 @@ class OperationsManager(object):
         """
         resources = self.context.request.resources
         resource = resources[-1]
+        model_controller = ModelsController()
 
         if len(resources) == 1:
             # Root parent
-            parent = ModelsController.get_current_user()
+            parent = model_controller.get_current_user()
 
         else:  # Having a parent and a child
             parent_resource = resources[0]
-            parent = ModelsController.get_object(parent_resource.name, parent_resource.value)
+
+            parent = model_controller.get_object(parent_resource.name, parent_resource.value)
 
             if parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
                 self.context.report_error(property='', title='Object not found', description=description)
                 raise NotFoundException()
 
+
         self.context.parent = parent
-        self.context.objects = ModelsController.get_objects(parent, resource.name)
+        self.context.objects = model_controller.get_objects(parent, resource.name)
 
     def _perform_readall_operation(self):
         """
         """
-        self._prepare_context_for_read_operation()
+        try:
+            self._prepare_context_for_readall_operation()
+        except NotFoundException as exc:
+            self.context.report_error(property='', title='Object not found', description=exc.message)
+            raise NotFoundException()
 
         plugin_manager = PluginsManager(context=self.context)
 
@@ -98,11 +111,7 @@ class OperationsManager(object):
                 plugin_manager.perform_delegate(delegate='preprocess_readall', object=object)
             # End manage
 
-        # ModelsController.read()
-
         plugin_manager.perform_delegate(delegate='end_readall_operation')
-
-
 
     def _prepare_context_for_write_operation(self):
         """
@@ -110,6 +119,7 @@ class OperationsManager(object):
         action = self.context.request.action
         resources = self.context.request.resources
         resource = resources[-1]
+        model_controller = ModelsController()
 
         if action != GARequest.ACTION_CREATE and resource.value is None:
             description = 'Unable to %s a resource without its identifier' % self.context.action
@@ -121,7 +131,8 @@ class OperationsManager(object):
 
         else:  # Having a parent and a child
             parent_resource = resources[0]
-            self.context.parent = ModelsController.get_object(parent_resource.name, parent_resource.value)
+
+            self.context.parent = model_controller.get_object(parent_resource.name, parent_resource.value)
 
             if parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
@@ -129,14 +140,18 @@ class OperationsManager(object):
                 raise NotFoundException()
 
         if action == GARequest.ACTION_CREATE:
-            self.context.object = ModelsController.create_object(resource.name)
+            self.context.object = model_controller.create_object(resource.name)
         else:
-            self.context.object = ModelsController.get_object(resource.name, resource.value)
+            self.context.object = model_controller.get_object(resource.name, resource.value)
 
     def _perform_write_operation(self):
         """
         """
-        self._prepare_context_for_write_operation()
+        try:
+            self._prepare_context_for_write_operation()
+        except NotFoundException as exc:
+            self.context.report_error(property='', title='Object not found', description=exc.message)
+            raise NotFoundException()
 
         # Do a read after all
         pass

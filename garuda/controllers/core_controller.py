@@ -5,7 +5,7 @@ from .operations_manager import OperationsManager
 from .session_manager import SessionManager
 
 from channels.rest import RESTCommunicationChannel
-from garuda.models import GAContext, GAResponse
+from garuda.models import GAContext, GAResponse, GARequest
 from garuda.exceptions import GAException
 
 from uuid import uuid4
@@ -79,7 +79,11 @@ class CoreController(object):
         except GAException as exc:
             exception_name = exc.__class__.__name__
             return GAResponse(status=exception_name, content=context.errors)
-        except Exception as exc:
-            raise exc  # Reraise exception for development purpose
+        # except Exception as exc:
+        #     raise exc  # Reraise exception for development purpose
 
-        return GAResponse(status=GAResponse.STATUS_SUCCESS, content={'data': 'ok'})
+        if request.action is GARequest.ACTION_READALL:
+            return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
+
+        else:
+            return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
