@@ -28,23 +28,29 @@ class UserBehavior(TaskSet):
         pass
 
 
-    @task
-    def enterprises(self):
-        """
-        """
-        self.client.get("/enterprises", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+    # @task
+    # def enterprises(self):
+    #     """
+    #     """
+    #     self.client.get("/enterprises", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+    #
+    # @task
+    # def subnets(self):
+    #     """
+    #     """
+    #     self.client.get("/subnets", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+    #
+    # @task
+    # def domain(self):
+    #     """
+    #     """
+    #     self.client.get("/enterprises/b554017b-8f51-4a39-8139-08a3d7f01951/domains", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
     @task
-    def subnets(self):
+    def vspkonly(self):
         """
         """
-        self.client.get("/subnets", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
-
-    @task
-    def domain(self):
-        """
-        """
-        self.client.get("/enterprises/b78323f3-105b-461d-9fa5-1be1808427dc/domains", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+        self.client.get("/vspkonly", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
 class WebsiteUser(HttpLocust):
     """

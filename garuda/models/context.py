@@ -27,7 +27,8 @@ class GAContext(object):
     def copy(self):
         """
         """
-        return deepcopy(self)
+        # return deepcopy(self)
+        return self
 
     def merge_contexts(self, contexts):
         """

@@ -2,7 +2,10 @@
 
 from collections import namedtuple
 
+from vsdhelpers import Transform
+
 from garuda.exceptions import NotFoundException
+
 
 GAResource = namedtuple('GAResource', ['name', 'value'])
 
@@ -46,7 +49,7 @@ class PathParser(object):
         """
 
         if len(path) == 0:
-            raise NotFoundException()
+            return
 
         if path.startswith('/'):
             path = path[1:]
@@ -72,7 +75,9 @@ class PathParser(object):
 
                 index = index + 1
                 value = infos[index] if index < len(infos) and len(infos[index]) > 0 else None
-                result.append(GAResource(self._get_resource(resource), value))
+
+                name = self._get_resource(resource)
+                result.append(GAResource(Transform.get_singular_name(name), value))
 
             index = index + 1
 

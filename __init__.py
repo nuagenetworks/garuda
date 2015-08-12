@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from bambou import BambouConfig
+BambouConfig.set_should_raise_bambou_http_error(False)
+
+
 from garuda.controllers import CoreController, PluginsManager
 from plugins import ReaderPlugin, AnotherPlugin
 
