@@ -38,7 +38,7 @@ class UserBehavior(TaskSet):
     def an_enterprise(self):
         """
         """
-        self.client.get("/enterprises/b554017b-8f51-4a39-8139-08a3d7f01951", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+        self.client.get("/enterprises/080a15cf-defb-4aec-af70-883ca69bfde5", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
     # @task
     # def subnets(self):
@@ -50,7 +50,7 @@ class UserBehavior(TaskSet):
     # def domain(self):
     #     """
     #     """
-    #     self.client.get("/enterprises/b554017b-8f51-4a39-8139-08a3d7f01951/domains", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+    #     self.client.get("/enterprises/080a15cf-defb-4aec-af70-883ca69bfde5/domains", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
     # @task
     # def vspkonly(self):
