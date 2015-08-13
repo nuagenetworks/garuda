@@ -28,7 +28,6 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon)
         self.app.add_url_rule('/vspkonly', 'vspk-only', self.vspkonly)
-        self.app.add_url_rule('/', 'vsd', self.index, defaults={'path': ''})
         self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
 
@@ -97,7 +96,6 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return str(content)
 
-
     def make_channel_response(self, action, response):
         """
         """
@@ -118,7 +116,6 @@ class RESTCommunicationChannel(CommunicationChannel):
                 code = 200
                 content = self._convert_content(content)
 
-
         # Errors
         elif status == BadRequestException.__name__:
             code = 400
@@ -128,8 +125,6 @@ class RESTCommunicationChannel(CommunicationChannel):
             code = 409
         elif status == ActionNotAllowedException.__name__:
             code = 405
-
-
 
         response = make_response(json.dumps(content))
         response.status_code = code
@@ -161,7 +156,6 @@ class RESTCommunicationChannel(CommunicationChannel):
     def index(self, path):
         """
         """
-
         content = self._extract_content(request.json)
         parameters = self._extract_parameters(request.headers)
         method = request.method.upper()
@@ -198,13 +192,11 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         """
         from vspk.vsdk.v3_2 import NUVSDSession, NUEnterprise
-        session = NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.88:8443')
+        session = NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.49:8443')
         session.start()
 
-        enterprise = NUEnterprise(id='b554017b-8f51-4a39-8139-08a3d7f01951')
+        enterprise = NUEnterprise(id='080a15cf-defb-4aec-af70-883ca69bfdea')
         domains = enterprise.domains.get()
 
-        return 'coucou'
-
-        # ga_response = GAResponse(status=GAResponse.STATUS_SUCCESS, content=domains)
-        # return self.make_channel_response(action='readall', response=ga_response)
+        ga_response = GAResponse(status=GAResponse.STATUS_SUCCESS, content=domains)
+        return self.make_channel_response(action='readall', response=ga_response)

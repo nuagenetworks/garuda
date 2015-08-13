@@ -3,6 +3,7 @@
 from .process_manager import ProcessManager
 from .operations_manager import OperationsManager
 from .session_manager import SessionManager
+from .models_controller import ModelsController
 
 from channels.rest import RESTCommunicationChannel
 from garuda.models import GAContext, GAResponse, GARequest
@@ -48,6 +49,8 @@ class CoreController(object):
     def start(self):
         """
         """
+        ModelsController.start_session()
+
         for channel in self._channels:
             self._process_manager.start(channel.start)
 

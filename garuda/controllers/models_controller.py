@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import json
 from time import sleep
 
 from vsdhelpers import VSDKFactory
@@ -9,12 +10,6 @@ from bambou import NURESTModelController
 
 from vspk.vsdk.v3_2 import NUVSDSession, NUEnterprise
 
-MODE_GARUDA_ONLY = 0
-MODE_VSPK_ONLY = 1
-MODE_NORMAL = 2
-
-MODE = MODE_NORMAL
-SLEEP_TIME = 0
 
 class ModelsController(object):
     """
@@ -23,34 +18,20 @@ class ModelsController(object):
     __session = None
 
     @classmethod
-    def _start_session_if_necessary(cls):
+    def start_session(cls):
         """
         """
+
         if cls.__session is None:
 
-            if MODE == MODE_VSPK_ONLY:
-                cls._session = NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.88:8443')
-            else:
-                vsdk = VSDKFactory.get_vsdk_package()
-                cls._session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.88:8443')
-
-            cls._session.start()
+            vsdk = VSDKFactory.get_vsdk_package()
+            cls.__session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.49:8443')
+            cls.__session.start()
 
     @classmethod
     def get_objects(cls, parent, resource_name):
         """
         """
-        if MODE == MODE_GARUDA_ONLY:
-            sleep(SLEEP_TIME)
-            return [object(),object(),object(),object(),object()]
-
-        cls._start_session_if_necessary()
-
-
-        if MODE == MODE_VSPK_ONLY:
-            enterprise = NUEnterprise(id='b554017b-8f51-4a39-8139-08a3d7f01951')
-            return enterprise.domains.get()
-
         fetcher = parent.fetcher_for_rest_name(resource_name)
 
         if fetcher is None:
@@ -62,11 +43,9 @@ class ModelsController(object):
     def get_object(cls, resource_name, resource_value):
         """
         """
-        if MODE == MODE_GARUDA_ONLY:
-            sleep(SLEEP_TIME)
-            return object()
-
-        cls._start_session_if_necessary()
+        # json_data = '{"allowGatewayManagement": true, "DHCPLeaseInterval": 24, "floatingIPsQuota": 1000, "enterpriseProfileID": "0e0c8e99-ea27-4c1a-9fdb-40f9a9e2e60d", "parentID": null, "owner": "8a6f0e20-a4db-4878-ad84-9cc61756cd5e", "LDAPEnabled": false, "description": "Default Enterprise", "associatedEnterpriseSecurityID": "6adcb017-37a1-4359-a2a2-311d437bc701", "ID": "b554017b-8f51-4a39-8139-08a3d7f01951", "LDAPAuthorizationEnabled": false, "associatedKeyServerMonitorID": "31d5dd95-fa9d-4644-bc55-f3a6d76bedd8", "lastUpdatedDate": 1439399480000, "floatingIPsUsed": 0, "avatarType": null, "parentType": null, "lastUpdatedBy": "43f8868f-4bc1-472c-9d19-533dcfcb1ee0", "associatedGroupKeyEncryptionProfileID": "2eed9304-15bf-4593-bdd8-417de9a77670", "creationDate": 1439399480000, "allowTrustedForwardingClass": true, "customerID": 10004, "name": "Triple A", "avatarData": null, "receiveMultiCastListID": "e19e38fa-86f8-4119-a4eb-95a38e7dda4f", "allowedForwardingClasses": ["A", "B", "C", "D", "E", "F"], "sendMultiCastListID": "ead49282-7ce7-4ac4-8e65-29e5af2b2331", "allowAdvancedQOSConfiguration": true}';
+        #
+        # return NUEnterprise(data=json.loads(json_data))
 
         klass = NURESTModelController.get_first_model(resource_name)
         obj = klass(id=resource_value)
@@ -74,64 +53,45 @@ class ModelsController(object):
         if obj is None:
             return None
 
-        (obj, connection) = obj.fetch()
+        (_, connection) = obj.fetch()
 
         if connection.response.status_code >= 300:
             return None
 
         return obj
 
-    # @classmethod
-    # def create_object(cls, resource_name):
-    #     """
-    #     """
-    #     if MODE == MODE_GARUDA_ONLY:
-    #         sleep(SLEEP_TIME)
-    #         return object()
-    #
-    #     cls._start_session_if_necessary()
-    #
-    #     obj = VSDKFactory.get_instance(resource_name)
-    #
-    #     if obj is None:
-    #         raise NotFoundException('Unknown %s object' % resource_name)
-    #
-    #     return obj
-    #
-    # @classmethod
-    # def save_object(cls, object, parent=None):
-    #     """
-    #     """
-    #     if MODE == MODE_GARUDA_ONLY:
-    #         sleep(SLEEP_TIME)
-    #         return object()
-    #
-    #     cls._start_session_if_necessary()
-    #
-    #     if object.id:
-    #         try:
-    #             object.save()
-    #         except BambouHTTPError as error:
-    #             response = error.connection.response
-    #             raise NotFoundException('Could not save %s with ID %s. [%s] %s' % (object.rest_name, object.id, response.status_code, response.reason))
-    #
-    #     elif parent:
-    #         try:
-    #             parent.create_child(object)
-    #         except BambouHTTPError as error:
-    #             response = error.connection.response
-    #             raise NotFoundException('Could not create %s in %s (%s) %s. [%s] %s' % (object.rest_name, parent.rest_name, parent.id, response.status_code, response.reason))
-    #     else:
-    #         raise Exception('Save object error')
+    @classmethod
+    def create_object(cls, resource_name):
+        """
+        """
+        return VSDKFactory.get_instance(resource_name)
+
+    @classmethod
+    def save_object(cls, object, parent=None):
+        """
+        """
+        if object.id:
+
+            (_, connection) = object.save()
+
+            if connection.response.status_code >= 300:
+                return None
+
+            return object
+
+        if parent:
+            (_, connection) = parent.create_child(object)
+
+            if connection.response.status_code >= 300:
+                return None
+
+            return object
+
+        else:
+            raise Exception('Save object error')
 
     @classmethod
     def get_current_user(cls):
         """
         """
-        if MODE == MODE_GARUDA_ONLY:
-            sleep(SLEEP_TIME)
-            return object()
-
-        cls._start_session_if_necessary()
-
-        return cls._session.user
+        return cls.__session.user
