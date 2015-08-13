@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import json
-from time import sleep
-
 from vsdhelpers import VSDKFactory
 
-from bambou.exceptions import BambouHTTPError
 from bambou import NURESTModelController
-
-from vspk.vsdk.v3_2 import NUVSDSession, NUEnterprise
 
 
 class ModelsController(object):
@@ -52,23 +46,26 @@ class ModelsController(object):
 
         return obj
 
-    def create_object(self, resource_name, attributes=None):
+    def create_object(self, resource_name):
         """
         """
-
-        if attributes is None:
-            attributes = dict()
 
         klass = NURESTModelController.get_first_model(resource_name)
-        obj = klass(data=attributes)
+        obj = klass()
 
         obj.validate()
         return obj
 
-    def save_object(self, object, parent=None):
+    def save_object(self, object, parent=None, attributes={}):
         """
         """
-        object.validate()
+
+        object.from_dict(attributes)
+
+        from pprint import pprint
+        pprint('save_object %s ' % object.to_dict())
+        # TODO: Uncomment this line when validation will work
+        # object.validate()
 
         if len(object.errors) > 0:
             return object
@@ -92,6 +89,11 @@ class ModelsController(object):
 
         else:
             raise Exception('Save object error')
+
+    def delete_object(self, object):
+        """
+        """
+        object.delete()
 
     def get_current_user(self):
         """

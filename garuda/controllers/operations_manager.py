@@ -122,7 +122,7 @@ class OperationsManager(object):
         resource = resources[-1]
 
         if action != GARequest.ACTION_CREATE and resource.value is None:
-            description = 'Unable to %s a resource without its identifier' % self.context.action
+            description = 'Unable to %s a resource without its identifier' % self.context.request.action
             self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Action not allowed', description=description)
             return
 
@@ -140,11 +140,15 @@ class OperationsManager(object):
                 return
 
         if action == GARequest.ACTION_CREATE:
-            self.context.object = self.models_controller.create_object(resource.name, attributes=self.context.request.content)
+            self.context.object = self.models_controller.create_object(resource.name)
         else:
             self.context.object = self.models_controller.get_object(resource.name, resource.value)
 
-        if not self.context.object.is_valid():
+        if self.context.object is None:
+            description = 'Unable to retrieve object %s with identifier %s' % (resource.name, resource.value)
+            self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Object not found', description=description)
+
+        elif not self.context.object.is_valid():
             for property, description in self.context.object.errors.iteritems():
                 self.context.report_error(type=GAError.TYPE_INVALID, property=property, title='Invalid %s' % property, description=description)
 
@@ -167,7 +171,10 @@ class OperationsManager(object):
 
         plugin_manager.perform_delegate(delegate='preprocess_write')
 
-        self.models_controller.save_object(object=self.context.object, parent=self.context.parent)
+        if self.context.request.action == GARequest.ACTION_DELETE:
+            self.models_controller.delete_object(object=self.context.object)
+        else:
+            self.models_controller.save_object(object=self.context.object, parent=self.context.parent, attributes=self.context.request.content)
 
         if not self.context.object.is_valid():
             for property, description in self.context.object.errors.iteritems():
