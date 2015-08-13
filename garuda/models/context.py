@@ -32,14 +32,9 @@ class GAContext(object):
         copy = GAContext(session=self.session, request=self.request)
         copy._errors_list = GAErrorsList()  # Don't need to forward errors no ?
 
-        if self.parent_object:
-            copy.parent_object = self.parent_object.copy()
-
-        if self.object:
-            copy.object = self.object.copy()
-
-        if self.objects:
-            copy.objects = [obj.copy() for obj in self.objects]
+        copy.parent_object = self.parent_object
+        copy.object = self.object
+        copy.objects = self.objects
 
         return copy
 

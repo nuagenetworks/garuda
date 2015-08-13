@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from garuda.models import GAError
 from garuda.models.abstracts import PluginManifest, GAPlugin
 
 
@@ -30,6 +31,7 @@ class AnotherPlugin(GAPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         print 'AnotherPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.parameters['Host']
+        # context.report_error(type=GAError.TYPE_INVALID, property='what', title='NOWAY', description='TUUTUTUTUUT')
         return context
 
     def preprocess_readall(self, context, object):

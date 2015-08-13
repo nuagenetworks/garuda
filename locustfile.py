@@ -28,29 +28,29 @@ class UserBehavior(TaskSet):
         pass
 
 
-    # @task
-    # def enterprises(self):
-    #     """
-    #     """
-    #     self.client.get("/enterprises", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+    @task
+    def enterprises(self):
+        """
+        """
+        self.client.get("/enterprises", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
     @task
-    def an_enterprise(self):
+    def subnets(self):
         """
         """
-        self.client.get("/enterprises/080a15cf-defb-4aec-af70-883ca69bfde5", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+        self.client.get("/subnets", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+
+    @task
+    def domain(self):
+        """
+        """
+        self.client.get("/enterprises/080a15cf-defb-4aec-af70-883ca69bfde5/domains", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
     # @task
-    # def subnets(self):
+    # def an_enterprise(self):
     #     """
     #     """
-    #     self.client.get("/subnets", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
-    #
-    # @task
-    # def domain(self):
-    #     """
-    #     """
-    #     self.client.get("/enterprises/080a15cf-defb-4aec-af70-883ca69bfde5/domains", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
+    #     self.client.get("/enterprises/080a15cf-defb-4aec-af70-883ca69bfde5", headers={'Authorization': 'XREST Y3Nwcm9vdDo5ODIwY2ZlMi01ODFmLTQxZGItYmM5OC0wZDNkMDJmYWM5MDM=', 'X-Nuage-Organization':'csp'}, verify=False)
 
     # @task
     # def vspkonly(self):
