@@ -13,8 +13,8 @@ class AnotherPlugin(GAPlugin):
 
         """
 
-        return PluginManifest(name='Another Plugin', subscriptions={"subnets": ["readall", "delete"], \
-                                                                    "domains": ["readall", "update"]})
+        return PluginManifest(name='Another Plugin', subscriptions={"subnet": ["readall", "delete"], \
+                                                                    "domain": ["readall", "update"]})
 
     def begin_readall_operation(self, context):
         """

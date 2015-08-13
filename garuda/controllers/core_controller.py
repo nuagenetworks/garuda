@@ -2,7 +2,7 @@
 
 from .process_manager import ProcessManager
 from .operations_manager import OperationsManager
-from .session_manager import SessionManager
+from .sessions_manager import SessionsManager
 from .models_controller import ModelsController
 
 from channels.rest import RESTCommunicationChannel
@@ -21,6 +21,8 @@ class CoreController(object):
         self._uuid = uuid4().hex
         self._channels = []
         self._process_manager = ProcessManager()
+        self._models_controller = ModelsController()
+        self._sessions_manager = SessionsManager()
 
         flask2000 = RESTCommunicationChannel(controller=self, port=2000, processes=3, debug=True, use_reloader=False)
         flask3000 = RESTCommunicationChannel(controller=self, port=3000, processes=3, debug=True, use_reloader=False)
@@ -33,6 +35,18 @@ class CoreController(object):
         """
         """
         return self._uuid
+
+    @property
+    def models_controller(self):
+        """
+        """
+        return self._models_controller
+
+    @property
+    def sessions_manager(self):
+        """
+        """
+        return self._sessions_manager
 
     def register_channel(self, channel):
         """
@@ -49,8 +63,6 @@ class CoreController(object):
     def start(self):
         """
         """
-        ModelsController.start_session()
-
         for channel in self._channels:
             self._process_manager.start(channel.start)
 
@@ -71,20 +83,15 @@ class CoreController(object):
         """
         """
         session_uuid = request.parameters['X-GASession'] if 'X-GASession' in request.parameters else None
-        session = SessionManager.get_session(uuid=session_uuid)
+        session = self.sessions_manager.get_session(uuid=session_uuid)
 
         context = GAContext(session=session, request=request)
 
-        manager = OperationsManager(context=context)
+        manager = OperationsManager(context=context, models_controller=self.models_controller)
         manager.run()
-        # except GAException as exc:
-        #     exception_name = exc.__class__.__name__
-        #     return GAResponse(status=exception_name, content=context.errors)
-        # except Exception as exc:
-        #     raise exc  # Reraise exception for development purpose
 
         if context.has_errors():
-            return GAResponse(status='NotFoundException', content=context.errors)
+            return GAResponse(status=context.errors.type, content=context.errors)
 
         if request.action is GARequest.ACTION_READALL:
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)

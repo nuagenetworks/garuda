@@ -8,9 +8,8 @@ from uuid import uuid4
 from flask import Flask, request, make_response
 
 from .utils.constants import RESTConstants
-from garuda.exceptions import BadRequestException, NotFoundException, ConflictException, ActionNotAllowedException, GAException
 from garuda.lib import PathParser
-from garuda.models import GARequest, GASession, GAResponse
+from garuda.models import GARequest, GAResponse, GAError
 from garuda.models.abstracts import CommunicationChannel
 
 
@@ -101,29 +100,30 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         code = 520
         status = response.status
-        content = response.content
+        content = self._convert_content(response.content)
 
         # Success
         if status == GAResponse.STATUS_SUCCESS:
             if action is GARequest.ACTION_CREATE:
                 code = 201
-                content = self._convert_content(content)
 
             elif content is None or (type(content) is list and len(content) == 0):
                 code = 204
-                content = []
+
             else:
                 code = 200
-                content = self._convert_content(content)
 
         # Errors
-        elif status == BadRequestException.__name__:
+        elif status == GAError.TYPE_INVALID:
             code = 400
-        elif status == NotFoundException.__name__:
+
+        elif status == GAError.TYPE_NOTFOUND:
             code = 404
-        elif status == ConflictException.__name__:
+
+        elif status == GAError.TYPE_CONFLICT:
             code = 409
-        elif status == ActionNotAllowedException.__name__:
+
+        elif status == GAError.TYPE_NOTALLOWED:
             code = 405
 
         response = make_response(json.dumps(content))
@@ -135,13 +135,13 @@ class RESTCommunicationChannel(CommunicationChannel):
     def determine_action(self, method, resources):
         """
         """
-        if method is RESTConstants.HTTP_POST:
+        if method == RESTConstants.HTTP_POST:
             return GARequest.ACTION_CREATE
 
-        elif method is RESTConstants.HTTP_PUT:
+        elif method == RESTConstants.HTTP_PUT:
             return GARequest.ACTION_UPDATE
 
-        elif method is RESTConstants.HTTP_DELETE:
+        elif method == RESTConstants.HTTP_DELETE:
             return GARequest.ACTION_DELETE
 
         elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS, RESTConstants.HTTP_HEAD]:
@@ -162,13 +162,8 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         print '--- Request from %s ---' % parameters['Host']
 
-        try:
-            parser = PathParser()
-            resources = parser.parse(path=path)
-
-        except GAException as exc:
-            exception_name = exc.__class__.__name__
-            return self.make_channel_response(action=None, response=GAResponse(status=exception_name, content={u'description': 'Garuda failed with %s' % exception_name}))
+        parser = PathParser()
+        resources = parser.parse(path=path)
 
         action = self.determine_action(method, resources)
 

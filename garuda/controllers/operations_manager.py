@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from garuda.models import GARequest
+from garuda.models import GARequest, GAError
 from .models_controller import ModelsController
 from .plugins_manager import PluginsManager
 
@@ -9,10 +9,11 @@ class OperationsManager(object):
     """
 
     """
-    def __init__(self, context):
+    def __init__(self, context, models_controller):
         """
         """
         self.context = context
+        self.models_controller = models_controller
 
     def run(self):
         """
@@ -34,10 +35,10 @@ class OperationsManager(object):
         resources = self.context.request.resources
         resource = resources[-1]
 
-        self.context.object = ModelsController.get_object(resource.name, resource.value)
+        self.context.object = self.models_controller.get_object(resource.name, resource.value)
 
         if self.context.object is None:
-            self.context.report_error(property='', title='Object not found', description='Could not find %s with identifier %s' % (resource.name, resource.value))
+            self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Object not found', description='Could not find %s with identifier %s' % (resource.name, resource.value))
 
     def _perform_read_operation(self):
         """
@@ -55,7 +56,7 @@ class OperationsManager(object):
         # Manage one object at a time
         plugin_manager.perform_delegate(delegate='should_perform_read', object=self.context.object)
 
-        if len(self.context.errors) > 0:
+        if self.context.has_errors():
             return
 
         plugin_manager.perform_delegate(delegate='preprocess_read')
@@ -71,23 +72,23 @@ class OperationsManager(object):
 
         if len(resources) == 1:
             # Root parent
-            parent = ModelsController.get_current_user()
+            parent = self.models_controller.get_current_user()
 
         else:  # Having a parent and a child
             parent_resource = resources[0]
 
-            parent = ModelsController.get_object(parent_resource.name, parent_resource.value)
+            parent = self.models_controller.get_object(parent_resource.name, parent_resource.value)
 
             if parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
-                self.context.report_error(property='', title='Object not found', description=description)
+                self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Object not found', description=description)
                 return
 
         self.context.parent = parent
-        self.context.objects = ModelsController.get_objects(parent, resource.name)
+        self.context.objects = self.models_controller.get_objects(parent, resource.name)
 
         if self.context.objects is None:
-            self.context.report_error(property='', title='Objects not found', description='Could not find any %s' % resource.name)
+            self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Objects not found', description='Could not find any %s' % resource.name)
 
     def _perform_readall_operation(self):
         """
@@ -122,26 +123,30 @@ class OperationsManager(object):
 
         if action != GARequest.ACTION_CREATE and resource.value is None:
             description = 'Unable to %s a resource without its identifier' % self.context.action
-            self.context.report_error(property='', title='Action not allowed', description=description)
+            self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Action not allowed', description=description)
             return
 
         if len(resources) == 1:
-            parent = None
+            self.context.parent = self.models_controller.get_current_user()
 
         else:  # Having a parent and a child
             parent_resource = resources[0]
 
-            self.context.parent = ModelsController.get_object(parent_resource.name, parent_resource.value)
+            self.context.parent = self.models_controller.get_object(parent_resource.name, parent_resource.value)
 
             if parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
-                self.context.report_error(property='', title='Object not found', description=description)
+                self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Object not found', description=description)
                 return
 
         if action == GARequest.ACTION_CREATE:
-            self.context.object = ModelsController.create_object(resource.name)
+            self.context.object = self.models_controller.create_object(resource.name, attributes=self.context.request.content)
         else:
-            self.context.object = ModelsController.get_object(resource.name, resource.value)
+            self.context.object = self.models_controller.get_object(resource.name, resource.value)
+
+        if not self.context.object.is_valid():
+            for property, description in self.context.object.errors.iteritems():
+                self.context.report_error(type=GAError.TYPE_INVALID, property=property, title='Invalid %s' % property, description=description)
 
     def _perform_write_operation(self):
         """
@@ -151,5 +156,24 @@ class OperationsManager(object):
         if self.context.has_errors():
             return
 
-        # Do a read after all
-        pass
+        plugin_manager = PluginsManager(context=self.context)
+
+        plugin_manager.perform_delegate(delegate='begin_write_operation')
+
+        plugin_manager.perform_delegate(delegate='should_perform_write')
+
+        if self.context.has_errors():
+            return
+
+        plugin_manager.perform_delegate(delegate='preprocess_write')
+
+        self.models_controller.save_object(object=self.context.object, parent=self.context.parent)
+
+        if not self.context.object.is_valid():
+            for property, description in self.context.object.errors.iteritems():
+                self.context.report_error(type=GAError.TYPE_INVALID, property=property, title='Invalid %s' % property, description=description)
+            return
+
+        plugin_manager.perform_delegate(delegate='did_perform_write')
+
+        plugin_manager.perform_delegate(delegate='end_write_operation')

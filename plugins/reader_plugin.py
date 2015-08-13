@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from garuda.models import GAError
 from garuda.models.abstracts import PluginManifest, GAPlugin
 
 from time import sleep
@@ -14,8 +15,8 @@ class ReaderPlugin(GAPlugin):
 
         """
 
-        return PluginManifest(name='Reader Plugin', subscriptions={"subnets": ["readall", "delete"], \
-                                                                   "subnettemplates": ["readall", "update"]})
+        return PluginManifest(name='Reader Plugin', subscriptions={"subnet": ["readall", "delete"], \
+                                                                   "subnettemplate": ["readall", "update"]})
 
     def begin_readall_operation(self, context):
         """
@@ -31,7 +32,7 @@ class ReaderPlugin(GAPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         print 'ReaderPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.parameters['Host']
-        # context.report_error(property='name', title='name is too long', description='name should have maximum 255 characters')
+        # context.report_error(type=GAError.TYPE_INVALID, property='name', title='name is too long', description='name should have maximum 255 characters')
         return context
 
     def preprocess_readall(self, context, object):

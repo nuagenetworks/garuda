@@ -2,6 +2,8 @@
 
 from copy import deepcopy
 
+from .errors import GAErrorsList
+
 
 class GAContext(object):
     """
@@ -11,7 +13,7 @@ class GAContext(object):
     def __init__(self, session, request):
         """
         """
-        self._errors = []
+        self._errors_list = GAErrorsList()
         self.session = session
         self.request = request
         self.parent_object = None
@@ -22,20 +24,31 @@ class GAContext(object):
     def errors(self):
         """
         """
-        return self._errors
+        return self._errors_list
 
     def copy(self):
         """
         """
-        # return deepcopy(self)
-        return self
+        copy = GAContext(session=self.session, request=self.request)
+        copy._errors_list = GAErrorsList()  # Don't need to forward errors no ?
+
+        if self.parent_object:
+            copy.parent_object = self.parent_object.copy()
+
+        if self.object:
+            copy.object = self.object.copy()
+
+        if self.objects:
+            copy.objects = [obj.copy() for obj in self.objects]
+
+        return copy
 
     def merge_contexts(self, contexts):
         """
         """
         for context in contexts:
-            if self.has_errors:
-                self._errors += context.errors
+            if context.has_errors():
+                self._errors_list.merge(context._errors_list)
 
             # TODO: Merge context object here...
             # Add the conflict in errors
@@ -45,31 +58,15 @@ class GAContext(object):
     def has_errors(self):
         """
         """
-        return len(self._errors)
+        return self._errors_list.has_errors()
 
-    def _error_index(self, property):
+
+    def report_error(self, type, property, title, description, suggestion=None):
         """
         """
-        for index, error in enumerate(self._errors):
-            if error['property'] is property:
-                return index
-
-        return -1
-
-    def report_error(self, property, title, description, suggestion=None):
-        """
-        """
-        index = self._error_index(property)
-
-        if index < 0:
-            error = {u'property': property, u'descriptions': []}
-            self._errors.append(error)
-        else:
-            error = self._errors[index]
-
-        error['descriptions'].append({u'title': title, u'description': description, u'suggestion': suggestion})
+        self._errors_list.add_error(type=type, property=property, title=title, description=description, suggestion=suggestion)
 
     def clear_errors(self):
         """
         """
-        self._errors = []
+        self._errors.clear()
