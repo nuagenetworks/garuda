@@ -1,0 +1,30 @@
+## Configuration
+
+exclude                 = "{*.{o,pyc},Modules,Build,Frameworks,webapp,ModulesSources,Tests,Environments,*.sublime*,*.cappenvs*,*.xcodeproj,Libraries/Cappuccino,Libraries/NUKit,*.cib,*.png,*.gif,*ico}"
+excludeInBrowser        = "{$excludeInBrowser,$exclude}"
+excludeInFileChooser    = "{$excludeInFileChooser,$exclude}"
+excludeInFolderSearch   = "{$excludeInFolderSearch,$exclude,*.cib}"
+invisiblesMap           = "~ \t┊"
+projectDirectory        = "$CWD"
+showInvisibles          = true
+softTabs                = true
+tabSize                 = 4
+windowTitle             = "$TM_DISPLAYNAME — ${CWD/^.*\///} $TM_SCM_BRANCH"
+fontName                = "Menlo"
+fontSize                = "10"
+
+## Variables
+
+TM_PROJECT_DIRECTORY    = "$projectDirectory"
+
+[ *.j ]
+fileType                = "source.js.objj"
+
+[ Jakefile ]
+fileType                = "source.js"
+
+[ *.jake ]
+fileType                = "source.js"
+
+[ *.{icns,ico,jpg,jpeg,m4v,nib,pdf,png,psd,pyc,rtf,tif,tiff,cib} ]
+binary                  = true
