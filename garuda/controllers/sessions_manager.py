@@ -19,7 +19,7 @@ class SessionsManager(object):
     def get_session(self, uuid=None):
         """
         """
-        stored_session = self._redis.get('ceb41f7690404aba8caf777dc683676c')
+        stored_session = self._redis.get(uuid)
 
         if stored_session is None:
             session = GASession(user=GAUser())
