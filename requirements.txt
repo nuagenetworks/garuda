@@ -1,3 +1,4 @@
 gevent
 Flask
 vsdhelpers
+redis
