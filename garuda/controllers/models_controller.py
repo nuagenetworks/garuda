@@ -3,6 +3,7 @@
 from vsdhelpers import VSDKFactory
 
 from bambou import NURESTModelController
+from garuda.config import GAConfig
 
 
 class ModelsController(object):
@@ -13,7 +14,7 @@ class ModelsController(object):
         """
         """
         vsdk = VSDKFactory.get_vsdk_package()
-        self._vsd_session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.49:8443')
+        self._vsd_session = vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
         self._vsd_session.start()
 
     def get_objects(self, parent, resource_name):

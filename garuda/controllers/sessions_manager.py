@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from garuda.models import GASession
+import redis
+import json
+
+from garuda.models import GASession, GAUser
+from garuda.config import GAConfig
 
 
 class SessionsManager(object):
@@ -10,19 +14,26 @@ class SessionsManager(object):
         """
 
         """
-        self._sessions = {}
+        self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
     def get_session(self, uuid=None):
         """
         """
-        if uuid is None or uuid not in self._sessions:
-            session = GASession()
-            self._sessions[session.uuid] = session
+        stored_session = self._redis.get('ceb41f7690404aba8caf777dc683676c')
 
+        if stored_session is None:
+            session = GASession(user=GAUser())
         else:
-            session = self._sessions[uuid]
+            session = GASession.from_dict(json.loads(stored_session))
 
             if session.has_expired():
                 session.renew()
 
+        self._redis.set(session.uuid, json.dumps(session.to_dict()))
+
         return session
+
+    def flush(self):
+        """
+        """
+        self._redis.flushdb()

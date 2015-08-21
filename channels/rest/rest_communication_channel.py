@@ -11,6 +11,7 @@ from .utils.constants import RESTConstants
 from garuda.lib import PathParser
 from garuda.models import GARequest, GAResponse, GAError
 from garuda.models.abstracts import CommunicationChannel
+from garuda.config import GAConfig
 
 
 class RESTCommunicationChannel(CommunicationChannel):
@@ -187,7 +188,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         """
         from vspk.vsdk.v3_2 import NUVSDSession, NUEnterprise
-        session = NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.49:8443')
+        session = NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
         session.start()
 
         enterprise = NUEnterprise(id='080a15cf-defb-4aec-af70-883ca69bfdea')
