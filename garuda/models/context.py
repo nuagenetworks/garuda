@@ -19,6 +19,7 @@ class GAContext(object):
         self.parent_object = None
         self.object = None
         self.objects = []
+        self.user_info = {}
 
     @property
     def errors(self):
@@ -30,10 +31,8 @@ class GAContext(object):
         """
         """
         copy = GAContext(session=self.session, request=self.request)
-        copy._errors_list = GAErrorsList()  # Don't need to forward errors no ?
-
         copy.parent_object = self.parent_object
-        copy.object = self.object
+        copy.object = self.object.copy()
         copy.objects = self.objects
 
         return copy
@@ -45,10 +44,10 @@ class GAContext(object):
             if context.has_errors():
                 self._errors_list.merge(context._errors_list)
 
-            # TODO: Merge context object here...
-            # Add the conflict in errors
+            if context.object:
 
-            # Merge user_info
+
+            self.user_info.update(content.user_info)
 
     def has_errors(self):
         """
