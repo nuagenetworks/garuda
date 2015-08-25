@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['CoreController', 'ModelsController', 'OperationsManager', 'PluginsManager', 'ProcessManager', 'SessionsManager']
+__all__ = ['AuthenticationController', 'CoreController', 'ModelsController', 'OperationsManager', 'PluginsManager', 'ProcessManager', 'SessionsManager']
 
+from .authentication_controller import AuthenticationController
 from .core_controller import CoreController
 from .models_controller import ModelsController
 from .operations_manager import OperationsManager

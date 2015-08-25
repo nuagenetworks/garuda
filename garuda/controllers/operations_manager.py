@@ -29,6 +29,7 @@ class OperationsManager(object):
         else:
             self._perform_write_operation()
 
+
     def _prepare_context_for_read_operation(self):
         """
         """

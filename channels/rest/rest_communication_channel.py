@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import json
+from base64 import urlsafe_b64decode
 
 from copy import deepcopy
 from uuid import uuid4
+from urlparse import urlparse
 
 from flask import Flask, request, make_response
 
@@ -21,13 +23,13 @@ class RESTCommunicationChannel(CommunicationChannel):
     def __init__(self, controller, **kwargs):
         """
         """
-        self._uuid = uuid4().hex
+        self._uuid = str(uuid4())
         self._is_running = False
         self.controller = controller
         self.app = Flask(self.__class__.__name__)
 
         self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon)
-        self.app.add_url_rule('/vspkonly', 'vspk-only', self.vspkonly)
+        self.app.add_url_rule('/me', 'authenticate', self.authenticate)
         self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
 
@@ -42,6 +44,11 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         """
         return self._is_running
+
+    def channel_type(self):
+        """
+        """
+        return CommunicationChannel.CHANNEL_TYPE_REST
 
     def start(self):
         """
@@ -73,6 +80,13 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         for p in parameters:
             params[p[0]] = p[1]
+
+        if 'Authorization' in parameters:
+            encoded_auth = parameters['Authorization'][6:]  # XREST stuff
+            decoded_auth = urlsafe_b64decode(str(encoded_auth))
+            auth = decoded_auth.split(':')
+            params['username'] = auth[0]
+            params['password'] = auth[1]
 
         return params
 
@@ -118,14 +132,20 @@ class RESTCommunicationChannel(CommunicationChannel):
         elif status == GAError.TYPE_INVALID:
             code = 400
 
+        elif status == GAError.TYPE_UNAUTHORIZED:
+            code = 401
+
+        elif status == GAError.TYPE_AUTHENTICATIONFAILURE:
+            code = 403
+
         elif status == GAError.TYPE_NOTFOUND:
             code = 404
 
-        elif status == GAError.TYPE_CONFLICT:
-            code = 409
-
         elif status == GAError.TYPE_NOTALLOWED:
             code = 405
+
+        elif status == GAError.TYPE_CONFLICT:
+            code = 409
 
         response = make_response(json.dumps(content))
         response.status_code = code
@@ -146,9 +166,9 @@ class RESTCommunicationChannel(CommunicationChannel):
             return GARequest.ACTION_DELETE
 
         elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS, RESTConstants.HTTP_HEAD]:
-
             if resources[-1].value is None:
                 return GARequest.ACTION_READALL
+
             else:
                 return GARequest.ACTION_READ
 
@@ -168,7 +188,7 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         action = self.determine_action(method, resources)
 
-        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self.uuid)
+        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.controller.execute(request=ga_request)
 
         print '--- Response to %s ---' % parameters['Host']
@@ -184,15 +204,22 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return response
 
-    def vspkonly(self):
+    def authenticate(self):
         """
         """
-        from vspk.vsdk.v3_2 import NUVSDSession, NUEnterprise
-        session = NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
-        session.start()
+        content = self._extract_content(request.json)
+        parameters = self._extract_parameters(request.headers)
+        method = request.method.upper()
 
-        enterprise = NUEnterprise(id='080a15cf-defb-4aec-af70-883ca69bfdea')
-        domains = enterprise.domains.get()
+        print '--- Authenticate from %s ---' % parameters['Host']
 
-        ga_response = GAResponse(status=GAResponse.STATUS_SUCCESS, content=domains)
-        return self.make_channel_response(action='readall', response=ga_response)
+        parser = PathParser()
+        resources = parser.parse(urlparse(request.url).path)
+        action = GARequest.ACTION_AUTHENTICATE
+
+        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
+        ga_response = self.controller.execute_authenticate(request=ga_request)
+
+        print '--- Authenticate to %s ---' % parameters['Host']
+
+        return self.make_channel_response(action=action, response=ga_response)

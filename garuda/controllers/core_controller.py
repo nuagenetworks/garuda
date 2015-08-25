@@ -6,7 +6,7 @@ from .sessions_manager import SessionsManager
 from .models_controller import ModelsController
 
 from channels.rest import RESTCommunicationChannel
-from garuda.models import GAContext, GAResponse, GARequest
+from garuda.models import GAContext, GAResponse, GARequest, GAError
 
 from uuid import uuid4
 
@@ -18,7 +18,7 @@ class CoreController(object):
     def __init__(self):
         """
         """
-        self._uuid = uuid4().hex
+        self._uuid = str(uuid4())
         self._channels = []
         self._process_manager = ProcessManager()
         self._models_controller = ModelsController()
@@ -82,10 +82,13 @@ class CoreController(object):
     def execute(self, request):
         """
         """
-        session_uuid = request.parameters['X-GASession'] if 'X-GASession' in request.parameters else None
+        session_uuid = request.parameters['password'] if 'password' in request.parameters else None
         session = self.sessions_manager.get_session(uuid=session_uuid)
-
         context = GAContext(session=session, request=request)
+
+        if session is None:
+            context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
+            return GAResponse(status=context.errors.type, content=context.errors)
 
         manager = OperationsManager(context=context, models_controller=self.models_controller)
         manager.run()
@@ -97,3 +100,19 @@ class CoreController(object):
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
 
         return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
+
+    def execute_authenticate(self, request):
+        """
+        """
+        session = self.sessions_manager.create_session(request=request, models_controller=self.models_controller)
+        context = GAContext(session=session, request=request)
+
+        if session is None:
+            description = 'Unable to authenticate'
+            context.report_error(type=GAError.TYPE_AUTHENTICATIONFAILURE, property='', title='Authentication failed!', description=description)
+
+        if context.has_errors():
+            return GAResponse(status=context.errors.type, content=context.errors)
+
+        return GAResponse(status=GAResponse.STATUS_SUCCESS, content=session.user)
+

@@ -12,11 +12,12 @@ class GARequest(object):
     ACTION_DELETE = 'delete'
     ACTION_READ = 'read'
     ACTION_READALL = 'readall'
+    ACTION_AUTHENTICATE = 'authenticate'
 
     def __init__(self, action, channel, content={}, resources=[], parameters={}, cookies=None):
         """
         """
-        self._uuid = uuid4().hex
+        self._uuid = str(uuid4())
         self.action = action
         self.content = content
         self.parameters = parameters

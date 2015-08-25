@@ -13,8 +13,8 @@ class ModelsController(object):
     def __init__(self):
         """
         """
-        vsdk = VSDKFactory.get_vsdk_package()
-        self._vsd_session = vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
+        self._vsdk = VSDKFactory.get_vsdk_package()
+        self._vsd_session = self._vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
         self._vsd_session.start()
 
     def get_objects(self, parent, resource_name):
@@ -63,8 +63,6 @@ class ModelsController(object):
 
         object.from_dict(attributes)
 
-        from pprint import pprint
-        pprint('save_object %s ' % object.to_dict())
         # TODO: Uncomment this line when validation will work
         # object.validate()
 
@@ -100,3 +98,11 @@ class ModelsController(object):
         """
         """
         return self._vsd_session.user
+
+    def authenticate_user(self, username, password, enterprise):
+        """
+        """
+        session = self._vsdk.NUVSDSession(username=username, password=password, enterprise=enterprise, api_url=GAConfig.VSD_API_URL)
+        session.start()
+
+        return session.user

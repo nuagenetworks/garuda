@@ -19,7 +19,7 @@ class GASession(object):
         """
 
         """
-        self._uuid = uuid4().hex
+        self._uuid = str(uuid4())
         self._expiration_date = None
         self.user = user
         self.user_info = user_info

@@ -44,6 +44,8 @@ class GAError(object):
     TYPE_CONFLICT = 'conflict'
     TYPE_UNKNOWN = 'unknown'
     TYPE_NOTALLOWED = 'not allowed'
+    TYPE_AUTHENTICATIONFAILURE = 'authentication failed'
+    TYPE_UNAUTHORIZED = 'unauthorized'
 
     def __init__(self, title, description, suggestion):
         """

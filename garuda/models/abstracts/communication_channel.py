@@ -7,6 +7,16 @@ class CommunicationChannel(object):
     """
 
     """
+
+    CHANNEL_TYPE_REST = 0
+    CHANNEL_TYPE_XMPP = 1
+    CHANNEL_TYPE_OTHER = 2
+
+    def channel_type(self):
+        """
+        """
+        raise NotImplementedException('CommunicationChannel should implement channel_type method')
+
     def start(self):
         """
         """
