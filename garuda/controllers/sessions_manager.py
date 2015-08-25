@@ -55,7 +55,7 @@ class SessionsManager(object):
 
         session.user_info['APIKey'] = user.api_key
         user.api_key = session.uuid
-        session.user = user
+        session.user = GAUser(api_key=user.api_key, username=user.user_name, id=user.id, email=user.email, firstname=user.first_name, lastname=user.last_name)
 
         self._redis.set(session.uuid, json.dumps(session.to_dict()))
         return session
