@@ -13,6 +13,7 @@ class GARequest(object):
     ACTION_READ = 'read'
     ACTION_READALL = 'readall'
     ACTION_AUTHENTICATE = 'authenticate'
+    ACTION_LISTENEVENTS = 'listen events'
 
     def __init__(self, action, channel, content={}, resources=[], parameters={}, cookies=None):
         """

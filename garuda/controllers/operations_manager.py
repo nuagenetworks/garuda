@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from garuda.models import GARequest, GAError
-from .models_controller import ModelsController
 from .plugins_manager import PluginsManager
 
 
@@ -28,7 +27,6 @@ class OperationsManager(object):
 
         else:
             self._perform_write_operation()
-
 
     def _prepare_context_for_read_operation(self):
         """
@@ -135,7 +133,7 @@ class OperationsManager(object):
 
             self.context.parent = self.models_controller.get_object(parent_resource.name, parent_resource.value)
 
-            if parent is None:
+            if self.context.parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
                 self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Object not found', description=description)
                 return
@@ -172,10 +170,15 @@ class OperationsManager(object):
 
         plugin_manager.perform_delegate(delegate='preprocess_write')
 
+        success = False
         if self.context.request.action == GARequest.ACTION_DELETE:
-            self.models_controller.delete_object(object=self.context.object)
+            success = self.models_controller.delete_object(object=self.context.object)
         else:
-            self.models_controller.save_object(object=self.context.object, parent=self.context.parent, attributes=self.context.request.content)
+            success = self.models_controller.save_object(object=self.context.object, parent=self.context.parent, attributes=self.context.request.content)
+
+        if success is False:  # TODO: This is temporarely bad
+            self.context.report_error(type=GAError.TYPE_INVALID, property='', title='Failure', description='A Failure happened on the VSD side')
+            return
 
         if not self.context.object.is_valid():
             for property, description in self.context.object.errors.iteritems():

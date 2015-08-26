@@ -54,7 +54,8 @@ class ModelsController(object):
         klass = NURESTModelController.get_first_model(resource_name)
         obj = klass()
 
-        obj.validate()
+        # TODO: Uncomment this line once validation is working
+        # obj.validate()
         return obj
 
     def save_object(self, object, parent=None, attributes={}):
@@ -63,7 +64,7 @@ class ModelsController(object):
 
         object.from_dict(attributes)
 
-        # TODO: Uncomment this line when validation will work
+        # TODO: Uncomment this line once validation is working
         # object.validate()
 
         if len(object.errors) > 0:
@@ -71,18 +72,20 @@ class ModelsController(object):
 
         if object.id:
 
-            (_, connection) = object.save()
+            (object, connection) = object.save()
 
             if connection.response.status_code >= 300:
-                return None
+                return False  # TODO: This is temporarely bad
 
             return object
 
         if parent:
-            (_, connection) = parent.create_child(object)
+            (object, connection) = parent.create_child(object)
+
+            print connection.response.status_code
 
             if connection.response.status_code >= 300:
-                return None
+                return False  # TODO: This is temporarely bad
 
             return object
 

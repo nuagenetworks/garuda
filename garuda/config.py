@@ -18,3 +18,6 @@ class GAConfig(object):
     VSD_PASSWORD = 'csproot'
     VSD_ENTERPRISE = 'csp'
     VSD_API_URL = 'https://135.227.222.46:8443'
+
+    # Push notification
+    PUSH_TIMEOUT = 20

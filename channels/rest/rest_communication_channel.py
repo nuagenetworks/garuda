@@ -4,16 +4,17 @@ import json
 from base64 import urlsafe_b64decode
 
 from copy import deepcopy
-from uuid import uuid4
+from Queue import Queue, Empty
 from urlparse import urlparse
+from uuid import uuid4
 
 from flask import Flask, request, make_response
 
 from .utils.constants import RESTConstants
-from garuda.lib import PathParser
-from garuda.models import GARequest, GAResponse, GAError
-from garuda.models.abstracts import CommunicationChannel
 from garuda.config import GAConfig
+from garuda.lib import PathParser
+from garuda.models import GARequest, GAResponse, GAError, GAPushNotification
+from garuda.models.abstracts import CommunicationChannel
 
 
 class RESTCommunicationChannel(CommunicationChannel):
@@ -30,6 +31,7 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon)
         self.app.add_url_rule('/me', 'authenticate', self.authenticate)
+        self.app.add_url_rule('/events', 'listen_events', self.listen_events)
         self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
 
@@ -110,7 +112,7 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return str(content)
 
-    def make_channel_response(self, action, response):
+    def make_http_response(self, action, response):
         """
         """
         code = 520
@@ -149,6 +151,16 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         response = make_response(json.dumps(content))
         response.status_code = code
+        response.mimetype = 'application/json'
+
+        return response
+
+    def make_notification_response(self, notification):
+        """
+        """
+
+        response = make_response(json.dumps(notification.to_dict()))
+        response.status_code = 200
         response.mimetype = 'application/json'
 
         return response
@@ -193,7 +205,7 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         print '--- Response to %s ---' % parameters['Host']
 
-        return self.make_channel_response(action=action, response=ga_response)
+        return self.make_http_response(action=action, response=ga_response)
 
     def favicon(self):
         """
@@ -209,7 +221,6 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         content = self._extract_content(request.json)
         parameters = self._extract_parameters(request.headers)
-        method = request.method.upper()
 
         print '--- Authenticate from %s ---' % parameters['Host']
 
@@ -220,6 +231,28 @@ class RESTCommunicationChannel(CommunicationChannel):
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.controller.execute_authenticate(request=ga_request)
 
-        print '--- Authenticate to %s ---' % parameters['Host']
+        print '--- End Authenticate to %s ---' % parameters['Host']
 
-        return self.make_channel_response(action=action, response=ga_response)
+        return self.make_http_response(action=action, response=ga_response)
+
+    def listen_events(self):
+        """
+        """
+        content = self._extract_content(request.json)
+        parameters = self._extract_parameters(request.headers)
+
+        print '--- Listening events from %s ---' % parameters['Host']
+
+        ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
+        queue = self.controller.get_queue(request=ga_request)
+
+        try:
+            ga_notification = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
+            print 'Received notification'
+            queue.task_done()
+        except Empty:
+            ga_notification = GAPushNotification(action=None, entities=[])
+
+        print '--- End Listening events to %s ---' % parameters['Host']
+
+        return self.make_notification_response(notification=ga_notification)
