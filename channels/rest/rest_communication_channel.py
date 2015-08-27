@@ -244,11 +244,14 @@ class RESTCommunicationChannel(CommunicationChannel):
         print '--- Listening events from %s ---' % parameters['Host']
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
+
         queue = self.controller.get_queue(request=ga_request)
+
+        if queue is None:
+            return self.make_http_response(action='FUCK', response=GAResponse(status='UNAUTHORIZED', content='Queue is None!'))
 
         try:
             ga_notification = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
-            print 'Received notification'
             queue.task_done()
         except Empty:
             ga_notification = GAPushNotification(action=None, entities=[])

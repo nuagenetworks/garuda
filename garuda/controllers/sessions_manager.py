@@ -18,6 +18,11 @@ class SessionsManager(object):
         """
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
+    def _publish(self, event, content):
+        """
+        """
+        self._redis.publish(event, content)
+
     def get_session(self, uuid=None):
         """
         """

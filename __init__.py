@@ -16,20 +16,18 @@ PluginsManager.register_plugin(plugin)
 PluginsManager.register_plugin(anotherplugin)
 
 
-import signal
 from time import sleep
 
 core = CoreController()
 
-
-def stop_garuda(signal, frame):
-    """
-    """
-    core.stop()
-
-signal.signal(signal.SIGINT, stop_garuda)
-
 core.start()
 
-while core.is_running():
-    sleep(3)
+print 'Garuda is now ready.'
+while True:
+    try:
+        sleep(3000)
+    except KeyboardInterrupt:
+        break
+
+print 'Garuda is stopping...'
+core.stop()

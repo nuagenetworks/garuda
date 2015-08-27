@@ -26,15 +26,11 @@ class PushController(object):
         p = self._redis.pubsub()
         p.subscribe(**{'garuda-new-event': self.receive_events})
 
-        print 'starting push controller %s' % self._redis
-
         self._thread = p.run_in_thread(sleep_time=0.001)
 
     def stop(self):
         """
         """
-        print 'stoping push controller %s' % self
-
         if self._thread:
             self._thread.stop()
             self._thread = None
@@ -57,10 +53,8 @@ class PushController(object):
     def get_queue_for_session(self, session_uuid):
         """
         """
-        print 'Get queue to %s ' % session_uuid
-
         if session_uuid not in self._queues:
-            print 'Creating queue'
+            print 'creation queue'
             self._queues[session_uuid] = Queue()
 
         return self._queues[session_uuid]

@@ -2,7 +2,7 @@
 
 from .models_controller import ModelsController
 from .operations_manager import OperationsManager
-from .process_manager import ProcessManager
+from .thread_manager import ThreadManager
 from .push_controller import PushController
 from .sessions_manager import SessionsManager
 
@@ -21,13 +21,15 @@ class CoreController(object):
         """
         self._uuid = str(uuid4())
         self._channels = []
-        self._process_manager = ProcessManager()
+        self._thread_manager = ThreadManager()
         self._models_controller = ModelsController()
         self._sessions_manager = SessionsManager()
         self._push_controller = PushController()
 
-        flask2000 = RESTCommunicationChannel(controller=self, port=2000, processes=10, debug=True, use_reloader=False)
-        flask3000 = RESTCommunicationChannel(controller=self, port=3000, processes=10, debug=True, use_reloader=False)
+        self.push_controller.start()
+
+        flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
+        flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False)
 
         self.register_channel(flask2000)
         # self.register_channel(flask3000)
@@ -71,24 +73,18 @@ class CoreController(object):
     def start(self):
         """
         """
-        self.push_controller.start()
-
         for channel in self._channels:
-            self._process_manager.start(channel.start)
+            self._thread_manager.start(channel.start)
 
     def is_running(self):
         """
         """
-        return self._process_manager.is_running()
+        return self._thread_manager.is_running()
 
     def stop(self, signal=None, frame=None):
         """
         """
-        self._process_manager.stop_all()
-
-        for channel in self._channels:
-            channel.stop()
-
+        self._thread_manager.stop_all()
         self.push_controller.stop()
 
     def execute(self, request):
@@ -136,13 +132,16 @@ class CoreController(object):
 
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
         session = self.sessions_manager.get_session(uuid=session_uuid)
-        context = GAContext(session=session, request=request)
+        # context = GAContext(session=session, request=request)
 
         if session is None:
-            context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
-            return GAResponse(status=context.errors.type, content=context.errors)
+            # TODO: Create a GAResponse
+            # context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
+            return None
 
         session.is_listening_push_notifications = True
         self.sessions_manager.save(session)
 
-        return self.push_controller.get_queue_for_session(session_uuid)
+        queue = self.push_controller.get_queue_for_session(session.uuid)
+
+        return queue
