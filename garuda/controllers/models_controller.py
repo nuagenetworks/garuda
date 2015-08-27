@@ -18,8 +18,6 @@ class ModelsController(object):
         self._vsd_session = self._vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
         self._vsd_session.start()
 
-        print 'session %s started' % self._vsd_session
-
     def get_objects(self, parent, resource_name):
         """
         """
@@ -93,8 +91,6 @@ class ModelsController(object):
 
         if parent:
             (object, connection) = parent.create_child(object)
-
-            print connection.response.status_code
 
             if connection.response.status_code >= 300:
                 return False  # TODO: This is temporarely bad

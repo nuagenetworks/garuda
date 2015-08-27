@@ -54,7 +54,6 @@ class PushController(object):
         """
         """
         if session_uuid not in self._queues:
-            print 'creation queue'
             self._queues[session_uuid] = Queue()
 
         return self._queues[session_uuid]
