@@ -91,7 +91,7 @@ class CoreController(object):
         """
         """
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
-        session = self.sessions_manager.get_session(uuid=session_uuid)
+        session = self.sessions_manager.get(session_uuid=session_uuid)
         context = GAContext(session=session, request=request)
 
         if session is None:
@@ -131,7 +131,7 @@ class CoreController(object):
         """
 
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
-        session = self.sessions_manager.get_session(uuid=session_uuid)
+        session = self.sessions_manager.get(session_uuid=session_uuid)
         # context = GAContext(session=session, request=request)
 
         if session is None:

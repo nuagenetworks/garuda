@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import redis
-import json
 
 from .authentication_controller import AuthenticationController
 
 from garuda.models import GASession, GAUser
 from garuda.config import GAConfig
+
+REDIS_ALL_KEY = '*'
+REDIS_LISTENING_KEY = 'listening'
+REDIS_GARUDA_KEY = 'garuda'
+
+REDIS_SESSION_TTL = 3600
 
 
 class SessionsManager(object):
@@ -18,26 +23,51 @@ class SessionsManager(object):
         """
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
-    def _publish(self, event, content):
+    def send_event(self, event, content):
         """
         """
         self._redis.publish(event, content)
 
-    def get_session(self, uuid=None):
+    def save(self, session):
         """
         """
-        if uuid is None:
+        self._redis.expire(session.uuid, REDIS_SESSION_TTL)
+
+        if session.is_listening_push_notifications:
+            self._redis.sadd(REDIS_LISTENING_KEY, session.uuid)
+
+        self._redis.sadd(REDIS_GARUDA_KEY + session.garuda_uuid, session.uuid)
+
+        return self._redis.hmset(session.uuid, session.to_hash())
+
+    def get_all(self, garuda_uuid=None, listening=None):
+        """
+        """
+        if garuda_uuid is None:
+            return self._redis.keys(REDIS_ALL_KEY)
+
+        garuda_key = REDIS_GARUDA_KEY + garuda_uuid
+
+        if listening is None:
+            return self._redis.smembers(garuda_key)
+
+        if listening is True:
+            return self._redis.sinter(garuda_key, REDIS_LISTENING_KEY)
+
+        return self._redis.sdiff(garuda_key, REDIS_LISTENING_KEY)
+
+    def get(self, session_uuid):
+        """
+        """
+        if session_uuid is None:
             return None
 
-        stored_session = self._redis.get(uuid)
+        session_hash = self._redis.hgetall(session_uuid)
 
-        if stored_session is None:
+        if session_hash is None:
             return None
 
-        session = GASession.from_dict(json.loads(stored_session))
-
-        if session.has_expired():
-            return None
+        session = GASession.from_hash(session_hash)
 
         self.save(session)
 
@@ -61,14 +91,6 @@ class SessionsManager(object):
 
         self.save(session)
         return session
-
-    def save(self, session):
-        """
-        """
-        # TODO: Use redis expiration date here
-        session.renew()
-
-        return self._redis.set(session.uuid, json.dumps(session.to_dict()))
 
     def flush(self):
         """
