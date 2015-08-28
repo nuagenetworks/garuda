@@ -252,6 +252,7 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         try:
             ga_notification = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
+            print 'Communication channel receive notification %s ' % ga_notification.to_dict()
             queue.task_done()
         except Empty:
             ga_notification = GAPushNotification(action=None, entities=[])

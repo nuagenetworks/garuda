@@ -8,8 +8,8 @@ from garuda.models import GASession, GAUser
 from garuda.config import GAConfig
 
 REDIS_ALL_KEY = '*'
-REDIS_LISTENING_KEY = 'listening'
-REDIS_GARUDA_KEY = 'garuda'
+REDIS_LISTENING_KEY = 'sessions-listenning'
+REDIS_GARUDA_KEY = 'sessions-for-garuda-'
 
 REDIS_SESSION_TTL = 3600
 
@@ -59,12 +59,13 @@ class SessionsManager(object):
     def get(self, session_uuid):
         """
         """
+
         if session_uuid is None:
             return None
 
         session_hash = self._redis.hgetall(session_uuid)
 
-        if session_hash is None:
+        if session_hash is None or len(session_hash) == 0:
             return None
 
         session = GASession.from_hash(session_hash)
@@ -91,6 +92,20 @@ class SessionsManager(object):
 
         self.save(session)
         return session
+
+    def flush_garuda(self, garuda_uuid):
+        """
+        """
+        garuda_key = REDIS_GARUDA_KEY + garuda_uuid
+
+        session_uuids = self.get_all(garuda_uuid=garuda_uuid)
+
+        if len(session_uuids) == 0:
+            return
+
+        self._redis.delete(*session_uuids)
+        self._redis.srem(garuda_key, *session_uuids)
+        self._redis.srem(REDIS_LISTENING_KEY, *session_uuids)
 
     def flush(self):
         """

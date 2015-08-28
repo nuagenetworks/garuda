@@ -10,7 +10,7 @@ class GAPushNotification(object):
     """
 
     """
-    def __init__(self, action, entities=[]):
+    def __init__(self, action=None, entities=[]):
         """
         """
         self.action = action
@@ -36,3 +36,16 @@ class GAPushNotification(object):
         to_dict['uuid'] = self.uuid
 
         return to_dict
+
+    @classmethod
+    def from_dict(cls, a_dict):
+        """
+        """
+        instance = cls()
+
+        instance._uuid = a_dict['uuid']
+        instance.action = a_dict['action']
+        instance.entities = a_dict['entities']
+        instance.creation_date = datetime.strptime(a_dict['creation_date'], GAConfig.DATE_FORMAT)
+
+        return instance

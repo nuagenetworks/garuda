@@ -19,7 +19,7 @@ class CoreController(object):
     def __init__(self):
         """
         """
-        self._uuid = str(uuid4())
+        self._uuid = 'f44280b2-6782-420b-9be8-8f0ceb74557c'  # str(uuid4())
         self._channels = []
         self._thread_manager = ThreadManager()
         self._models_controller = ModelsController()
@@ -85,6 +85,7 @@ class CoreController(object):
         """
         """
         self._thread_manager.stop_all()
+        self.push_controller.flush(garuda_uuid=self.uuid)
         self.push_controller.stop()
 
     def execute(self, request):
@@ -104,7 +105,7 @@ class CoreController(object):
         if context.has_errors():
             return GAResponse(status=context.errors.type, content=context.errors)
 
-        self.push_controller.add_notification(uuid=self.uuid, action='ACTION', entities=['COUCOU'])
+        self.push_controller.add_notification(garuda_uuid=self.uuid, action='ACTION', entities=['COUCOU'])
 
         if request.action is GARequest.ACTION_READALL:
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
