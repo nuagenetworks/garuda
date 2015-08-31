@@ -4,9 +4,6 @@ from collections import namedtuple
 
 from vsdhelpers import Transform
 
-from garuda.exceptions import NotFoundException
-
-
 GAResource = namedtuple('GAResource', ['name', 'value'])
 
 RESOURCE_MAPPING = {'allalarms': 'alarms'}

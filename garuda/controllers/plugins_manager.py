@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import gevent
+import logging
 
+logger = logging.getLogger('Garuda.PluginsManager')
 
 from garuda.exceptions import InternalInconsistencyException
 from collections import namedtuple

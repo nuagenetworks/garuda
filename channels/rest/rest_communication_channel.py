@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import logging
-from garuda.lib.utils import create_logger
-
-logger = create_logger('Garuda.RESTCommunicationChannel')
-logger.setLevel(logging.INFO)
-
 import json
+import logging
+
+logger = logging.getLogger('Garuda.RESTCommunicationChannel')
+
 from base64 import urlsafe_b64decode
 
 from copy import deepcopy
@@ -35,9 +33,9 @@ class RESTCommunicationChannel(CommunicationChannel):
         self.controller = controller
         self.app = Flask(self.__class__.__name__)
 
-        self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon)
-        self.app.add_url_rule('/me', 'authenticate', self.authenticate)
-        self.app.add_url_rule('/events', 'listen_events', self.listen_events)
+        self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
+        self.app.add_url_rule('/me', 'authenticate', self.authenticate, methods=[RESTConstants.HTTP_GET])
+        self.app.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET])
         self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
         self.start_parameters = kwargs
 
@@ -65,6 +63,7 @@ class RESTCommunicationChannel(CommunicationChannel):
             return
 
         self._is_running = True
+        logger.debug('Channel starting')
         self.app.run(**self.start_parameters)
 
     def stop(self):
@@ -200,6 +199,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         method = request.method.upper()
 
         logger.info('--- Request from %s ---' % parameters['Host'])
+        logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
         resources = parser.parse(path=path)
@@ -216,6 +216,7 @@ class RESTCommunicationChannel(CommunicationChannel):
     def favicon(self):
         """
         """
+        logger.debug('Asking for favicon...')
         response = make_response()
         response.status_code = 200
         response.mimetype = 'application/json'
@@ -229,6 +230,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         parameters = self._extract_parameters(request.headers)
 
         logger.info('--- Authenticate from %s ---' % parameters['Host'])
+        logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
         resources = parser.parse(urlparse(request.url).path)
@@ -248,6 +250,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         parameters = self._extract_parameters(request.headers)
 
         logger.info('--- Listening events from %s ---' % parameters['Host'])
+        logger.debug(json.dumps(parameters, indent=4))
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
 

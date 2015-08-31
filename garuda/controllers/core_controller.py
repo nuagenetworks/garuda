@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from garuda.lib.utils import create_logger
 
-logger = create_logger('Garuda.CoreController')
-logger.setLevel(logging.INFO)
+logger = logging.getLogger('Garuda.CoreController')
 
 from .models_controller import ModelsController
 from .operations_manager import OperationsManager
@@ -31,7 +29,6 @@ class CoreController(object):
         self._models_controller = ModelsController()
         self._sessions_manager = SessionsManager()
         self._push_controller = PushController()
-
         self.push_controller.start()
 
         flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
@@ -67,12 +64,14 @@ class CoreController(object):
     def register_channel(self, channel):
         """
         """
+        logger.debug('Register channel %s' % channel)
         if channel not in self._channels:
             self._channels.append(channel)
 
     def unregister_channel(self, channel):
         """
         """
+        logger.debug('Unregister channel %s' % channel)
         if channel in self._channels:
             self._channels.remove(channel)
 
@@ -81,6 +80,7 @@ class CoreController(object):
         """
         logger.debug('Starting core controller')
         for channel in self._channels:
+            logger.debug('Starting channel %s' % channel)
             self._thread_manager.start(channel.start)
 
     def is_running(self):

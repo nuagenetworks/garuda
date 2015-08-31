@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logging.getLogger
+
+logger = logging.getLogger('Garuda.SessionsManager')
+
 import redis
 
 from .authentication_controller import AuthenticationController
@@ -31,9 +36,11 @@ class SessionsManager(object):
     def save(self, session):
         """
         """
+        logger.debug('Saving session uuid=%s for garuda_uuid' %  (session.uuid, garuda_uuid))
         self._redis.expire(session.uuid, REDIS_SESSION_TTL)
 
         if session.is_listening_push_notifications:
+            logger.debug('Session is listening for push notification' % garuda_uuid)
             self._redis.sadd(REDIS_LISTENING_KEY, session.uuid)
 
         self._redis.sadd(REDIS_GARUDA_KEY + session.garuda_uuid, session.uuid)
@@ -44,14 +51,17 @@ class SessionsManager(object):
         """
         """
         if garuda_uuid is None:
+            logger.debug('Get all sessions stored in redis')
             return self._redis.keys(REDIS_ALL_KEY)
 
         garuda_key = REDIS_GARUDA_KEY + garuda_uuid
 
         if listening is None:
+            logger.debug('Get all sessions for garuda_uuid=%s' % garuda_uuid)
             return self._redis.smembers(garuda_key)
 
         if listening is True:
+            logger.debug('Get all sessions listening for push notification and for garuda_uuid=%s' % garuda_uuid)
             return self._redis.sinter(garuda_key, REDIS_LISTENING_KEY)
 
         return self._redis.sdiff(garuda_key, REDIS_LISTENING_KEY)
@@ -60,14 +70,17 @@ class SessionsManager(object):
         """
         """
 
+        logger.debug('Get session with uuid=%s' % uuid)
         if session_uuid is None:
             return None
 
         session_hash = self._redis.hgetall(session_uuid)
 
         if session_hash is None or len(session_hash) == 0:
+            logger.debug('No session found')
             return None
 
+        logger.debug('Getting session from hash')
         session = GASession.from_hash(session_hash)
 
         self.save(session)
@@ -77,6 +90,7 @@ class SessionsManager(object):
     def create_session(self, request, models_controller, garuda_uuid):
         """
         """
+        logger.debug('Creating session for garuda_uuid=%s' % garuda_uuid)
         session = GASession(garuda_uuid=garuda_uuid)
 
         authentication_controller = AuthenticationController()
@@ -96,6 +110,7 @@ class SessionsManager(object):
     def flush_garuda(self, garuda_uuid):
         """
         """
+        logger.debug('Flushing Garuda Sessions')
         garuda_key = REDIS_GARUDA_KEY + garuda_uuid
 
         session_uuids = self.get_all(garuda_uuid=garuda_uuid)

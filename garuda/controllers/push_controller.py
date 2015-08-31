@@ -2,6 +2,9 @@
 
 import json
 import redis
+import logging
+
+logger = logging.getLogger('Garuda.RESTCommunicationChannel')
 
 from Queue import Queue
 
@@ -26,6 +29,8 @@ class PushController(object):
     def start(self):
         """
         """
+        logger.debug('Starting listening Redis pubsub')
+
         p = self._redis.pubsub()
         p.subscribe(**{'garuda-new-event': self.receive_events})
 
