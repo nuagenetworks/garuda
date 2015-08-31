@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
+from garuda.lib.utils import create_logger
+
+logger = create_logger('Garuda.CoreController')
+logger.setLevel(logging.INFO)
+
 from .models_controller import ModelsController
 from .operations_manager import OperationsManager
 from .thread_manager import ThreadManager
@@ -19,7 +25,7 @@ class CoreController(object):
     def __init__(self):
         """
         """
-        self._uuid = 'f44280b2-6782-420b-9be8-8f0ceb74557c'  # str(uuid4())
+        self._uuid = str(uuid4())
         self._channels = []
         self._thread_manager = ThreadManager()
         self._models_controller = ModelsController()
@@ -73,6 +79,7 @@ class CoreController(object):
     def start(self):
         """
         """
+        logger.debug('Starting core controller')
         for channel in self._channels:
             self._thread_manager.start(channel.start)
 
@@ -84,6 +91,7 @@ class CoreController(object):
     def stop(self, signal=None, frame=None):
         """
         """
+        logger.debug('Stopping core controller')
         self._thread_manager.stop_all()
         self.push_controller.flush(garuda_uuid=self.uuid)
         self.push_controller.stop()
@@ -94,6 +102,8 @@ class CoreController(object):
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
         session = self.sessions_manager.get(session_uuid=session_uuid)
         context = GAContext(session=session, request=request)
+
+        logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
         if session is None:
             context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
@@ -118,6 +128,8 @@ class CoreController(object):
         session = self.sessions_manager.create_session(request=request, models_controller=self.models_controller, garuda_uuid=self.uuid)
         context = GAContext(session=session, request=request)
 
+        logger.debug('Execute action %s on session UUID=%s' % (request.action, session.uuid if session else None))
+
         if session is None:
             description = 'Unable to authenticate'
             context.report_error(type=GAError.TYPE_AUTHENTICATIONFAILURE, property='', title='Authentication failed!', description=description)
@@ -139,6 +151,9 @@ class CoreController(object):
             # TODO: Create a GAResponse
             # context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
             return None
+
+
+        logger.debug('Set listening session UUID=%s for push notification' % (request.action, session_uuid))
 
         session.is_listening_push_notifications = True
         self.sessions_manager.save(session)

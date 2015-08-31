@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import logging
+from garuda.lib.utils import create_logger
+
+logger = create_logger('Garuda.RESTCommunicationChannel')
+logger.setLevel(logging.INFO)
+
 import json
 from base64 import urlsafe_b64decode
 
 from copy import deepcopy
-from Queue import Queue, Empty
+from Queue import Empty
 from urlparse import urlparse
 from uuid import uuid4
 
@@ -193,7 +199,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         parameters = self._extract_parameters(request.headers)
         method = request.method.upper()
 
-        print '--- Request from %s ---' % parameters['Host']
+        logger.info('--- Request from %s ---' % parameters['Host'])
 
         parser = PathParser()
         resources = parser.parse(path=path)
@@ -203,7 +209,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.controller.execute(request=ga_request)
 
-        print '--- Response to %s ---' % parameters['Host']
+        logger.info('--- Response to %s ---' % parameters['Host'])
 
         return self.make_http_response(action=action, response=ga_response)
 
@@ -222,7 +228,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         content = self._extract_content(request.json)
         parameters = self._extract_parameters(request.headers)
 
-        print '--- Authenticate from %s ---' % parameters['Host']
+        logger.info('--- Authenticate from %s ---' % parameters['Host'])
 
         parser = PathParser()
         resources = parser.parse(urlparse(request.url).path)
@@ -231,7 +237,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.controller.execute_authenticate(request=ga_request)
 
-        print '--- End Authenticate to %s ---' % parameters['Host']
+        logger.info('--- Response to authentication to %s ---' % parameters['Host'])
 
         return self.make_http_response(action=action, response=ga_response)
 
@@ -241,7 +247,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         content = self._extract_content(request.json)
         parameters = self._extract_parameters(request.headers)
 
-        print '--- Listening events from %s ---' % parameters['Host']
+        logger.info('--- Listening events from %s ---' % parameters['Host'])
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
 
@@ -252,11 +258,11 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         try:
             ga_notification = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
-            print 'Communication channel receive notification %s ' % ga_notification.to_dict()
+            logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
             queue.task_done()
         except Empty:
             ga_notification = GAPushNotification(action=None, entities=[])
 
-        print '--- End Listening events to %s ---' % parameters['Host']
+        logger.info('--- Response to Listening events to %s ---' % parameters['Host'])
 
         return self.make_notification_response(notification=ga_notification)
