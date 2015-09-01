@@ -115,11 +115,12 @@ class CoreController(object):
         if context.has_errors():
             return GAResponse(status=context.errors.type, content=context.errors)
 
-        self.push_controller.add_notification(garuda_uuid=self.uuid, action='ACTION', entities=['COUCOU'])
+
 
         if request.action is GARequest.ACTION_READALL:
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
 
+        self.push_controller.add_notification(garuda_uuid=self.uuid, action=request.action, entities=[context.object])
         return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
 
     def execute_authenticate(self, request):
@@ -152,8 +153,7 @@ class CoreController(object):
             # context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
             return None
 
-
-        logger.debug('Set listening session UUID=%s for push notification' % (request.action, session_uuid))
+        logger.debug('Set listening %s session UUID=%s for push notification' % (request.action, session_uuid))
 
         session.is_listening_push_notifications = True
         self.sessions_manager.save(session)

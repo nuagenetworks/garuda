@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logger = logging.getLogger('Garuda.ModelsController')
+
 from vsdhelpers import VSDKFactory
 
 from bambou import NURESTModelController
@@ -17,10 +20,12 @@ class ModelsController(object):
         self._vsdk = VSDKFactory.get_vsdk_package()
         self._vsd_session = self._vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
         self._vsd_session.start()
+        logger.debug('Started VSD Session with user %s' % self._vsd_session.user.user_name)
 
     def get_objects(self, parent, resource_name):
         """
         """
+        logger.debug('Get objects %s with parent=%s' % (resource_name, parent))
         fetcher = parent.fetcher_for_rest_name(resource_name)
 
         if fetcher is None:
@@ -42,6 +47,8 @@ class ModelsController(object):
 
         self._use_session()
 
+        logger.debug('Get object %s with ID=%s' % (resource_name, resource_value))
+
         klass = NURESTModelController.get_first_model(resource_name)
         obj = klass(id=resource_value)
 
@@ -60,6 +67,8 @@ class ModelsController(object):
         """
         self._use_session()
 
+        logger.debug('Create object %s' % resource_name)
+
         klass = NURESTModelController.get_first_model(resource_name)
         obj = klass()
 
@@ -71,6 +80,8 @@ class ModelsController(object):
         """
         """
         self._use_session()
+
+        logger.debug('Save object %s with parent=%s. Attributes=%s' % (object, parent, attributes))
 
         object.from_dict(attributes)
 
@@ -105,6 +116,8 @@ class ModelsController(object):
         """
         self._use_session()
 
+        logger.debug('Delete object %s with ID=%s' % (object, object.id))
+
         object.delete()
 
     def get_current_user(self):
@@ -112,11 +125,15 @@ class ModelsController(object):
         """
         self._use_session()
 
+        logger.debug('Get current user')
+
         return self._vsd_session.user
 
     def authenticate_user(self, username, password, enterprise):
         """
         """
+        logger.debug('Authenticate with username=%s password=%s and enterprise=%s' % (username, password, enterprise))
+
         session = self._vsdk.NUVSDSession(username=username, password=password, enterprise=enterprise, api_url=GAConfig.VSD_API_URL)
         session.start()
 

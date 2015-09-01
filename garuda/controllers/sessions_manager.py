@@ -36,11 +36,11 @@ class SessionsManager(object):
     def save(self, session):
         """
         """
-        logger.debug('Saving session uuid=%s for garuda_uuid' %  (session.uuid, garuda_uuid))
+        logger.debug('Saving session uuid=%s for garuda_uuid=%s' % (session.uuid, session.garuda_uuid))
         self._redis.expire(session.uuid, REDIS_SESSION_TTL)
 
         if session.is_listening_push_notifications:
-            logger.debug('Session is listening for push notification' % garuda_uuid)
+            logger.debug('Session is listening for push notification')
             self._redis.sadd(REDIS_LISTENING_KEY, session.uuid)
 
         self._redis.sadd(REDIS_GARUDA_KEY + session.garuda_uuid, session.uuid)
@@ -70,7 +70,7 @@ class SessionsManager(object):
         """
         """
 
-        logger.debug('Get session with uuid=%s' % uuid)
+        logger.debug('Get session with uuid=%s' % session_uuid)
         if session_uuid is None:
             return None
 
@@ -80,7 +80,6 @@ class SessionsManager(object):
             logger.debug('No session found')
             return None
 
-        logger.debug('Getting session from hash')
         session = GASession.from_hash(session_hash)
 
         self.save(session)
@@ -122,7 +121,7 @@ class SessionsManager(object):
         self._redis.srem(garuda_key, *session_uuids)
         self._redis.srem(REDIS_LISTENING_KEY, *session_uuids)
 
-    def flush(self):
+    def flush_database(self):
         """
         """
         self._redis.flushdb()

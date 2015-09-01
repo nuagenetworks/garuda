@@ -46,24 +46,42 @@ class PushController(object):
         """
         if self._thread:
             self._thread.stop()
-            self._thread = None
 
     def receive_events(self, message):
         """
         """
-        print 'Receiving notification...'
         data = json.loads(message['data'])
+        logger.info('Receives message:\n%s' % json.dumps(data, indent=4))
+
         garuda_uuid = data['garuda_uuid']
         notification = GAPushNotification.from_dict(data['content'])
 
         session_uuids = self._session_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
+
+
 
         for session_uuid in session_uuids:
             if session_uuid not in self._queues:
                 continue
 
             queue = self._queues[session_uuid]
-            queue.put(notification)
+            # session = self._session_manager.get(session_uuid=session_uuid)
+            #
+            # for entity in notification.entities:
+            #     # TODO: Trigger a READ operation for each session
+            #     resources = [GAResources(name=entity.parent_type, value=entity.parent_id), GARequest(name=entity.rest_name, value=entity.id)]
+            #     request = GARequest(action=ACTION_READ, resources=resources)
+            #     context = GAContext(request=request, session=session)
+            #
+            #     operation_manager = OperationManager(context=context)
+            #     operation_manager.run()
+            #
+            #     if context.has_errors():
+            #         # TODO: Send notification with error
+            #
+            #     else:
+
+        queue.put(notification)
 
     def add_notification(self, garuda_uuid, action, entities):
         """
@@ -78,6 +96,7 @@ class PushController(object):
         """
         """
         if session_uuid not in self._queues:
+            logger.debug('Creating queue for session uuid=%s' % session_uuid)
             self._queues[session_uuid] = Queue()
 
         return self._queues[session_uuid]
