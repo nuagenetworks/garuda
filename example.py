@@ -27,5 +27,12 @@ print '---- GET http://localhost:2000/enterprises'
 response = requests.post('http://localhost:2000/enterprises', headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token}, json={'name': 'Christophe'})
 print '[%s]\n%s\n' % (response.status_code, response.content)
 
-print 'Sleeping...'
-sleep(10)
+data = response.json()
+enterprise_id = data['ID']
+
+print 'Waiting...\n\n'
+sleep(8)
+
+print '---- DELETE http://localhost:2000/enterprises/%s' % enterprise_id
+response = requests.delete('http://localhost:2000/enterprises/%s' % enterprise_id, headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token}, json={'name': 'Christophe'})
+print '[%s]\n%s\n' % (response.status_code, response.content)

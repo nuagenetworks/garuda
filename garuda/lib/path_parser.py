@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
+import re
 
-from vsdhelpers import Transform
+from collections import namedtuple
+from .utils import VSDKTransform
 
 GAResource = namedtuple('GAResource', ['name', 'value'])
 
@@ -31,7 +32,7 @@ class PathParser(object):
         """
         return self._version
 
-    def parse(self, path, url_prefix='/nuage/api/', url_version=False):
+    def parse(self, path, url_prefix='nuage/api/'):
         """ Parse the path to retrieve information
 
             Args:
@@ -44,7 +45,6 @@ class PathParser(object):
                 [GAResource(name=u'enterprises', value=3), GAResource(name=u'domains', value=None)]
 
         """
-
         if len(path) == 0:
             return
 
@@ -54,9 +54,9 @@ class PathParser(object):
         if path.startswith(url_prefix):
             path = path[len(url_prefix):]
 
-        if url_version:
-            index = path.index('/')
+        index = path.find('/')
 
+        if index > 0 and re.match('v[0-9]_[0-9]', path[:index]):
             self._version = path[:index]
             path = path[index + 1:]
 
@@ -74,7 +74,7 @@ class PathParser(object):
                 value = infos[index] if index < len(infos) and len(infos[index]) > 0 else None
 
                 name = self._get_resource(resource)
-                result.append(GAResource(Transform.get_singular_name(name), value))
+                result.append(GAResource(VSDKTransform.get_singular_name(name), value))
 
             index = index + 1
 

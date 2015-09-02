@@ -1,5 +1,4 @@
 gevent
 Flask
-vsdhelpers
 redis
 logging

@@ -3,7 +3,7 @@
 import logging
 logger = logging.getLogger('Garuda.ModelsController')
 
-from vsdhelpers import VSDKFactory
+from garuda.lib.utils import VSDKLoader
 
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
@@ -17,7 +17,7 @@ class ModelsController(object):
     def __init__(self):
         """
         """
-        self._vsdk = VSDKFactory.get_vsdk_package()
+        self._vsdk = VSDKLoader.get_vsdk_package(version=3.2)  # TODO: Later this should be in a configuration file
         self._vsd_session = self._vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
         self._vsd_session.start()
         logger.debug('Started VSD Session with user %s' % self._vsd_session.user.user_name)
