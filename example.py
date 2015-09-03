@@ -6,25 +6,27 @@ import threading
 from time import sleep
 from base64 import urlsafe_b64encode
 
+base_url = 'http://localhost:2000/nuage/api/v3_2/'
 
-print '---- GET http://localhost:2000/me'
-response = requests.get('http://localhost:2000/me', headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST Y3Nwcm9vdDpjc3Byb290'})
+
+print '---- GET %s/me' % base_url
+response = requests.get('%s/me' % base_url, headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST Y3Nwcm9vdDpjc3Byb290'})
 print '[%s]\n%s\n' % (response.status_code, response.content)
 data = response.json()
 encoded_token = urlsafe_b64encode('csproot:%s' % data['api_key'])
 
 
 def listen_events(token):
-    print '---- GET http://localhost:2000/events'
-    response = requests.get('http://localhost:2000/events', headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token})
+    print '---- GET %s/events' % base_url
+    response = requests.get('%s/events' % base_url, headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token})
     print '[%s]\n%s\n' % (response.status_code, response.content)
 
 
 thread = threading.Thread(target=listen_events, name="ListeningPushNotification", kwargs={'token': encoded_token})
 thread.start()
 
-print '---- GET http://localhost:2000/enterprises'
-response = requests.post('http://localhost:2000/enterprises', headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token}, json={'name': 'Christophe'})
+print '---- GET %s/enterprises' % base_url
+response = requests.post('%s/enterprises' % base_url, headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token}, json={'name': 'Christophe'})
 print '[%s]\n%s\n' % (response.status_code, response.content)
 
 data = response.json()
@@ -33,6 +35,6 @@ enterprise_id = data['ID']
 print 'Waiting...\n\n'
 sleep(8)
 
-print '---- DELETE http://localhost:2000/enterprises/%s' % enterprise_id
-response = requests.delete('http://localhost:2000/enterprises/%s' % enterprise_id, headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token}, json={'name': 'Christophe'})
+print '---- DELETE %s/enterprises/%s' % (base_url, enterprise_id)
+response = requests.delete('%s/enterprises/%s' % (base_url, enterprise_id), headers={'X-Nuage-Organization': 'csp', 'Authorization': 'XREST %s' % encoded_token}, json={'name': 'Christophe'})
 print '[%s]\n%s\n' % (response.status_code, response.content)
