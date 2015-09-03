@@ -1,4 +1,11 @@
-Garuda Repo
+Garuda
+======
+
+
+Launch Garuda using its controller
+
+    $ ./garudactl
+
 
 
 Use Locust
