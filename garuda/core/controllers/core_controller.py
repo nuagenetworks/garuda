@@ -143,7 +143,7 @@ class CoreController(object):
         if context.has_errors():
             return GAResponse(status=context.errors.type, content=context.errors)
 
-        return GAResponse(status=GAResponse.STATUS_SUCCESS, content=session.user)
+        return GAResponse(status=GAResponse.STATUS_SUCCESS, content=[session.user])
 
     def get_queue(self, request):
         """
