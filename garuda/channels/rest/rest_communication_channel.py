@@ -278,11 +278,12 @@ class RESTCommunicationChannel(CommunicationChannel):
             return self.make_http_response(action='FUCK', response=GAResponse(status='UNAUTHORIZED', content='Queue is None!'))
 
         try:
-            ga_notification = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
+            ga_event = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
+            ga_notification = GAPushNotification(events=[ga_event])
             logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
             queue.task_done()
         except Empty:
-            ga_notification = GAPushNotification(action=None, entities=[])
+            ga_notification = GAPushNotification()
 
         logger.info('<<<< Response for %s %s events to %s' % (request.method, request.path, parameters['Host']))
 

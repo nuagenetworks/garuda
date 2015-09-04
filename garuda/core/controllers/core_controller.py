@@ -125,7 +125,7 @@ class CoreController(object):
         if request.action is GARequest.ACTION_READALL:
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
 
-        self.push_controller.add_notification(garuda_uuid=self.uuid, action=request.action, entities=[context.object])
+        self.push_controller.add_event(garuda_uuid=self.uuid, action=request.action, entities=[context.object])
         return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
 
     def execute_authenticate(self, request):

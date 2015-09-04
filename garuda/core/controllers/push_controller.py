@@ -8,7 +8,7 @@ logger = logging.getLogger('Garuda.PushController')
 
 from Queue import Queue
 
-from garuda.core.models import GAPushNotification
+from garuda.core.models import GAPushEvent
 from garuda.core.config import GAConfig
 
 from .sessions_manager import SessionsManager
@@ -32,7 +32,7 @@ class PushController(object):
         logger.debug('Starting listening Redis pubsub')
 
         p = self._redis.pubsub()
-        p.subscribe(**{'garuda-new-event': self.receive_events})
+        p.subscribe(**{'garuda-new-event': self.receive_event})
 
         self._thread = p.run_in_thread(sleep_time=0.001)
 
@@ -47,14 +47,14 @@ class PushController(object):
         if self._thread:
             self._thread.stop()
 
-    def receive_events(self, message):
+    def receive_event(self, content):
         """
         """
-        data = json.loads(message['data'])
+        data = json.loads(content['data'])
         logger.info('Receives message:\n%s' % json.dumps(data, indent=4))
 
         garuda_uuid = data['garuda_uuid']
-        notification = GAPushNotification.from_dict(data['content'])
+        event = GAPushEvent.from_dict(data['event'])
 
         session_uuids = self._session_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
 
@@ -79,15 +79,15 @@ class PushController(object):
             #
             #     else:
 
-            queue.put(notification)
+            queue.put(event)
 
-    def add_notification(self, garuda_uuid, action, entities):
+    def add_event(self, garuda_uuid, action, entities):
         """
         """
-        notification = GAPushNotification(action=action, entities=entities)
+        event = GAPushEvent(action=action, entities=entities)
         data = dict()
         data['garuda_uuid'] = garuda_uuid
-        data['content'] = notification.to_dict()
+        data['event'] = event.to_dict()
         self._redis.publish('garuda-new-event', json.dumps(data))
 
     def get_queue_for_session(self, session_uuid):

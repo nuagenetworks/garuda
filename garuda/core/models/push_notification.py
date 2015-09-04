@@ -11,19 +11,15 @@ class GAPushNotification(GASerializable):
     """
 
     """
-    def __init__(self, action=None, entities=[]):
+    def __init__(self, events=[]):
         """
         """
         GASerializable.__init__(self)
 
-        self.action = action
-        self.creation_date = datetime.now()
-        self.entities = entities
+        self.events = events
         self._uuid = str(uuid4())
 
-        self.register_attribute(type=str, internal_name='action')
-        self.register_attribute(type=list, internal_name='entities')
-        self.register_attribute(type=datetime, internal_name='creation_date')
+        self.register_attribute(type=list, internal_name='events')
         self.register_attribute(type=str, internal_name='_uuid')
 
     @property
