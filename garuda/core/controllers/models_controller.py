@@ -3,11 +3,11 @@
 import logging
 logger = logging.getLogger('Garuda.ModelsController')
 
-from garuda.lib.utils import VSDKLoader
+from garuda.core.lib.utils import VSDKLoader
 
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
-from garuda.config import GAConfig
+from garuda.core.config import GAConfig
 
 
 class ModelsController(object):

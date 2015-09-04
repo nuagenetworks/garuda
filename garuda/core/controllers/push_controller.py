@@ -4,12 +4,12 @@ import json
 import redis
 import logging
 
-logger = logging.getLogger('Garuda.RESTCommunicationChannel')
+logger = logging.getLogger('Garuda.PushController')
 
 from Queue import Queue
 
-from garuda.models import GAPushNotification
-from garuda.config import GAConfig
+from garuda.core.models import GAPushNotification
+from garuda.core.config import GAConfig
 
 from .sessions_manager import SessionsManager
 
@@ -58,8 +58,6 @@ class PushController(object):
 
         session_uuids = self._session_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
 
-
-
         for session_uuid in session_uuids:
             if session_uuid not in self._queues:
                 continue
@@ -81,7 +79,7 @@ class PushController(object):
             #
             #     else:
 
-        queue.put(notification)
+            queue.put(notification)
 
     def add_notification(self, garuda_uuid, action, entities):
         """

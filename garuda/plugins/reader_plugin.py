@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from garuda.models import GAError
-from garuda.models.abstracts import PluginManifest, GAPlugin
+from garuda.core.models import GAError
+from garuda.core.models.abstracts import PluginManifest, GAPlugin
 
 from time import sleep
 

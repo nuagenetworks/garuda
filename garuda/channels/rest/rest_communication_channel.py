@@ -15,10 +15,10 @@ from uuid import uuid4
 from flask import Flask, request, make_response
 
 from .utils.constants import RESTConstants
-from garuda.config import GAConfig
-from garuda.lib import PathParser
-from garuda.models import GARequest, GAResponse, GAError, GAPushNotification
-from garuda.models.abstracts import CommunicationChannel
+from garuda.core.config import GAConfig
+from garuda.core.lib import PathParser
+from garuda.core.models import GARequest, GAResponse, GAError, GAPushNotification
+from garuda.core.models.abstracts import CommunicationChannel
 
 
 class RESTCommunicationChannel(CommunicationChannel):
@@ -34,9 +34,17 @@ class RESTCommunicationChannel(CommunicationChannel):
         self.app = Flask(self.__class__.__name__)
 
         self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
-        self.app.add_url_rule('/me', 'authenticate', self.authenticate, methods=[RESTConstants.HTTP_GET])
-        self.app.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET])
-        self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS])
+
+        # Authentication
+        self.app.add_url_rule('/me', 'authenticate', self.authenticate, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
+        self.app.add_url_rule('/<path:path>me', 'authenticate', self.authenticate, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
+
+        # Events
+        self.app.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
+        self.app.add_url_rule('/<path:path>events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
+
+        # Other requests
+        self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
         self.start_parameters = kwargs
 
     @property
@@ -74,11 +82,15 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         self._is_running = False
 
-    def _extract_content(self, content):
+    def _extract_content(self, request):
         """
 
         """
-        return deepcopy(content)
+        content = request.get_json(force=True, silent=True)
+        if content:
+            return deepcopy(content)
+
+        return dict()
 
     def _extract_parameters(self, parameters):
         """
@@ -154,6 +166,8 @@ class RESTCommunicationChannel(CommunicationChannel):
         elif status == GAError.TYPE_CONFLICT:
             code = 409
 
+        logger.debug(json.dumps(content, indent=4))
+
         response = make_response(json.dumps(content))
         response.status_code = code
         response.mimetype = 'application/json'
@@ -163,8 +177,11 @@ class RESTCommunicationChannel(CommunicationChannel):
     def make_notification_response(self, notification):
         """
         """
+        content = notification.to_dict()
 
-        response = make_response(json.dumps(notification.to_dict()))
+        logger.debug(json.dumps(content, indent=4))
+
+        response = make_response(json.dumps(content))
         response.status_code = 200
         response.mimetype = 'application/json'
 
@@ -194,11 +211,12 @@ class RESTCommunicationChannel(CommunicationChannel):
     def index(self, path):
         """
         """
-        content = self._extract_content(request.json)
+
+        content = self._extract_content(request)
         parameters = self._extract_parameters(request.headers)
         method = request.method.upper()
 
-        logger.info('--- Request from %s ---' % parameters['Host'])
+        logger.info('>>>> Request on %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
@@ -209,7 +227,7 @@ class RESTCommunicationChannel(CommunicationChannel):
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.controller.execute(request=ga_request)
 
-        logger.info('--- Response to %s ---' % parameters['Host'])
+        logger.info('<<<< Response for %s %s to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_http_response(action=action, response=ga_response)
 
@@ -223,33 +241,33 @@ class RESTCommunicationChannel(CommunicationChannel):
 
         return response
 
-    def authenticate(self):
+    def authenticate(self, path):
         """
         """
-        content = self._extract_content(request.json)
+        content = self._extract_content(request)
         parameters = self._extract_parameters(request.headers)
 
-        logger.info('--- Authenticate from %s ---' % parameters['Host'])
+        logger.info('>>>> Authenticate on %s %s from %s ---' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
-        resources = parser.parse(urlparse(request.url).path)
+        resources = parser.parse(path)
         action = GARequest.ACTION_AUTHENTICATE
 
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.controller.execute_authenticate(request=ga_request)
 
-        logger.info('--- Response to authentication to %s ---' % parameters['Host'])
+        logger.info('<<<< Response for %s %s authentication to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_http_response(action=action, response=ga_response)
 
-    def listen_events(self):
+    def listen_events(self, path):
         """
         """
-        content = self._extract_content(request.json)
+        content = self._extract_content(request)
         parameters = self._extract_parameters(request.headers)
 
-        logger.info('--- Listening events from %s ---' % parameters['Host'])
+        logger.info('>>>> Listening %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
@@ -266,6 +284,6 @@ class RESTCommunicationChannel(CommunicationChannel):
         except Empty:
             ga_notification = GAPushNotification(action=None, entities=[])
 
-        logger.info('--- Response to Listening events to %s ---' % parameters['Host'])
+        logger.info('<<<< Response for %s %s events to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_notification_response(notification=ga_notification)

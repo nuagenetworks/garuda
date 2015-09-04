@@ -26,5 +26,5 @@ fileType                = "source.js"
 [ *.jake ]
 fileType                = "source.js"
 
-[ *.{icns,ico,jpg,jpeg,m4v,nib,pdf,png,psd,pyc,rtf,tif,tiff,cib} ]
+[ *.{icns,ico,jpg,jpeg,m4v,nib,pdf,png,psd,pyc,rtf,tif,tiff,cib,rdb} ]
 binary                  = true

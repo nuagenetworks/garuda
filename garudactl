@@ -4,5 +4,5 @@
 import sys
 
 if __name__ == '__main__':
-    from garuda import main
+    from garuda.core import main
     sys.exit(main())

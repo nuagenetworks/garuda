@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from garuda.exceptions import NotImplementedException
+from garuda.core.exceptions import NotImplementedException
 
 
 class CommunicationChannel(object):

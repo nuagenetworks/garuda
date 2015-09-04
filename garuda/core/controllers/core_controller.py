@@ -10,11 +10,12 @@ from .thread_manager import ThreadManager
 from .push_controller import PushController
 from .sessions_manager import SessionsManager
 
-from channels.rest import RESTCommunicationChannel
-from garuda.models import GAContext, GAResponse, GARequest, GAError
+from garuda.channels.rest import RESTCommunicationChannel
+from garuda.core.models import GAContext, GAResponse, GARequest, GAError
 
 from uuid import uuid4
 
+import ssl
 
 class CoreController(object):
     """
@@ -31,8 +32,12 @@ class CoreController(object):
         self._push_controller = PushController()
         self.push_controller.start()
 
-        flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
-        flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False)
+        context = None
+        # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        # context.load_cert_chain("/Users/chserafi/Desktop/keys/vns.pem", "/Users/chserafi/Desktop/keys/vns-Key.pem")
+
+        flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False, ssl_context=context)
+        flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False, ssl_context=context)
 
         self.register_channel(flask2000)
         # self.register_channel(flask3000)

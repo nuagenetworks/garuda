@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger('Garuda.PluginsManager')
 
-from garuda.exceptions import InternalInconsistencyException
+from garuda.core.exceptions import InternalInconsistencyException
 from collections import namedtuple
 PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
 

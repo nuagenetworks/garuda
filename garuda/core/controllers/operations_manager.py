@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from garuda.models import GARequest, GAError
+from garuda.core.models import GARequest, GAError
 from .plugins_manager import PluginsManager
 
 

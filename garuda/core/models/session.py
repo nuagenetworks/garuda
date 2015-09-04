@@ -4,9 +4,9 @@ import json
 
 from uuid import uuid4
 
-from .user import GAUser
 from .abstracts import GASerializable
 
+from vspk.vsdk.v3_2 import NURESTUser  # TODO: BAD !
 
 class GASession(GASerializable):
     """
@@ -30,7 +30,7 @@ class GASession(GASerializable):
 
         self.register_attribute(type=str, internal_name='_uuid')
         self.register_attribute(type=str, internal_name='_garuda_uuid')
-        self.register_attribute(type=GAUser, internal_name='user')
+        self.register_attribute(type=NURESTUser, internal_name='user')
         self.register_attribute(type=dict, internal_name='user_info')
         self.register_attribute(type=bool, internal_name='is_listening_push_notifications')
 

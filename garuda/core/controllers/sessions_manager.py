@@ -9,8 +9,8 @@ import redis
 
 from .authentication_controller import AuthenticationController
 
-from garuda.models import GASession, GAUser
-from garuda.config import GAConfig
+from garuda.core.models import GASession, GAUser
+from garuda.core.config import GAConfig
 
 REDIS_ALL_KEY = '*'
 REDIS_LISTENING_KEY = 'sessions-listenning'
@@ -80,6 +80,7 @@ class SessionsManager(object):
             logger.debug('No session found')
             return None
 
+        logger.debug('Session found with uuid=%s' % session_uuid)
         session = GASession.from_hash(session_hash)
 
         self.save(session)
@@ -101,7 +102,7 @@ class SessionsManager(object):
 
         session.user_info['APIKey'] = user.api_key
         user.api_key = session.uuid
-        session.user = GAUser(api_key=user.api_key, username=user.user_name, id=user.id, email=user.email, firstname=user.first_name, lastname=user.last_name)
+        session.user = user
 
         self.save(session)
         return session

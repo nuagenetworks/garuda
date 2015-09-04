@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import json
 
 from collections import namedtuple
 from datetime import datetime
 
-from garuda.config import GAConfig
+from garuda.core.config import GAConfig
 
 GASerializableAttribute = namedtuple('GASerializableAttribute', ['internal_name', 'name', 'type', 'children_type'])
 
+
+logger = logging.getLogger('Garuda.Serializable')
 
 class GASerializable(object):
     """
@@ -86,7 +89,7 @@ class GASerializable(object):
                 else:
                     result[attribute.name] = json.dumps(value) if hash_children else value
 
-            elif value is not None and issubclass(attribute.type, GASerializable):
+            elif value is not None and hasattr(value, 'to_dict'):
                 d = value.to_dict()
                 result[attribute.name] = json.dumps(d) if hash_children else d
 
@@ -105,8 +108,10 @@ class GASerializable(object):
         instance = cls()
 
         for attribute in instance._attributes:
+
             value = data[attribute.name]
 
+            # Dictionary
             if attribute.type is dict:
                 if attribute.children_type and hasattr(attribute.children_type, 'to_dict'):
                     attribute_value = attribute.type()
@@ -118,7 +123,7 @@ class GASerializable(object):
                     setattr(instance, attribute.internal_name, attribute_value)
                 else:
                     setattr(instance, attribute.internal_name, json.loads(value) if hash_children else value)
-
+            # List
             elif attribute.type is list:
                 if attribute.children_type and hasattr(attribute.children_type, 'to_dict'):
                     attribute_value = attribute.type()
@@ -130,14 +135,28 @@ class GASerializable(object):
                 else:
                     setattr(instance, attribute.internal_name, json.loads(value) if hash_children else value)
 
-            elif value is not None and hasattr(attribute.type, 'to_dict'):
-                d = json.loads(value) if hash_children else value
-                setattr(instance, attribute.internal_name, attribute.type.from_dict(d))
+            elif value is not None:
 
-            elif value is not None and attribute.type is datetime:
-                setattr(instance, attribute.internal_name, datetime.strptime(value, GAConfig.DATE_FORMAT))
+                # Objects
+                if hasattr(attribute.type, 'to_dict'):
+                    object = attribute.type()  # Note: Allows to use NURESTObject as well
+                    d = json.loads(value) if hash_children else value
+                    value = object.from_dict(d)
+                    setattr(instance, attribute.internal_name, value if value else object)
 
+                # Datetime
+                elif attribute.type is datetime:
+                    setattr(instance, attribute.internal_name, datetime.strptime(value, GAConfig.DATE_FORMAT))
+
+                # Boolean
+                elif attribute.type is bool:
+                    setattr(instance, attribute.internal_name, True if value == "True" else False)
+
+                # Others
+                else:
+                    setattr(instance, attribute.internal_name, value)
+            # None
             else:
-                setattr(instance, attribute.internal_name, value)
+                setattr(instance, attribute.internal_name, None)
 
         return instance
