@@ -11,7 +11,7 @@ from .push_controller import PushController
 from .sessions_manager import SessionsManager
 
 from garuda.channels.rest import RESTCommunicationChannel
-from garuda.core.models import GAContext, GAResponse, GARequest, GAError
+from garuda.core.models import GAContext, GAResponse, GARequest, GAError, GAPushEvent
 
 from uuid import uuid4
 
@@ -29,15 +29,10 @@ class CoreController(object):
         self._thread_manager = ThreadManager()
         self._models_controller = ModelsController()
         self._sessions_manager = SessionsManager()
-        self._push_controller = PushController()
-        self.push_controller.start()
+        self._push_controller = PushController(core_controller=self)
 
-        context = None
-        # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        # context.load_cert_chain("/Users/chserafi/Desktop/keys/vns.pem", "/Users/chserafi/Desktop/keys/vns-Key.pem")
-
-        flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False, ssl_context=context)
-        flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False, ssl_context=context)
+        flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
+        flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False)
 
         self.register_channel(flask2000)
         # self.register_channel(flask3000)
@@ -84,6 +79,9 @@ class CoreController(object):
         """
         """
         logger.debug('Starting core controller')
+
+        self.push_controller.start()
+
         for channel in self._channels:
             logger.debug('Starting channel %s' % channel)
             self._thread_manager.start(channel.start)
@@ -120,12 +118,17 @@ class CoreController(object):
         if context.has_errors():
             return GAResponse(status=context.errors.type, content=context.errors)
 
-
-
         if request.action is GARequest.ACTION_READALL:
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
 
-        self.push_controller.add_event(garuda_uuid=self.uuid, action=request.action, entities=[context.object])
+        # Sample code
+        context.add_event(GAPushEvent(action='TOTO', entities=[context.object]))
+        context.add_event(GAPushEvent(action=request.action, entities=[context.object]))
+        # End sample code
+
+        if len(context.events) > 0:
+            self.push_controller.add_events(events=context.events)
+
         return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
 
     def execute_authenticate(self, request):

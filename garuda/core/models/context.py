@@ -20,12 +20,24 @@ class GAContext(object):
         self.object = None
         self.objects = []
         self.user_info = {}
+        self._events = []
 
     @property
     def errors(self):
         """
         """
         return self._errors_list
+
+    @property
+    def events(self):
+        """
+        """
+        return self._events
+
+    def add_event(self, event):
+        """
+        """
+        self._events.append(event)
 
     def copy(self):
         """

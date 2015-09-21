@@ -18,13 +18,13 @@ class PushController(object):
     """
 
     """
-    def __init__(self):
+    def __init__(self, core_controller):
         """
         """
+        self.core_controller = core_controller
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
         self._queues = dict()
         self._thread = None
-        self._session_manager = SessionsManager()
 
     def start(self):
         """
@@ -39,7 +39,7 @@ class PushController(object):
     def flush(self, garuda_uuid):
         """
         """
-        self._session_manager.flush_garuda(garuda_uuid)
+        self.core_controller.sessions_manager.flush_garuda(garuda_uuid)
 
     def stop(self):
         """
@@ -54,16 +54,16 @@ class PushController(object):
         logger.info('Receives message:\n%s' % json.dumps(data, indent=4))
 
         garuda_uuid = data['garuda_uuid']
-        event = GAPushEvent.from_dict(data['event'])
+        events = [GAPushEvent.from_dict(event) for event in data['events']]
 
-        session_uuids = self._session_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
+        session_uuids = self.core_controller.sessions_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
 
         for session_uuid in session_uuids:
             if session_uuid not in self._queues:
                 continue
 
             queue = self._queues[session_uuid]
-            # session = self._session_manager.get(session_uuid=session_uuid)
+            # session = self.core_controller.sessions_manager.get(session_uuid=session_uuid)
             #
             # for entity in notification.entities:
             #     # TODO: Trigger a READ operation for each session
@@ -79,15 +79,14 @@ class PushController(object):
             #
             #     else:
 
-            queue.put(event)
+            queue.put(events)
 
-    def add_event(self, garuda_uuid, action, entities):
+    def add_events(self, events):
         """
         """
-        event = GAPushEvent(action=action, entities=entities)
         data = dict()
-        data['garuda_uuid'] = garuda_uuid
-        data['event'] = event.to_dict()
+        data['garuda_uuid'] = self.core_controller.uuid
+        data['events'] = [event.to_dict() for event in events]
         self._redis.publish('garuda-new-event', json.dumps(data))
 
     def get_queue_for_session(self, session_uuid):
