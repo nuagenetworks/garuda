@@ -17,6 +17,7 @@ BambouConfig.set_should_raise_bambou_http_error(False)
 
 from garuda.core.controllers import CoreController, PluginsManager
 from garuda.plugins import ReaderPlugin, AnotherPlugin
+from garuda.plugins import DefaultAuthenticationPlugin, DefaultModelControllerPlugin
 
 
 def main():
@@ -25,12 +26,14 @@ def main():
     # Instanciate plugins
     plugin = ReaderPlugin()
     anotherplugin = AnotherPlugin()
+    default_model_controller = DefaultModelControllerPlugin()
+    default_authentication_plugin = DefaultAuthenticationPlugin()
 
     # Register plugin
-    PluginsManager.register_plugin(plugin)
-    PluginsManager.register_plugin(anotherplugin)
+    # PluginsManager.register_plugin(plugin)
+    # PluginsManager.register_plugin(anotherplugin)
 
-    core = CoreController()
+    core = CoreController(authentication_plugins=[default_authentication_plugin], model_controller_plugins=[default_model_controller])
     core.start()
 
     logger.info('Garuda is now ready. (Press CTRL+C to quit)')

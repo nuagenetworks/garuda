@@ -34,14 +34,12 @@ class PluginsManager(object):
     @classmethod
     def register_plugin(cls, plugin):
         """
-
         """
         cls._plugins.append(plugin)
 
     @classmethod
     def unregister_plugin(cls, plugin):
         """
-
         """
         cls._plugins.remove(plugin)
 

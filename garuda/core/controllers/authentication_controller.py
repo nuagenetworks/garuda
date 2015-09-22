@@ -4,27 +4,33 @@ import logging
 
 logger = logging.getLogger('Garuda.AuthenticationController')
 
-from .models_controller import ModelsController
+from garuda.core.plugins.abstracts import GAPluginController
+from garuda.core.plugins import GAAuthenticationPlugin
 
-class AuthenticationController(object):
+
+class AuthenticationController(GAPluginController):
     """
 
     """
-    def authenticate(self, request, models_controller):
+    def __init__(self, plugins):
         """
         """
+        super(AuthenticationController, self).__init__(plugins, GAAuthenticationPlugin)
 
-        if 'username' not in request.parameters or \
-           'password' not in request.parameters or \
-           'X-Nuage-Organization' not in request.parameters:
-           logger.debug("No information provided to authenticate user")
-           return None
+    # Override
 
-        username = request.parameters['username']
-        password = request.parameters['password']
-        enterprise = request.parameters['X-Nuage-Organization']
+    def register_plugin(self, plugin):
+        """
+        """
+        super(AuthenticationController, self).register_plugin(plugin, GAAuthenticationPlugin)
 
+    # Implementation
 
-        logger.debug("Authenticate user with username=%s, password=%s, enterprise=%s" % (username, password, enterprise))
-        return models_controller.authenticate_user(username=username, password=password, enterprise=enterprise)
+    def authenticate(self, request):
+        """
+        """
+        for plugin in self._plugins:
+            if plugin.should_manage(request=request):
+                return plugin.authenticate(request=request)
 
+        return None

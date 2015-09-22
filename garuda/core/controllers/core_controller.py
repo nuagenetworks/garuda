@@ -4,7 +4,7 @@ import logging
 
 logger = logging.getLogger('Garuda.CoreController')
 
-from .models_controller import ModelsController
+from .model_controller import ModelController
 from .operations_manager import OperationsManager
 from .thread_manager import ThreadManager
 from .push_controller import PushController
@@ -21,14 +21,14 @@ class CoreController(object):
     """
 
     """
-    def __init__(self):
+    def __init__(self, authentication_plugins=[], model_controller_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
         self._channels = []
         self._thread_manager = ThreadManager()
-        self._models_controller = ModelsController()
-        self._sessions_manager = SessionsManager()
+        self._model_controller = ModelController(plugins=model_controller_plugins)
+        self._sessions_manager = SessionsManager(plugins=authentication_plugins)
         self._push_controller = PushController(core_controller=self)
 
         flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
@@ -44,10 +44,10 @@ class CoreController(object):
         return self._uuid
 
     @property
-    def models_controller(self):
+    def model_controller(self):
         """
         """
-        return self._models_controller
+        return self._model_controller
 
     @property
     def push_controller(self):
@@ -112,7 +112,7 @@ class CoreController(object):
             context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
             return GAResponse(status=context.errors.type, content=context.errors)
 
-        manager = OperationsManager(context=context, models_controller=self.models_controller)
+        manager = OperationsManager(context=context, model_controller=self.model_controller)
         manager.run()
 
         if context.has_errors():
@@ -134,7 +134,7 @@ class CoreController(object):
     def execute_authenticate(self, request):
         """
         """
-        session = self.sessions_manager.create_session(request=request, models_controller=self.models_controller, garuda_uuid=self.uuid)
+        session = self.sessions_manager.create_session(request=request, model_controller=self.model_controller, garuda_uuid=self.uuid)
         context = GAContext(session=session, request=request)
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session.uuid if session else None))

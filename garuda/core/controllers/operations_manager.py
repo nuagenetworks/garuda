@@ -8,11 +8,11 @@ class OperationsManager(object):
     """
 
     """
-    def __init__(self, context, models_controller):
+    def __init__(self, context, model_controller):
         """
         """
         self.context = context
-        self.models_controller = models_controller
+        self.model_controller = model_controller
 
     def run(self):
         """
@@ -34,7 +34,7 @@ class OperationsManager(object):
         resources = self.context.request.resources
         resource = resources[-1]
 
-        self.context.object = self.models_controller.get_object(resource.name, resource.value)
+        self.context.object = self.model_controller.get(resource.name, resource.value)
 
         if self.context.object is None:
             self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Object not found', description='Could not find %s with identifier %s' % (resource.name, resource.value))
@@ -71,12 +71,12 @@ class OperationsManager(object):
 
         if len(resources) == 1:
             # Root parent
-            parent = self.models_controller.get_current_user()
+            parent = None
 
         else:  # Having a parent and a child
             parent_resource = resources[0]
 
-            parent = self.models_controller.get_object(parent_resource.name, parent_resource.value)
+            parent = self.model_controller.get(parent_resource.name, parent_resource.value)
 
             if parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
@@ -84,7 +84,7 @@ class OperationsManager(object):
                 return
 
         self.context.parent = parent
-        self.context.objects = self.models_controller.get_objects(parent, resource.name)
+        self.context.objects = self.model_controller.get_all(parent, resource.name)
 
         if self.context.objects is None:
             self.context.report_error(type=GAError.TYPE_NOTFOUND, property='', title='Objects not found', description='Could not find any %s' % resource.name)
@@ -126,12 +126,12 @@ class OperationsManager(object):
             return
 
         if len(resources) == 1:
-            self.context.parent = self.models_controller.get_current_user()
+            self.context.parent = None
 
-        else:  # Having a parent and a child
+        else:
             parent_resource = resources[0]
 
-            self.context.parent = self.models_controller.get_object(parent_resource.name, parent_resource.value)
+            self.context.parent = self.model_controller.get(parent_resource.name, parent_resource.value)
 
             if self.context.parent is None:
                 description = 'Unable to retrieve object parent %s with identifier %s' % (parent_resource.name, parent_resource.value)
@@ -139,9 +139,9 @@ class OperationsManager(object):
                 return
 
         if action == GARequest.ACTION_CREATE:
-            self.context.object = self.models_controller.create_object(resource.name)
+            self.context.object = self.model_controller.instantiate(resource.name)
         else:
-            self.context.object = self.models_controller.get_object(resource.name, resource.value)
+            self.context.object = self.model_controller.get(resource.name, resource.value)
 
         if self.context.object is None:
             description = 'Unable to retrieve object %s with identifier %s' % (resource.name, resource.value)
@@ -172,9 +172,10 @@ class OperationsManager(object):
 
         success = False
         if self.context.request.action == GARequest.ACTION_DELETE:
-            success = self.models_controller.delete_object(object=self.context.object)
+            success = self.model_controller.delete(resource=self.context.object)
         else:
-            success = self.models_controller.save_object(object=self.context.object, parent=self.context.parent, attributes=self.context.request.content)
+            self.context.object.from_dict(self.context.request.content)
+            success = self.model_controller.save(resource=self.context.object, parent=self.context.parent)
 
         if success is False:  # TODO: This is temporarely bad
             self.context.report_error(type=GAError.TYPE_INVALID, property='', title='Failure', description='A Failure happened on the VSD side')

@@ -2,7 +2,7 @@
 
 __all__ = ['AuthenticationController', \
            'CoreController', \
-           'ModelsController', \
+           'ModelController', \
            'OperationsManager', \
            'PluginsManager', \
            'PushController', \
@@ -11,7 +11,7 @@ __all__ = ['AuthenticationController', \
 
 from .authentication_controller import AuthenticationController
 from .core_controller import CoreController
-from .models_controller import ModelsController
+from .model_controller import ModelController
 from .operations_manager import OperationsManager
 from .plugins_manager import PluginsManager
 from .push_controller import PushController
