@@ -30,7 +30,7 @@ class VSDKLoader(object):
                 cls._resources[resource_name] = klass
 
     @classmethod
-    def get_vsdk_package(cls, version):
+    def get_vsdk_package(cls, version=3.2):
         """ Returns vsdk package
 
         """

@@ -15,7 +15,7 @@ class GARequest(object):
     ACTION_AUTHENTICATE = 'authenticate'
     ACTION_LISTENEVENTS = 'listen events'
 
-    def __init__(self, action, channel, content={}, resources=[], parameters={}, cookies=None):
+    def __init__(self, action, channel=None, content={}, resources=[], parameters={}, cookies=None):
         """
         """
         self._uuid = str(uuid4())

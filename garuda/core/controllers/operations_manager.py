@@ -42,8 +42,8 @@ class OperationsManager(object):
     def _perform_read_operation(self):
         """
         """
-
-        self._prepare_context_for_read_operation()
+        if self.context.object is None:
+            self._prepare_context_for_read_operation()
 
         if self.context.has_errors():
             return

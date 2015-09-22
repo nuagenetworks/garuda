@@ -122,8 +122,8 @@ class CoreController(object):
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
 
         # Sample code
-        context.add_event(GAPushEvent(action='TOTO', entities=[context.object]))
-        context.add_event(GAPushEvent(action=request.action, entities=[context.object]))
+        context.add_event(GAPushEvent(action='TOTO', entity=context.object))
+        context.add_event(GAPushEvent(action=request.action, entity=context.object))
         # End sample code
 
         if len(context.events) > 0:

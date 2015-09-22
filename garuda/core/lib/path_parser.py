@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import re
-
-from collections import namedtuple
 from .utils import VSDKTransform
 
-GAResource = namedtuple('GAResource', ['name', 'value'])
+from garuda.core.models import GAResource
 
 RESOURCE_MAPPING = {'allalarms': 'alarms'}
 

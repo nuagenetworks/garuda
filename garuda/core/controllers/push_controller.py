@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import gevent
 import json
 import redis
 import logging
@@ -8,10 +9,10 @@ logger = logging.getLogger('Garuda.PushController')
 
 from Queue import Queue
 
-from garuda.core.models import GAPushEvent
+from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext
 from garuda.core.config import GAConfig
 
-from .sessions_manager import SessionsManager
+from .operations_manager import OperationsManager
 
 
 class PushController(object):
@@ -58,28 +59,38 @@ class PushController(object):
 
         session_uuids = self.core_controller.sessions_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
 
+        jobs = []
         for session_uuid in session_uuids:
-            if session_uuid not in self._queues:
-                continue
+            jobs.append(gevent.spawn(self._send_events, session_uuid=session_uuid, events=events))
 
-            queue = self._queues[session_uuid]
-            # session = self.core_controller.sessions_manager.get(session_uuid=session_uuid)
-            #
-            # for entity in notification.entities:
-            #     # TODO: Trigger a READ operation for each session
-            #     resources = [GAResources(name=entity.parent_type, value=entity.parent_id), GARequest(name=entity.rest_name, value=entity.id)]
-            #     request = GARequest(action=ACTION_READ, resources=resources)
-            #     context = GAContext(request=request, session=session)
-            #
-            #     operation_manager = OperationManager(context=context)
-            #     operation_manager.run()
-            #
-            #     if context.has_errors():
-            #         # TODO: Send notification with error
-            #
-            #     else:
+        gevent.joinall(jobs)
 
-            queue.put(events)
+    def _send_events(self, session_uuid, events):
+        """
+        """
+        if session_uuid not in self._queues:
+            return
+
+        events_to_send = []
+        queue = self._queues[session_uuid]
+        session = self.core_controller.sessions_manager.get(session_uuid=session_uuid)
+
+        for event in events:
+            entity = event.entity
+            resources = [GAResource(name=entity.rest_name, value=entity.id)]
+            request = GARequest(action=GARequest.ACTION_READ, resources=resources)
+            context = GAContext(request=request, session=session)
+            context.object = entity
+
+            operation_manager = OperationsManager(context=context, models_controller=self.core_controller.models_controller)
+            operation_manager.run()
+
+            if not context.has_errors():
+                event.entity = context.object
+                events_to_send.append(event)
+
+        logger.debug('Sending events to REST Communication Channel %s' % events_to_send)
+        queue.put(events_to_send)
 
     def add_events(self, events):
         """
