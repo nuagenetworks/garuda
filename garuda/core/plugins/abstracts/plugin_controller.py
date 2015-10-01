@@ -9,27 +9,23 @@ from .plugin import GAPlugin
 class GAPluginController(object):
     """
     """
-    def __init__(self, plugins, plugin_type):
+    def __init__(self, plugins):
         """
         """
 
         self._plugins = []
 
         for plugin in plugins:
-            if isinstance(plugin, plugin_type):
-                self._plugins.append(plugin)
-            else:
-                logger.error("Plugin %s cannot be registered for %s" % self)
+            self.register_plugin(plugin=plugin)
 
     def register_plugin(self, plugin, plugin_type):
         """
         """
         if not isinstance(plugin, plugin_type):
-            logger.error("Plugin %s cannot be registered for %s" % self)
+            logger.error("Plugin %s cannot be registered to %s" % (plugin, self))
             return
 
-
-        if plugin in self._plugins or not issubclass(plugin, GAPlugin):
+        if plugin in self._plugins or not isinstance(plugin, GAPlugin):
             logger.warn("Plugin %s is already registered in controller %s" % (plugin, self))
             return
 

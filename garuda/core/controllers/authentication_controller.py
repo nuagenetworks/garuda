@@ -15,14 +15,14 @@ class AuthenticationController(GAPluginController):
     def __init__(self, plugins):
         """
         """
-        super(AuthenticationController, self).__init__(plugins, GAAuthenticationPlugin)
+        super(AuthenticationController, self).__init__(plugins=plugins)
 
     # Override
 
     def register_plugin(self, plugin):
         """
         """
-        super(AuthenticationController, self).register_plugin(plugin, GAAuthenticationPlugin)
+        super(AuthenticationController, self).register_plugin(plugin=plugin, plugin_type=GAAuthenticationPlugin)
 
     # Implementation
 

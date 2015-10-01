@@ -33,7 +33,7 @@ class PushController(object):
         logger.debug('Starting listening Redis pubsub')
 
         p = self._redis.pubsub()
-        p.subscribe(**{'garuda-new-event': self.receive_event})
+        p.subscribe(**{'event:new': self.receive_event})
 
         self._thread = p.run_in_thread(sleep_time=0.001)
 
@@ -98,7 +98,7 @@ class PushController(object):
         data = dict()
         data['garuda_uuid'] = self.core_controller.uuid
         data['events'] = [event.to_dict() for event in events]
-        self._redis.publish('garuda-new-event', json.dumps(data))
+        self._redis.publish('event:new', json.dumps(data))
 
     def get_queue_for_session(self, session_uuid):
         """

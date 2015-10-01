@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from unittest2 import TestCase
+from garuda.core import set_log_level
+
+set_log_level(logging.ERROR)
+
 
 class UnitTestCase(TestCase):
     """
@@ -9,5 +15,5 @@ class UnitTestCase(TestCase):
     def __init__(self, name):
         """
         """
-        TestCase.__init__(self, name)
+        super(UnitTestCase, self).__init__(name)
         self.maxDiff = None

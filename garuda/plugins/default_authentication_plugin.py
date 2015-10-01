@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.DefaultAuthenticationPlugin')
+logger = logging.getLogger('Garuda.plugins.DefaultAuthenticationPlugin')
 
 from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.config import GAConfig

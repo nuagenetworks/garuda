@@ -13,8 +13,8 @@ from garuda.core.models import GASession, GAUser
 from garuda.core.config import GAConfig
 
 REDIS_ALL_KEY = '*'
-REDIS_LISTENING_KEY = 'sessions-listenning'
-REDIS_GARUDA_KEY = 'sessions-for-garuda-'
+REDIS_LISTENING_KEY = 'sessions:listenning'
+REDIS_GARUDA_KEY = 'sessions:'
 
 REDIS_SESSION_TTL = 3600
 

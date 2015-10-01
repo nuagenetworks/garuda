@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.DefaultModelControllerPlugin')
+logger = logging.getLogger('Garuda.plugins.DefaultModelControllerPlugin')
 
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext

@@ -14,14 +14,14 @@ class ModelController(GAPluginController):
     def __init__(self, plugins):
         """
         """
-        super(ModelController, self).__init__(plugins, GAModelControllerPlugin)
+        super(ModelController, self).__init__(plugins=plugins)
 
     # Override
 
     def register_plugin(self, plugin):
         """
         """
-        super(ModelController, self).register_plugin(plugin, GAModelControllerPlugin)
+        super(ModelController, self).register_plugin(plugin=plugin, plugin_type=GAModelControllerPlugin)
 
     # Implementation
 
