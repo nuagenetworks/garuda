@@ -8,17 +8,20 @@ class TestCreatePermissions(PermissionPluginTestCase):
     """
 
     def setUp(self):
-        """
+        """ Initialize context
+
         """
         pass
 
     def tearDown(self):
-        """
+        """ Cleanup context
+
         """
         pass
 
     def test_create_read_permission_at_root_level(self):
-        """
+        """ Permission READ at the top level should be inherited
+
         """
         self.grant_permission(self.objectA, 'read')
 
@@ -43,7 +46,8 @@ class TestCreatePermissions(PermissionPluginTestCase):
         self.revoke_permission(self.objectA, 'read')
 
     def test_create_read_permission_at_object_level(self):
-        """
+        """ Permission READ at the top level should be inherited and implicitely extended
+
         """
         self.grant_permission(self.objectC, 'read')
 
@@ -69,7 +73,8 @@ class TestCreatePermissions(PermissionPluginTestCase):
 
 
     def test_create_use_permission_at_root_level(self):
-        """
+        """ Permission USE at the top level should be inherited and implicitely extended
+
         """
 
         self.grant_permission(self.objectC, 'use')
@@ -108,17 +113,19 @@ class TestOverridePermissions(PermissionPluginTestCase):
     """
     """
     def setUp(self):
-        """
+        """ Initialize context
+
         """
         self.grant_permission(self.objectC, 'use')
 
     def tearDown(self):
-        """
+        """ Cleanup context
+
         """
         self.revoke_permission(self.objectC, 'use')
 
     def test_override_write_permission_before_object(self):
-        """
+        """ Permission WRITE before an existing USE permission should override it
         """
         self.grant_permission(self.objectB, 'write')
 
@@ -153,7 +160,7 @@ class TestOverridePermissions(PermissionPluginTestCase):
 
 
     def test_override_write_permission_after_object(self):
-        """
+        """ Permission WRITE after an existing USE permission should override it
         """
         self.grant_permission(self.objectF, 'write')
 

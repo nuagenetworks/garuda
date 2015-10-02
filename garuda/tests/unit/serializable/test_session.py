@@ -29,16 +29,21 @@ class TestSerializeSession(UnitTestCase):
     """
     @classmethod
     def setUpClass(cls):
-        """ Initialize context """
+        """ Initialize context
+
+        """
         pass
 
     @classmethod
     def tearDownClass(cls):
-        """ Removes context """
+        """ Removes context
+
+        """
         pass
 
     def test_session_to_dict(self):
-        """
+        """ Session should be serializable as a dictionary
+
         """
         user = get_valid_user()
 
@@ -55,7 +60,8 @@ class TestSerializeSession(UnitTestCase):
         self.assertEqual(session.to_dict(), expected_result)
 
     def test_session_to_hash(self):
-        """
+        """ Session should be serializable as a hashmap
+
         """
         user = get_valid_user()
 
@@ -86,7 +92,8 @@ class TestDeserializeSession(UnitTestCase):
         pass
 
     def test_session_from_dict(self):
-        """
+        """ Session should be deserializable from a dictionary
+
         """
         user = get_valid_user()
 
@@ -99,7 +106,8 @@ class TestDeserializeSession(UnitTestCase):
         self.assertEqual(deserialized_session.to_dict(), d)
 
     def test_session_from_hash(self):
-        """
+        """ Session should be deserializable from a hashmap
+
         """
         user = get_valid_user()
 

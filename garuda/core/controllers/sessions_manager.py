@@ -13,8 +13,9 @@ from garuda.core.models import GASession, GAUser
 from garuda.core.config import GAConfig
 
 REDIS_ALL_KEY = '*'
-REDIS_LISTENING_KEY = 'sessions:listenning'
-REDIS_GARUDA_KEY = 'sessions:'
+REDIS_LISTENING_KEY = 'sessions:listen-for-push'
+REDIS_SESSION_KEY = 'sessions:'
+REDIS_GARUDA_KEY = 'garuda:'
 
 REDIS_SESSION_TTL = 3600
 
@@ -43,18 +44,18 @@ class SessionsManager(object):
 
         if session.is_listening_push_notifications:
             logger.debug('Session is listening for push notification')
-            self._redis.sadd(REDIS_LISTENING_KEY, session.uuid)
+            self._redis.sadd(REDIS_LISTENING_KEY, REDIS_SESSION_KEY + session.uuid)
 
-        self._redis.sadd(REDIS_GARUDA_KEY + session.garuda_uuid, session.uuid)
+        self._redis.sadd(REDIS_GARUDA_KEY + session.garuda_uuid, REDIS_SESSION_KEY + session.uuid)
 
-        return self._redis.hmset(session.uuid, session.to_hash())
+        return self._redis.hmset(REDIS_SESSION_KEY + session.uuid, session.to_hash())
 
     def get_all(self, garuda_uuid=None, listening=None):
         """
         """
         if garuda_uuid is None:
             logger.debug('Get all sessions stored in redis')
-            return self._redis.keys(REDIS_ALL_KEY)
+            return self._redis.keys("sessions*")
 
         garuda_key = REDIS_GARUDA_KEY + garuda_uuid
 
@@ -76,7 +77,7 @@ class SessionsManager(object):
         if session_uuid is None:
             return None
 
-        session_hash = self._redis.hgetall(session_uuid)
+        session_hash = self._redis.hgetall(REDIS_SESSION_KEY + session_uuid)
 
         if session_hash is None or len(session_hash) == 0:
             logger.debug('No session found')
@@ -89,7 +90,7 @@ class SessionsManager(object):
 
         return session
 
-    def create_session(self, request, model_controller, garuda_uuid):
+    def create_session(self, request, garuda_uuid):
         """
         """
         logger.debug('Creating session for garuda_uuid=%s' % garuda_uuid)
@@ -115,14 +116,14 @@ class SessionsManager(object):
         logger.debug('Flushing Garuda Sessions')
         garuda_key = REDIS_GARUDA_KEY + garuda_uuid
 
-        session_uuids = self.get_all(garuda_uuid=garuda_uuid)
+        session_keys = self.get_all(garuda_uuid=garuda_uuid)
 
-        if len(session_uuids) == 0:
+        if len(session_keys) == 0:
             return
 
-        self._redis.delete(*session_uuids)
-        self._redis.srem(garuda_key, *session_uuids)
-        self._redis.srem(REDIS_LISTENING_KEY, *session_uuids)
+        self._redis.delete(*session_keys)
+        self._redis.srem(garuda_key, *session_keys)
+        self._redis.srem(REDIS_LISTENING_KEY, *session_keys)
 
     def flush_database(self):
         """

@@ -142,7 +142,7 @@ class CoreController(object):
     def execute_authenticate(self, request):
         """
         """
-        session = self.sessions_manager.create_session(request=request, model_controller=self.model_controller, garuda_uuid=self.uuid)
+        session = self.sessions_manager.create_session(request=request, garuda_uuid=self.uuid)
         context = GAContext(session=session, request=request)
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session.uuid if session else None))

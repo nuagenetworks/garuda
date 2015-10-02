@@ -18,7 +18,7 @@ class TestRemovePermissions(PermissionPluginTestCase):
         pass
 
     def test_remove_read_permission_at_root_level(self):
-        """
+        """ Remove READ permission at the object level leaves no trace
         """
         self.grant_permission(self.objectA, 'read')
         self.assertCanRead(self.objectA)
@@ -27,7 +27,7 @@ class TestRemovePermissions(PermissionPluginTestCase):
         self.assertNoSessionExists()
 
     def test_remove_write_permission_at_object_level(self):
-        """
+        """ Remove WRITE permission at the object level leaves no trace
         """
         self.grant_permission(self.objectC, 'write')
         self.revoke_permission(self.objectC, 'write')
@@ -35,7 +35,8 @@ class TestRemovePermissions(PermissionPluginTestCase):
         self.assertNoSessionExists()
 
     def test_remove_multiple_permissions(self):
-        """
+        """ Remove multiple permission leaves no trace
+
         """
         self.grant_permission(self.objectC, 'write')
         self.grant_permission(self.objectD, 'use')

@@ -140,23 +140,17 @@ class DefaultPermissionsControllerPlugin(object):
     def has_permission(self, resource, target, action):
         """
         """
-        logger.setLevel(logging.DEBUG)
-        logger.info('HAS PERMISSION %s %s %s' % (resource, target, action))
         permission_key = self._get_permission_key(resource=resource, target=target)
 
         authorized_action = self._redis.zrevrange(permission_key, 0, 0)
 
         if authorized_action:
-            logger.info('Highest action available for %s is %s' % (permission_key, authorized_action))
             action_value = self._value_for_action(action=action)
             authorized_action_value = self._value_for_action(action=authorized_action[0])
 
-            logger.info('%s >= %s ?' % (authorized_action_value, action_value))
             if authorized_action_value >= action_value:
-                logger.info('%s >= %s OK' % (authorized_action_value, action_value))
+                logger.info('Found %s >= %s' % (authorized_action, action))
                 return True
-
-        logger.info('Recursive call on parent object')
 
         if hasattr(target, "parent_object") is False:
             raise Exception('%s does not have a parent_object attribute' % target)
@@ -164,6 +158,7 @@ class DefaultPermissionsControllerPlugin(object):
         parent = target.parent_object
 
         if parent is None:
+            logger.info('No inherited permission')
             return False
 
         return self.has_permission(resource=resource, target=target.parent_object, action=action)
