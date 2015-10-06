@@ -9,7 +9,7 @@ import redis
 
 from .authentication_controller import AuthenticationController
 
-from garuda.core.models import GASession, GAUser
+from garuda.core.models import GASession
 from garuda.core.config import GAConfig
 
 REDIS_ALL_KEY = '*'
@@ -103,7 +103,8 @@ class SessionsManager(object):
         if user is None or user.api_key is None:
             return None
 
-        session.user_info['APIKey'] = user.api_key
+        # TODO: Should be removed from the session
+        # Temporary used to send the user in the REST Communication channel
         user.api_key = session.uuid
         session.user = user
 

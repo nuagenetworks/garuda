@@ -34,14 +34,3 @@ class TestSaveSession(SessionsManagerTestCase):
 
         self.session = self.get_session(self.session.uuid)
         self.assertEquals(self.session.is_listening_push_notifications, True)
-
-    def test_save_session_with_user_info(self):
-        """ Save session with user_info information should succeed
-
-        """
-        self.session.user_info['Commit'] = True
-        self.assertEquals(self.save_session(self.session), True)
-
-        self.session = self.get_session(self.session.uuid)
-        self.assertIn('Commit', self.session.user_info)
-        self.assertTrue(self.session.user_info['Commit'])
