@@ -7,6 +7,7 @@ logger = logging.getLogger('Garuda')
 handler = logging.StreamHandler()
 formatter = logging.Formatter('[%(levelname)s] %(name)s - %(message)s')
 handler.setFormatter(formatter)
+logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
@@ -37,7 +38,7 @@ def main():
     # PluginsManager.register_plugin(plugin)
     # PluginsManager.register_plugin(anotherplugin)
 
-    core = CoreController(authentication_plugins=[default_authentication_plugin], model_controller_plugins=[default_model_controller], permission__controller_plugins=[default_permission_controller_plugin])
+    core = CoreController(authentication_plugins=[default_authentication_plugin], model_controller_plugins=[default_model_controller], permission_controller_plugins=[default_permission_controller_plugin])
     core.start()
 
     logger.info('Garuda is now ready. (Press CTRL+C to quit)')

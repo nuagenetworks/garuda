@@ -22,7 +22,7 @@ class CoreController(object):
     """
 
     """
-    def __init__(self, authentication_plugins=[], model_controller_plugins=[], permission__controller_plugins=[]):
+    def __init__(self, authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
@@ -31,7 +31,7 @@ class CoreController(object):
         self._model_controller = ModelController(plugins=model_controller_plugins)
         self._sessions_manager = SessionsManager(plugins=authentication_plugins)
         self._push_controller = PushController(core_controller=self)
-        self._permissions_controller = PermissionsController(plugins=permission__controller_plugins)
+        self._permissions_controller = PermissionsController(plugins=permission_controller_plugins)
 
         flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
         flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False)
