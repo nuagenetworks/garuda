@@ -46,7 +46,6 @@ class ModelController(GAPluginController):
     def get_all(self, parent, resource_name):
         """
         """
-        print resource_name
         for plugin in self._plugins:
             if plugin.should_manage(resource_name=resource_name, identifier=None):
                 return plugin.get_all(parent=parent, resource_name=resource_name)

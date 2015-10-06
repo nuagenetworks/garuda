@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 import logging
 
 # Logger
@@ -28,17 +29,20 @@ def main():
     """
     """
     from garuda.plugins import DefaultAuthenticationPlugin, DefaultModelControllerPlugin, DefaultPermissionsControllerPlugin
+    from garuda.core.lib import SDKsManager
+
+    sdks_manager = SDKsManager()
+    sdks_manager.register_sdk(identifier="vspk32", sdk=importlib.import_module('vspk.v3_2'))
 
     # Instanciate plugins
     default_model_controller = DefaultModelControllerPlugin()
     default_authentication_plugin = DefaultAuthenticationPlugin()
     default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
-    # Register plugin
-    # PluginsManager.register_plugin(plugin)
-    # PluginsManager.register_plugin(anotherplugin)
-
-    core = CoreController(authentication_plugins=[default_authentication_plugin], model_controller_plugins=[default_model_controller], permission_controller_plugins=[default_permission_controller_plugin])
+    core = CoreController(sdks_manager=sdks_manager,
+                          authentication_plugins=[default_authentication_plugin],
+                          model_controller_plugins=[default_model_controller],
+                          permission_controller_plugins=[default_permission_controller_plugin])
     core.start()
 
     logger.info('Garuda is now ready. (Press CTRL+C to quit)')

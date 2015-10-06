@@ -11,6 +11,7 @@ from .push_controller import PushController
 from .sessions_manager import SessionsManager
 from .permissions_controller import PermissionsController
 
+from garuda.core.lib import SDKsManager
 from garuda.channels.rest import RESTCommunicationChannel
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError, GAPushEvent
 
@@ -22,7 +23,7 @@ class CoreController(object):
     """
 
     """
-    def __init__(self, authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
+    def __init__(self, sdks_manager, authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
@@ -32,6 +33,7 @@ class CoreController(object):
         self._sessions_manager = SessionsManager(plugins=authentication_plugins)
         self._push_controller = PushController(core_controller=self)
         self._permissions_controller = PermissionsController(plugins=permission_controller_plugins)
+        self._sdks_manager = sdks_manager
 
         flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
         flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False)
@@ -68,6 +70,12 @@ class CoreController(object):
         """
         """
         return self._sessions_manager
+
+    @property
+    def sdks_manager(self):
+        """
+        """
+        return self._sdks_manager
 
     def register_channel(self, channel):
         """

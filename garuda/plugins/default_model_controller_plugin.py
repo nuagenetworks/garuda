@@ -6,8 +6,8 @@ logger = logging.getLogger('Garuda.plugins.DefaultModelControllerPlugin')
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
 from garuda.core.config import GAConfig
-from garuda.core.lib.utils import VSDKLoader
 from garuda.core.plugins import GAModelControllerPlugin
+from garuda.core.lib import SDKsManager
 
 
 class DefaultModelControllerPlugin(GAModelControllerPlugin):
@@ -17,21 +17,28 @@ class DefaultModelControllerPlugin(GAModelControllerPlugin):
     def __init__(self):
         """
         """
-        self._vsdk = VSDKLoader.get_vsdk_package(version=3.2)  # TODO: Later this should be in a configuration file
-        self._vsd_session = self._vsdk.NUVSDSession(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
-        self._vsd_session.start()
-        logger.debug('Started VSD Session with user %s' % self._vsd_session.user.user_name)
+        self._sdk_session = None
 
     def _use_session(self):
         """
         """
-        _NURESTSessionCurrentContext.session = self._vsd_session
+        if self._sdk_session is None:
+            sdks_manager = SDKsManager()
+            session_class = sdks_manager.get_sdk_session_class('vspk32')
+
+            if session_class:
+                self._sdk_session = session_class(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
+                self._sdk_session.start()
+                logger.debug('Started SDK Session with user %s' % self._sdk_session.user.user_name)
+
+
+        _NURESTSessionCurrentContext.session = self._sdk_session
 
     def _get_current_user(self):
         """
         """
         self._use_session()
-        return self._vsd_session.user
+        return self._sdk_session.user
 
     # Implementation
 

@@ -3,8 +3,6 @@
 import json
 from datetime import datetime
 
-from vspk.vsdk.v3_2 import NURESTUser
-
 from garuda.tests import UnitTestCase
 from garuda.core.models import GASession
 

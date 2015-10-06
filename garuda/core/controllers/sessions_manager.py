@@ -28,7 +28,6 @@ class SessionsManager(object):
 
         """
         self._plugins = plugins  # TODO: Should SessionsManager be a GAPluginController ?! Can we register plugins ?!
-
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
     def send_event(self, event, content):
@@ -97,7 +96,6 @@ class SessionsManager(object):
         session = GASession(garuda_uuid=garuda_uuid)
 
         authentication_controller = AuthenticationController(plugins=self._plugins)
-
         user = authentication_controller.authenticate(request=request)
 
         if user is None or user.api_key is None:

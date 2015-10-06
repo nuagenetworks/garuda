@@ -6,12 +6,12 @@ from .abstracts import GAPlugin
 class GAAuthenticationPlugin(GAPlugin):
     """
     """
-    def should_manage(self, username, password, enterprise):
+    def should_manage(self, request):
         """
         """
         return True
 
-    def authenticate_user(self, username, password, enterprise):
+    def authenticate(self, request):
         """
         """
-        raise NotImplementedError("%s should implement authenticate_user method" % self)
+        raise NotImplementedError("%s should implement authenticate method" % self)

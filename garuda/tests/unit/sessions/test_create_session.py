@@ -38,7 +38,7 @@ class TestGetSession(SessionsManagerTestCase):
         self.assertEquals(session.is_listening_push_notifications, False)
         self.assertEquals(session.user.to_dict(), user.to_dict())
 
-    def test_create_session_without_authenticatio(self):
+    def test_create_session_without_authentication(self):
         """ Create a session with authentication failure should succeed
 
         """

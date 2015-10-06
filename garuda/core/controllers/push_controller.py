@@ -103,8 +103,10 @@ class PushController(object):
     def get_queue_for_session(self, session_uuid):
         """
         """
+        session_uuid = "sessions:%s" % session_uuid
+
         if session_uuid not in self._queues:
-            logger.debug('Creating queue for session uuid=%s' % session_uuid)
+            logger.debug('Creating queue for %s' % session_uuid)
             self._queues[session_uuid] = Queue()
 
         return self._queues[session_uuid]

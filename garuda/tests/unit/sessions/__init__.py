@@ -1,10 +1,8 @@
 # -*- coding:utf-8 -*-
 
-from mock import patch
-
 from garuda.core.controllers import SessionsManager
-from garuda.core.models import GASession
 from garuda.tests import UnitTestCase
+from bambou import NURESTRootObject
 
 
 class SessionsManagerTestCase(UnitTestCase):
@@ -53,6 +51,15 @@ class SessionsManagerTestCase(UnitTestCase):
         """
         """
         return self.manager.get(session_uuid)
+
+    def get_default_user(self):
+        """
+        """
+        root = NURESTRootObject()
+        root.id = "bbbbbbbb-f93e-437d-b97e-4c945904e7bb"
+        root.api_key = "aaaaaaaa-98d4-4c2b-a136-770c9cbf7cdc"
+        root.user_name = "Test"
+        return root
 
     def assertNoSessionsForGaruda(self, garuda_uuid):
         """

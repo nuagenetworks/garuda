@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['VSDKTransform', 'VSDKLoader']
+__all__ = ['VSDKTransform', 'Singleton']
 
 from .vsdk_transform import VSDKTransform
-from .vsdk_loader import VSDKLoader
+from .singleton import Singleton
