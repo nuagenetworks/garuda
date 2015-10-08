@@ -1,18 +1,18 @@
 # -*- coding:utf-8 -*-
 
-from garuda.core.controllers import SessionsManager
+from garuda.core.controllers import GASessionsManager
 from garuda.tests import UnitTestCase
 from bambou import NURESTRootObject
 
 
-class SessionsManagerTestCase(UnitTestCase):
+class GASessionsManagerTestCase(UnitTestCase):
     """
     """
     def __init__(self, name):
         """
         """
-        super(SessionsManagerTestCase, self).__init__(name)
-        self.manager = SessionsManager(plugins=[])
+        super(GASessionsManagerTestCase, self).__init__(name)
+        self.manager = GASessionsManager(plugins=[])
 
     def get_valid_garuda_uuid(self):
         """

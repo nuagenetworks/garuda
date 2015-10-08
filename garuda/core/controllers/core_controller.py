@@ -2,23 +2,22 @@
 
 import logging
 
-logger = logging.getLogger('Garuda.CoreController')
+logger = logging.getLogger('Garuda.GACoreController')
 
-from .model_controller import ModelController
-from .operations_manager import OperationsManager
-from .thread_manager import ThreadManager
-from .push_controller import PushController
-from .sessions_manager import SessionsManager
-from .permissions_controller import PermissionsController
+from .model_controller import GAModelController
+from .operations_manager import GAOperationsManager
+from .push_controller import GAPushController
+from .sessions_manager import GASessionsManager
+from .permissions_controller import GAPermissionsController
 
-from garuda.core.lib import SDKsManager
+from garuda.core.lib import SDKsManager, ThreadManager
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError, GAPushEvent
 
 from uuid import uuid4
 
 import ssl
 
-class CoreController(object):
+class GACoreController(object):
     """
 
     """
@@ -28,10 +27,10 @@ class CoreController(object):
         self._uuid = str(uuid4())
         self._channels = []
         self._thread_manager = ThreadManager()
-        self._model_controller = ModelController(plugins=model_controller_plugins)
-        self._sessions_manager = SessionsManager(plugins=authentication_plugins)
-        self._push_controller = PushController(core_controller=self)
-        self._permissions_controller = PermissionsController(plugins=permission_controller_plugins)
+        self._model_controller = GAModelController(plugins=model_controller_plugins)
+        self._sessions_manager = GASessionsManager(plugins=authentication_plugins)
+        self._push_controller = GAPushController(core_controller=self)
+        self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins)
         self._sdks_manager = sdks_manager
 
         for channel in communication_channels:
@@ -126,7 +125,7 @@ class CoreController(object):
             context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
             return GAResponse(status=context.errors.type, content=context.errors)
 
-        manager = OperationsManager(context=context, model_controller=self.model_controller)
+        manager = GAOperationsManager(context=context, model_controller=self.model_controller)
         manager.run()
 
         if context.has_errors():

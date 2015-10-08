@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['AuthenticationController', \
-           'CoreController', \
-           'ModelController', \
-           'OperationsManager', \
-           'PluginsManager', \
-           'PushController', \
-           'SessionsManager', \
-           'ThreadManager']
+__all__ = ['GAAuthenticationController',
+           'GACoreController',
+           'GAModelController',
+           'GAOperationsManager',
+           'GABusinessLogicPluginsManager',
+           'GAPushController',
+           'GASessionsManager']
 
-from .authentication_controller import AuthenticationController
-from .core_controller import CoreController
-from .model_controller import ModelController
-from .operations_manager import OperationsManager
-from .plugins_manager import PluginsManager
-from .push_controller import PushController
-from .sessions_manager import SessionsManager
-from .thread_manager import ThreadManager
+from .authentication_controller import GAAuthenticationController
+from .core_controller import GACoreController
+from .model_controller import GAModelController
+from .operations_manager import GAOperationsManager
+from .business_logic_plugins_manager import GABusinessLogicPluginsManager
+from .push_controller import GAPushController
+from .sessions_manager import GASessionsManager

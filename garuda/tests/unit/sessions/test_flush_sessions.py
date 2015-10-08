@@ -3,11 +3,11 @@
 from mock import patch
 
 from garuda.core.models import GASession
-from garuda.core.controllers import AuthenticationController
-from garuda.tests.unit.sessions import SessionsManagerTestCase
+from garuda.core.controllers import GAAuthenticationController
+from garuda.tests.unit.sessions import GASessionsManagerTestCase
 
 
-class TestFlushSession(SessionsManagerTestCase):
+class TestFlushSession(GASessionsManagerTestCase):
     """
     """
 
@@ -30,7 +30,7 @@ class TestFlushSession(SessionsManagerTestCase):
         garuda_uuid = self.get_valid_garuda_uuid()
         user = self.get_default_user()
 
-        with patch.object(AuthenticationController, 'authenticate', return_value=user):
+        with patch.object(GAAuthenticationController, 'authenticate', return_value=user):
             session1 = self.create_session(request='Session1', garuda_uuid=garuda_uuid, is_listening_push_notifications=True)
             session2 = self.create_session(request='Session2', garuda_uuid=garuda_uuid, is_listening_push_notifications=True)
             session3 = self.create_session(request='Session3', garuda_uuid=garuda_uuid, is_listening_push_notifications=True)

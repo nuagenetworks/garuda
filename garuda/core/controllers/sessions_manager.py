@@ -3,11 +3,11 @@
 import logging
 logging.getLogger
 
-logger = logging.getLogger('Garuda.SessionsManager')
+logger = logging.getLogger('Garuda.GASessionsManager')
 
 import redis
 
-from .authentication_controller import AuthenticationController
+from .authentication_controller import GAAuthenticationController
 
 from garuda.core.models import GASession
 from garuda.core.config import GAConfig
@@ -20,14 +20,14 @@ REDIS_GARUDA_KEY = 'garuda:'
 REDIS_SESSION_TTL = 3600
 
 
-class SessionsManager(object):
+class GASessionsManager(object):
     """
     """
     def __init__(self, plugins):
         """
 
         """
-        self._plugins = plugins  # TODO: Should SessionsManager be a GAPluginController ?! Can we register plugins ?!
+        self._plugins = plugins  # TODO: Should GASessionsManager be a GAPluginController ?! Can we register plugins ?!
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
     def send_event(self, event, content):
@@ -95,7 +95,7 @@ class SessionsManager(object):
         logger.debug('Creating session for garuda_uuid=%s' % garuda_uuid)
         session = GASession(garuda_uuid=garuda_uuid)
 
-        authentication_controller = AuthenticationController(plugins=self._plugins)
+        authentication_controller = GAAuthenticationController(plugins=self._plugins)
         user = authentication_controller.authenticate(request=request)
 
         if user is None or user.api_key is None:

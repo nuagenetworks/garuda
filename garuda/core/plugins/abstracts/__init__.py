@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['GAPlugin', 'GAPluginController']
+__all__ = ['GAPlugin']
 
 from .plugin import GAPlugin
-from .plugin_controller import GAPluginController

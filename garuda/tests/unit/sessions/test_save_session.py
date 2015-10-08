@@ -2,11 +2,11 @@
 
 from mock import patch
 
-from garuda.core.controllers import AuthenticationController
-from garuda.tests.unit.sessions import SessionsManagerTestCase
+from garuda.core.controllers import GAAuthenticationController
+from garuda.tests.unit.sessions import GASessionsManagerTestCase
 
 
-class TestSaveSession(SessionsManagerTestCase):
+class TestSaveSession(GASessionsManagerTestCase):
     """
     """
 
@@ -16,7 +16,7 @@ class TestSaveSession(SessionsManagerTestCase):
         """
         user = self.get_default_user()
 
-        with patch.object(AuthenticationController, 'authenticate', return_value=user):
+        with patch.object(GAAuthenticationController, 'authenticate', return_value=user):
             self.session = self.create_session()
 
     def tearDown(self):

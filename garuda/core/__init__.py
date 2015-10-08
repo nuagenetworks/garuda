@@ -17,7 +17,7 @@ from time import sleep
 from bambou import BambouConfig
 BambouConfig.set_should_raise_bambou_http_error(False)
 
-from garuda.core.controllers import CoreController, PluginsManager
+from garuda.core.controllers import GACoreController, GABusinessLogicPluginsManager
 
 def set_log_level(level):
     """
@@ -28,7 +28,7 @@ def set_log_level(level):
 def main():
     """
     """
-    from garuda.plugins import DefaultAuthenticationPlugin, DefaultModelControllerPlugin, DefaultPermissionsControllerPlugin
+    from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultGAPermissionsControllerPlugin
     from garuda.core.lib import SDKsManager
     from garuda.channels.rest import RESTCommunicationChannel
 
@@ -39,11 +39,11 @@ def main():
     sdks_manager.register_sdk(identifier="vspk32", sdk=importlib.import_module('vspk.v3_2'))
 
     # Instanciate plugins
-    default_model_controller = DefaultModelControllerPlugin()
+    default_model_controller = DefaultGAModelControllerPlugin()
     default_authentication_plugin = DefaultAuthenticationPlugin()
-    default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
+    default_permission_controller_plugin = DefaultGAPermissionsControllerPlugin()
 
-    core = CoreController(  sdks_manager=sdks_manager,
+    core = GACoreController(  sdks_manager=sdks_manager,
                             communication_channels=[rest_comm_channel],
                             authentication_plugins=[default_authentication_plugin],
                             model_controller_plugins=[default_model_controller],

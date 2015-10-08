@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.ModelController')
+logger = logging.getLogger('Garuda.GAModelController')
 
 from garuda.core.controllers.abstracts import GAPluginController
-from garuda.core.plugins import GAModelControllerPlugin
+from garuda.core.plugins import GAGAModelControllerPlugin
 
 
-class ModelController(GAPluginController):
+class GAModelController(GAPluginController):
     """
 
     """
     def __init__(self, plugins):
         """
         """
-        super(ModelController, self).__init__(plugins=plugins)
+        super(GAModelController, self).__init__(plugins=plugins)
 
     # Override
 
     def register_plugin(self, plugin):
         """
         """
-        super(ModelController, self).register_plugin(plugin=plugin, plugin_type=GAModelControllerPlugin)
+        super(GAModelController, self).register_plugin(plugin=plugin, plugin_type=GAGAModelControllerPlugin)
 
     # Implementation
 

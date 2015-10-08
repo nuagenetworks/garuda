@@ -5,17 +5,17 @@ import json
 import redis
 import logging
 
-logger = logging.getLogger('Garuda.PushController')
+logger = logging.getLogger('Garuda.GAPushController')
 
 from Queue import Queue
 
 from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext
 from garuda.core.config import GAConfig
 
-from .operations_manager import OperationsManager
+from .operations_manager import GAOperationsManager
 
 
-class PushController(object):
+class GAPushController(object):
     """
 
     """
@@ -82,7 +82,7 @@ class PushController(object):
             context = GAContext(request=request, session=session)
             context.object = entity
 
-            operation_manager = OperationsManager(context=context, model_controller=self.core_controller.model_controller)
+            operation_manager = GAOperationsManager(context=context, model_controller=self.core_controller.model_controller)
             operation_manager.run()
 
             if not context.has_errors():

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GARequest, GAError
-from .plugins_manager import PluginsManager
+from .business_logic_plugins_manager import GABusinessLogicPluginsManager
 
 
-class OperationsManager(object):
+class GAOperationsManager(object):
     """
 
     """
@@ -48,7 +48,7 @@ class OperationsManager(object):
         if self.context.has_errors():
             return
 
-        plugin_manager = PluginsManager(context=self.context)
+        plugin_manager = GABusinessLogicPluginsManager(context=self.context)
 
         plugin_manager.perform_delegate(delegate='begin_read_operation')
 
@@ -97,7 +97,7 @@ class OperationsManager(object):
         if self.context.has_errors():
             return
 
-        plugin_manager = PluginsManager(context=self.context)
+        plugin_manager = GABusinessLogicPluginsManager(context=self.context)
 
         plugin_manager.perform_delegate(delegate='begin_readall_operation')
 
@@ -159,7 +159,7 @@ class OperationsManager(object):
         if self.context.has_errors():
             return
 
-        plugin_manager = PluginsManager(context=self.context)
+        plugin_manager = GABusinessLogicPluginsManager(context=self.context)
 
         plugin_manager.perform_delegate(delegate='begin_write_operation')
 

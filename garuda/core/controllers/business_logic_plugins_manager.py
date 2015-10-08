@@ -3,14 +3,14 @@
 import gevent
 import logging
 
-logger = logging.getLogger('Garuda.PluginsManager')
+logger = logging.getLogger('Garuda.GABusinessLogicPluginsManager')
 
 from garuda.core.exceptions import InternalInconsistencyException
 from collections import namedtuple
 PluginContext = namedtuple('PluginContext', ['plugin', 'context'])
 
 
-class PluginsManager(object):
+class GABusinessLogicPluginsManager(object):
     """
 
     """
