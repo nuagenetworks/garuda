@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GAError
-from garuda.core.models.abstracts import GAPluginManifest, GAPlugin
+from garuda.core.plugins import GAPluginManifest, GABusinessLogicPlugin
 
 
-class AnotherPlugin(GAPlugin):
+class AnotherPlugin(GABusinessLogicPlugin):
     """
 
     """
@@ -14,8 +14,10 @@ class AnotherPlugin(GAPlugin):
 
         """
 
-        return GAPluginManifest(name='Another Plugin', subscriptions={"subnet": ["readall", "delete"], \
-                                                                    "domain": ["readall", "update"]})
+        return GAPluginManifest(name='Another Plugin',
+                                version=1.0,
+                                identifier="garuda.plugins.test.another",
+                                subscriptions={"subnet": ["readall", "delete"], "domain": ["readall", "update"]})
 
     def begin_readall_operation(self, context):
         """

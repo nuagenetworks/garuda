@@ -9,7 +9,7 @@ class GABusinessLoginPlugin(GAPlugin):
 
     """
 
-    @classmethod
+    @property
     def manifest(self):
         """
 
@@ -20,7 +20,7 @@ class GABusinessLoginPlugin(GAPlugin):
         """
 
         """
-        if self.manifest is None:
+        if self.manifest() is None:
             return False
 
         if rest_name not in self.manifest.subscriptions:

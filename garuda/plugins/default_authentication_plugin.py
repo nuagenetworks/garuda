@@ -4,13 +4,22 @@ import logging
 logger = logging.getLogger('Garuda.plugins.DefaultAuthenticationPlugin')
 
 from garuda.core.lib import SDKsManager
-from garuda.core.plugins import GAAuthenticationPlugin
+from garuda.core.plugins import GAAuthenticationPlugin, GAPluginManifest
 from garuda.core.config import GAConfig
 
 
 class DefaultAuthenticationPlugin(GAAuthenticationPlugin):
     """
     """
+
+    @property
+    def manifest(self):
+        """
+
+        """
+        return GAPluginManifest(name='VSD Authentifcation',
+                                version=1.0,
+                                identifier="garuda.plugins.vsd.authentication")
 
     def should_manage(self, request):
         """

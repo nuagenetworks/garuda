@@ -6,9 +6,10 @@ logger = logging.getLogger('Garuda.DefaultPermissionsControllerPlugin')
 import redis
 
 from garuda.core.config import GAConfig
+from garuda.core.plugins import GAPermissionsControllerPlugin
 
 
-class DefaultPermissionsControllerPlugin(object):
+class DefaultPermissionsControllerPlugin(GAPermissionsControllerPlugin):
     """
     """
     DEFAULT_ACTION = 'read'
@@ -17,6 +18,8 @@ class DefaultPermissionsControllerPlugin(object):
     def __init__(self, host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB):
         """
         """
+        super(GAPermissionsControllerPlugin, self).__init__()
+
         self._redis = redis.StrictRedis(host=host, port=port, db=db)
 
     def _get_extended_key(self, permission_key, action, implicit):

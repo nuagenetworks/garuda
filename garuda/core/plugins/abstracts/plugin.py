@@ -5,10 +5,15 @@ class GAPlugin(object):
     """
 
     @classmethod
-    def manifest(cls):
+    def manifest(self):
         """
         """
-        raise NotImplemented("information method must be implemented")
+        raise NotImplemented("manifest method must be implemented")
+
+    def __init__(self):
+        """
+        """
+        self.manifest
 
     def will_register(self):
         """

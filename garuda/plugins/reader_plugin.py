@@ -14,9 +14,10 @@ class ReaderPlugin(GABusinessLoginPlugin):
         """
 
         """
-
-        return GAPluginManifest(name='Reader Plugin', subscriptions={"subnet": ["readall", "delete"], \
-                                                                   "subnettemplate": ["readall", "update"]})
+        return GAPluginManifest(name='Reader Plugin',
+                                version=1.0,
+                                identifier="garuda.plugins.test.reader",
+                                subscriptions={"subnet": ["readall", "delete"], "subnettemplate": ["readall", "update"]})
 
     def begin_readall_operation(self, context):
         """

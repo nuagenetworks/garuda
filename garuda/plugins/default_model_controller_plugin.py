@@ -6,7 +6,7 @@ logger = logging.getLogger('Garuda.plugins.DefaultModelControllerPlugin')
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
 from garuda.core.config import GAConfig
-from garuda.core.plugins import GAModelControllerPlugin
+from garuda.core.plugins import GAModelControllerPlugin, GAPluginManifest
 from garuda.core.lib import SDKsManager
 
 
@@ -14,9 +14,19 @@ class DefaultModelControllerPlugin(GAModelControllerPlugin):
     """
     """
 
+    @property
+    def manifest(self):
+        """
+        """
+        return GAPluginManifest(name='VSD Model Controller',
+                                version=1.0,
+                                identifier="garuda.plugins.vsd.modelcontroller")
+
     def __init__(self):
         """
         """
+        super(GAModelControllerPlugin, self).__init__()
+
         self._sdk_session = None
 
     def _use_session(self):
