@@ -18,7 +18,7 @@ class DefaultGAPermissionsControllerPlugin(GAPermissionsControllerPlugin):
     def __init__(self, host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB):
         """
         """
-        super(GAPermissionsControllerPlugin, self).__init__()
+        super(DefaultGAPermissionsControllerPlugin, self).__init__()
 
         self._redis = redis.StrictRedis(host=host, port=port, db=db)
 

@@ -9,14 +9,21 @@ from garuda.core.plugins.abstracts import GAPlugin
 class GAPluginController(object):
     """
     """
-    def __init__(self, plugins):
+    def __init__(self, plugins, core_controller):
         """
         """
 
+        self._core_controller = core_controller
         self._plugins = []
 
         for plugin in plugins:
             self.register_plugin(plugin=plugin)
+
+    @property
+    def core_controller(self):
+        """
+        """
+        return self._core_controller
 
     def register_plugin(self, plugin, plugin_type):
         """
@@ -30,6 +37,8 @@ class GAPluginController(object):
             return
 
         logger.info("Register plugin %s in controller %s" % (plugin, self))
+
+        plugin.core_controller = self.core_controller
 
         plugin.will_register()
         self._plugins.append(plugin)
@@ -47,3 +56,5 @@ class GAPluginController(object):
         plugin.will_unregister()
         self._plugins.remove(plugin)
         plugin.did_unregister()
+
+        plugin.core_controller = None

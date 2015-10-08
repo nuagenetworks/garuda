@@ -12,10 +12,10 @@ class GAPermissionsController(GAPluginController):
     """
 
     """
-    def __init__(self, plugins):
+    def __init__(self, plugins, core_controller):
         """
         """
-        super(GAPermissionsController, self).__init__(plugins=plugins)
+        super(GAPermissionsController, self).__init__(plugins=plugins, core_controller=core_controller)
 
     # Override
 

@@ -23,10 +23,11 @@ REDIS_SESSION_TTL = 3600
 class GASessionsManager(object):
     """
     """
-    def __init__(self, plugins):
+    def __init__(self, plugins, core_controller):
         """
 
         """
+        self.core_controller = core_controller
         self._plugins = plugins  # TODO: Should GASessionsManager be a GAPluginController ?! Can we register plugins ?!
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
@@ -95,7 +96,7 @@ class GASessionsManager(object):
         logger.debug('Creating session for garuda_uuid=%s' % garuda_uuid)
         session = GASession(garuda_uuid=garuda_uuid)
 
-        authentication_controller = GAAuthenticationController(plugins=self._plugins)
+        authentication_controller = GAAuthenticationController(plugins=self._plugins, core_controller=self.core_controller)
         user = authentication_controller.authenticate(request=request)
 
         if user is None or user.api_key is None:

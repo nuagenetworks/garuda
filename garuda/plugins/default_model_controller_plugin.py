@@ -6,11 +6,11 @@ logger = logging.getLogger('Garuda.plugins.DefaultGAModelControllerPlugin')
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
 from garuda.core.config import GAConfig
-from garuda.core.plugins import GAGAModelControllerPlugin, GAPluginManifest
+from garuda.core.plugins import GAModelControllerPlugin, GAPluginManifest
 from garuda.core.lib import SDKsManager
 
 
-class DefaultGAModelControllerPlugin(GAGAModelControllerPlugin):
+class DefaultGAModelControllerPlugin(GAModelControllerPlugin):
     """
     """
 
@@ -25,7 +25,7 @@ class DefaultGAModelControllerPlugin(GAGAModelControllerPlugin):
     def __init__(self):
         """
         """
-        super(GAGAModelControllerPlugin, self).__init__()
+        super(DefaultGAModelControllerPlugin, self).__init__()
 
         self._sdk_session = None
 

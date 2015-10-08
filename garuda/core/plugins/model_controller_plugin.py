@@ -3,7 +3,7 @@
 from .abstracts import GAPlugin
 
 
-class GAGAModelControllerPlugin(GAPlugin):
+class GAModelControllerPlugin(GAPlugin):
     """
     """
 

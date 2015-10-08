@@ -9,8 +9,9 @@ from .operations_manager import GAOperationsManager
 from .push_controller import GAPushController
 from .sessions_manager import GASessionsManager
 from .permissions_controller import GAPermissionsController
+from .communication_channels_controller import GACommunicationChannelsController
 
-from garuda.core.lib import SDKsManager, ThreadManager
+from garuda.core.lib import SDKsManager
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError, GAPushEvent
 
 from uuid import uuid4
@@ -21,21 +22,16 @@ class GACoreController(object):
     """
 
     """
-    def __init__(self, sdks_manager, communication_channels=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
+    def __init__(self, sdks_manager, communication_channel_plugins=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
-        self._channels = []
-        self._thread_manager = ThreadManager()
-        self._model_controller = GAModelController(plugins=model_controller_plugins)
-        self._sessions_manager = GASessionsManager(plugins=authentication_plugins)
+        self._model_controller = GAModelController(plugins=model_controller_plugins, core_controller=self)
+        self._sessions_manager = GASessionsManager(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
-        self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins)
+        self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins, core_controller=self)
+        self._communication_channels_controller = GACommunicationChannelsController(plugins=communication_channel_plugins, core_controller=self)
         self._sdks_manager = sdks_manager
-
-        for channel in communication_channels:
-            self.register_channel(channel)
-
 
     @property
     def uuid(self):
@@ -68,25 +64,16 @@ class GACoreController(object):
         return self._sessions_manager
 
     @property
+    def communication_channels_controller(self):
+        """
+        """
+        return self._communication_channels_controller
+
+    @property
     def sdks_manager(self):
         """
         """
         return self._sdks_manager
-
-    def register_channel(self, channel):
-        """
-        """
-        logger.debug('Register channel %s' % channel)
-        if channel not in self._channels:
-            channel.controller = self
-            self._channels.append(channel)
-
-    def unregister_channel(self, channel):
-        """
-        """
-        logger.debug('Unregister channel %s' % channel)
-        if channel in self._channels:
-            self._channels.remove(channel)
 
     def start(self):
         """
@@ -94,21 +81,13 @@ class GACoreController(object):
         logger.debug('Starting core controller')
 
         self.push_controller.start()
-
-        for channel in self._channels:
-            logger.debug('Starting channel %s' % channel)
-            self._thread_manager.start(channel.start)
-
-    def is_running(self):
-        """
-        """
-        return self._thread_manager.is_running()
+        self.communication_channels_controller.start()
 
     def stop(self, signal=None, frame=None):
         """
         """
         logger.debug('Stopping core controller')
-        self._thread_manager.stop_all()
+        self.communication_channels_controller.stop()
         self.push_controller.flush(garuda_uuid=self.uuid)
         self.push_controller.stop()
 

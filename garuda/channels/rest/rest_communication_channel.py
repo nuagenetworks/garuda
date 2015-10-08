@@ -237,7 +237,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         action = self.determine_action(method, resources)
 
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
-        ga_response = self.controller.execute(request=ga_request)
+        ga_response = self.core_controller.execute(request=ga_request)
 
         logger.info('<<<< Response for %s %s to %s' % (request.method, request.path, parameters['Host']))
 
@@ -267,7 +267,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         action = GARequest.ACTION_AUTHENTICATE
 
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
-        ga_response = self.controller.execute_authenticate(request=ga_request)
+        ga_response = self.core_controller.execute_authenticate(request=ga_request)
 
         logger.info('<<<< Response for %s %s authentication to %s' % (request.method, request.path, parameters['Host']))
 
@@ -284,7 +284,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
 
-        queue = self.controller.get_queue(request=ga_request)
+        queue = self.core_controller.get_queue(request=ga_request)
 
         if queue is None:
             return self.make_http_response(action='FUCK', response=GAResponse(status='UNAUTHORIZED', content='Queue is None!'))

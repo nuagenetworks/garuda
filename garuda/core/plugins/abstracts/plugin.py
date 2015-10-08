@@ -4,16 +4,10 @@ class GAPlugin(object):
     """
     """
 
-    @classmethod
-    def manifest(self):
+    def __init__(self, core_controller=None):
         """
         """
-        raise NotImplemented("manifest method must be implemented")
-
-    def __init__(self):
-        """
-        """
-        self.manifest
+        self.core_controller = core_controller
 
     def will_register(self):
         """
@@ -34,3 +28,9 @@ class GAPlugin(object):
         """
         """
         pass
+
+    @classmethod
+    def manifest(self):
+        """
+        """
+        raise NotImplemented("manifest method must be implemented")

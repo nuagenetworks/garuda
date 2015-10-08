@@ -12,10 +12,10 @@ class GAAuthenticationController(GAPluginController):
     """
 
     """
-    def __init__(self, plugins):
+    def __init__(self, plugins, core_controller):
         """
         """
-        super(GAAuthenticationController, self).__init__(plugins=plugins)
+        super(GAAuthenticationController, self).__init__(plugins=plugins, core_controller=core_controller)
 
     # Override
 
