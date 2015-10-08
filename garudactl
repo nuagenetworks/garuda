@@ -4,27 +4,25 @@ import sys
 
 if __name__ == '__main__':
     print """
-                             N
-                             Ndysyd
-                 N  dd  N        h+/sd
-            Ndys+++++++///oshN     y::+d
-           yo+++++osyhddddhysoohN    /::s
-         s++++oosd              hd   d:::o
-       hoo++oood                      s:::y
-      hooooo+o                        d::::N
-     dooooo++                          :::-o            Garuda Server 1.0
-     sooos++y                         d::--/d           =================
-    Nooos+++d                         +::-/:s
-    Nooos+++                         y::--/-s
-     yo+s+++yN                      y:::-/--h           The sky's the limit!
-     No+s+++os                     o::::/--/N           https://garuda.org
-       ooo+++o+yN               do::::::--:
-        so++++o++sd          hs/:::///---/
-         ds+++++++/+osssso+////////:::-:y
-            s+++/+++/////////::::::::/yN
-              s+////++++//:::::://ohN
-               Nds+///////////+shN
-                   N dhhhhhd N
+
+                           +7
+           NI??????D        I+=          Garuda 1.0.0
+        IIII????????ID ?      ++         ============
+      IIIIII             +    D++
+    ?IIII$Z                    ===       Single node mode
+   IIII I                      N===      Port: 2000
+  IIIDI?                        ===:     https://garuda.org
+  IIIIID                       D====
+  IIIII                       7===7=
+  IIIIIZ                     O=== ==
+   INIII?                   =+== ==
+   O?III??I               ?+===~===
+     DI?????+          I++++O~===+
+      N????$??????7DZ$$8N?+++===
+        ?????8????++++++++++==
+          ?????+++NZ=+++=+N7
+             +?+_++++++=O
 """
+
     from garuda.core import main
     sys.exit(main())

@@ -3,7 +3,7 @@
 import logging
 logger = logging.getLogger('Garuda.ModelController')
 
-from garuda.core.plugins.abstracts import GAPluginController
+from garuda.core.controllers.abstracts import GAPluginController
 from garuda.core.plugins import GAModelControllerPlugin
 
 

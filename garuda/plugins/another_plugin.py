@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GAError
-from garuda.core.models.abstracts import PluginManifest, GAPlugin
+from garuda.core.models.abstracts import GAPluginManifest, GAPlugin
 
 
 class AnotherPlugin(GAPlugin):
@@ -14,7 +14,7 @@ class AnotherPlugin(GAPlugin):
 
         """
 
-        return PluginManifest(name='Another Plugin', subscriptions={"subnet": ["readall", "delete"], \
+        return GAPluginManifest(name='Another Plugin', subscriptions={"subnet": ["readall", "delete"], \
                                                                     "domain": ["readall", "update"]})
 
     def begin_readall_operation(self, context):

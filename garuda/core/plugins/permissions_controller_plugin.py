@@ -6,6 +6,7 @@ from .abstracts import GAPlugin
 class GAPermissionsControllerPlugin(GAPlugin):
     """
     """
+
     def should_manage(self, resource_name, identifier):
         """
         """

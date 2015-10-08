@@ -6,6 +6,7 @@ from .abstracts import GAPlugin
 class GAAuthenticationPlugin(GAPlugin):
     """
     """
+
     def should_manage(self, request):
         """
         """

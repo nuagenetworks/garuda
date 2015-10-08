@@ -6,6 +6,7 @@ from .abstracts import GAPlugin
 class GAModelControllerPlugin(GAPlugin):
     """
     """
+
     def should_manage(self, resource_name, identifier):
         """
         """

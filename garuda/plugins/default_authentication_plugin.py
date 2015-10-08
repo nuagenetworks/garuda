@@ -11,6 +11,7 @@ from garuda.core.config import GAConfig
 class DefaultAuthenticationPlugin(GAAuthenticationPlugin):
     """
     """
+
     def should_manage(self, request):
         """
         """
@@ -38,3 +39,4 @@ class DefaultAuthenticationPlugin(GAAuthenticationPlugin):
         session.start()
 
         return session.user
+

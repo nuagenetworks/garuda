@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GAError
-from garuda.core.models.abstracts import PluginManifest, GAPlugin
+from garuda.core.plugins import GAPluginManifest, GABusinessLoginPlugin
 
 from time import sleep
 
-class ReaderPlugin(GAPlugin):
+class ReaderPlugin(GABusinessLoginPlugin):
     """
 
     """
@@ -15,7 +15,7 @@ class ReaderPlugin(GAPlugin):
 
         """
 
-        return PluginManifest(name='Reader Plugin', subscriptions={"subnet": ["readall", "delete"], \
+        return GAPluginManifest(name='Reader Plugin', subscriptions={"subnet": ["readall", "delete"], \
                                                                    "subnettemplate": ["readall", "update"]})
 
     def begin_readall_operation(self, context):

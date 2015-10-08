@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
+from .abstracts import GAPlugin
 from garuda.core.exceptions import NotImplementedException
 
 
-class GAPlugin(object):
+class GABusinessLoginPlugin(GAPlugin):
     """
 
     """
-    @property
+
+    @classmethod
     def manifest(self):
         """
 
