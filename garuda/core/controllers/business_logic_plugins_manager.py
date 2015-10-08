@@ -3,7 +3,7 @@
 import gevent
 import logging
 
-logger = logging.getLogger('Garuda.GABusinessLogicPluginsManager')
+logger = logging.getLogger('garuda.businesslogicpluginsmanager')
 
 from garuda.core.exceptions import InternalInconsistencyException
 from collections import namedtuple

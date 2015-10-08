@@ -2,7 +2,7 @@
 
 import logging
 
-logger = logging.getLogger('Garuda.plugins.GAAuthenticationController')
+logger = logging.getLogger('garuda.authenticationcontroller')
 
 from garuda.core.controllers.abstracts import GAPluginController
 from garuda.core.plugins import GAPermissionsControllerPlugin

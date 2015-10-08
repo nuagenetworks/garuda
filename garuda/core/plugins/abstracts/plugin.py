@@ -30,7 +30,7 @@ class GAPlugin(object):
         pass
 
     @classmethod
-    def manifest(self):
+    def manifest(cls):
         """
         """
         raise NotImplemented("manifest method must be implemented")

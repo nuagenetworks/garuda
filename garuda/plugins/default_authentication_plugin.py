@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.plugins.DefaultAuthenticationPlugin')
+logger = logging.getLogger('ext.defaultauthenticationplugin')
 
 from garuda.core.lib import SDKsManager
 from garuda.core.plugins import GAAuthenticationPlugin, GAPluginManifest
@@ -12,8 +12,8 @@ class DefaultAuthenticationPlugin(GAAuthenticationPlugin):
     """
     """
 
-    @property
-    def manifest(self):
+    @classmethod
+    def manifest(cls):
         """
 
         """

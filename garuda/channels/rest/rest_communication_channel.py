@@ -3,7 +3,7 @@
 import json
 import logging
 
-logger = logging.getLogger('Garuda.RESTCommunicationChannel')
+logger = logging.getLogger('ext.restcommunicationchannel')
 
 from base64 import urlsafe_b64decode
 
@@ -18,13 +18,22 @@ from .utils.constants import RESTConstants
 from garuda.core.config import GAConfig
 from garuda.core.lib import PathParser
 from garuda.core.models import GARequest, GAResponse, GAError, GAPushNotification
-from garuda.core.plugins import GACommunicationChannel
+from garuda.core.plugins import GACommunicationChannel, GAPluginManifest
 
 
 class RESTCommunicationChannel(GACommunicationChannel):
     """
 
     """
+
+    @classmethod
+    def manifest(cls):
+        """
+        """
+        return GAPluginManifest(name='ReST Communication Channel',
+                                version=1.0,
+                                identifier="garuda.plugins.comm.rest")
+
     def __init__(self, **kwargs):
         """
         """

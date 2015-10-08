@@ -9,8 +9,8 @@ class ReaderPlugin(GABusinessLoginPlugin):
     """
 
     """
-    @property
-    def manifest(self):
+    @classmethod
+    def manifest(cls):
         """
 
         """

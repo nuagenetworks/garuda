@@ -9,24 +9,15 @@ class GABusinessLoginPlugin(GAPlugin):
 
     """
 
-    @property
-    def manifest(self):
-        """
-
-        """
-        raise NotImplementedException('Plugin should implement its manifest method')
-
     def is_listening(self, rest_name, action=None):
         """
 
         """
-        if self.manifest() is None:
+        manifest = self.manifest()
+        if rest_name not in manifest.subscriptions:
             return False
 
-        if rest_name not in self.manifest.subscriptions:
-            return False
-
-        if action and action in self.manifest.subscriptions[rest_name]:
+        if action and action in manifest.subscriptions[rest_name]:
             return True
 
         return False

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.plugins.DefaultGAModelControllerPlugin')
+logger = logging.getLogger('ext.defaultgamodelcontrollerplugin')
 
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
@@ -14,8 +14,8 @@ class DefaultGAModelControllerPlugin(GAModelControllerPlugin):
     """
     """
 
-    @property
-    def manifest(self):
+    @classmethod
+    def manifest(cls):
         """
         """
         return GAPluginManifest(name='VSD Model Controller',

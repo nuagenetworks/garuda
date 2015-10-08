@@ -11,7 +11,7 @@ from garuda.core.config import GAConfig
 GASerializableAttribute = namedtuple('GASerializableAttribute', ['internal_name', 'name', 'type', 'children_type'])
 
 
-logger = logging.getLogger('Garuda.Serializable')
+logger = logging.getLogger('garuda.serializable')
 
 class GASerializable(object):
     """

@@ -3,7 +3,7 @@
 import logging
 import re
 
-logger = logging.getLogger('VSDUtils.VSDKTransform')
+logger = logging.getLogger('garuda.vsdktransform')
 
 
 class VSDKTransform(object):

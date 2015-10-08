@@ -4,7 +4,7 @@ import importlib
 import logging
 
 # Logger
-logger = logging.getLogger('Garuda')
+logger = logging.getLogger('garuda')
 handler = logging.StreamHandler()
 formatter = logging.Formatter('[%(levelname)s] %(name)s - %(message)s')
 handler.setFormatter(formatter)
@@ -28,7 +28,7 @@ def start():
 
     """
     """
-    from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultGAPermissionsControllerPlugin
+    from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultPermissionsControllerPlugin
     from garuda.core.lib import SDKsManager
     from garuda.channels.rest import RESTCommunicationChannel
 
@@ -41,7 +41,7 @@ def start():
     # Instanciate plugins
     default_model_controller = DefaultGAModelControllerPlugin()
     default_authentication_plugin = DefaultAuthenticationPlugin()
-    default_permission_controller_plugin = DefaultGAPermissionsControllerPlugin()
+    default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
     core = GACoreController(  sdks_manager=sdks_manager,
                             communication_channel_plugins=[rest_comm_channel],

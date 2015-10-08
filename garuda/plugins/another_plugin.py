@@ -8,8 +8,8 @@ class AnotherPlugin(GABusinessLogicPlugin):
     """
 
     """
-    @property
-    def manifest(self):
+    @classmethod
+    def manifest(cls):
         """
 
         """

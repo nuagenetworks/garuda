@@ -1,24 +1,32 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.DefaultGAPermissionsControllerPlugin')
+logger = logging.getLogger('ext.defaultpermissionscontrollerplugin')
 
 import redis
 
 from garuda.core.config import GAConfig
-from garuda.core.plugins import GAPermissionsControllerPlugin
+from garuda.core.plugins import GAPermissionsControllerPlugin, GAPluginManifest
 
 
-class DefaultGAPermissionsControllerPlugin(GAPermissionsControllerPlugin):
+class DefaultPermissionsControllerPlugin(GAPermissionsControllerPlugin):
     """
     """
     DEFAULT_ACTION = 'read'
     ACTIONS = ['read', 'use', 'extend', 'write', 'all']
 
+    @classmethod
+    def manifest(cls):
+        """
+        """
+        return GAPluginManifest(name='Permissions Controller',
+                                version=1.0,
+                                identifier="garuda.plugins.permissions.default")
+
     def __init__(self, host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB):
         """
         """
-        super(DefaultGAPermissionsControllerPlugin, self).__init__()
+        super(DefaultPermissionsControllerPlugin, self).__init__()
 
         self._redis = redis.StrictRedis(host=host, port=port, db=db)
 
@@ -40,7 +48,7 @@ class DefaultGAPermissionsControllerPlugin(GAPermissionsControllerPlugin):
     def _value_for_action(self, action):
         """
         """
-        return DefaultGAPermissionsControllerPlugin.ACTIONS.index(action.lower())
+        return DefaultPermissionsControllerPlugin.ACTIONS.index(action.lower())
 
     def flush_permissions(self):
         """
@@ -78,7 +86,7 @@ class DefaultGAPermissionsControllerPlugin(GAPermissionsControllerPlugin):
         extended_key = self._get_extended_key(permission_key=permission_key, action=action, implicit=implicit)
 
         action_value = self._value_for_action(action=action)
-        read_value = self._value_for_action(action=DefaultGAPermissionsControllerPlugin.DEFAULT_ACTION)
+        read_value = self._value_for_action(action=DefaultPermissionsControllerPlugin.DEFAULT_ACTION)
 
         logger.info('Adding action %s permission (value=%s) to %s (implicit=%s)' % (action, action_value, permission_key, implicit))
 
@@ -89,14 +97,14 @@ class DefaultGAPermissionsControllerPlugin(GAPermissionsControllerPlugin):
 
         while target.parent_object != None:
             tmp_permission_key = self._get_permission_key(resource=resource, target=target.parent_object)
-            tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, action=DefaultGAPermissionsControllerPlugin.DEFAULT_ACTION, implicit=True)
+            tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, action=DefaultPermissionsControllerPlugin.DEFAULT_ACTION, implicit=True)
 
             logger.info('Adding implicit %s to %s' % (tmp_extended_key, extended_key))
             logger.info('Link %s to %s' % (extended_key, tmp_extended_key))
 
             self._redis.sadd(extended_key, tmp_extended_key)
             self._redis.sadd(tmp_extended_key, extended_key)
-            self._redis.zadd(tmp_permission_key, read_value, DefaultGAPermissionsControllerPlugin.DEFAULT_ACTION)
+            self._redis.zadd(tmp_permission_key, read_value, DefaultPermissionsControllerPlugin.DEFAULT_ACTION)
 
             target = target.parent_object
 
@@ -130,9 +138,9 @@ class DefaultGAPermissionsControllerPlugin(GAPermissionsControllerPlugin):
                     self._redis.delete(extended_implicit_key)
 
                     implicit_permission_key = self._convert_extended_key(extended_implicit_key)
-                    if not self._redis.exists(self._get_extended_key(permission_key=implicit_permission_key, action=DefaultGAPermissionsControllerPlugin.DEFAULT_ACTION, implicit=False)):
+                    if not self._redis.exists(self._get_extended_key(permission_key=implicit_permission_key, action=DefaultPermissionsControllerPlugin.DEFAULT_ACTION, implicit=False)):
                         logger.info('**Removes action %s from %s' % (action, implicit_permission_key))
-                        self._redis.zrem(implicit_permission_key, DefaultGAPermissionsControllerPlugin.DEFAULT_ACTION)
+                        self._redis.zrem(implicit_permission_key, DefaultPermissionsControllerPlugin.DEFAULT_ACTION)
 
                 else:
                     logger.info('Removing %s from %s' % (extended_key, extended_implicit_key))

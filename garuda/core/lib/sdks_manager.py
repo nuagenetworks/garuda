@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.SDKsManager')
+logger = logging.getLogger('garuda.sdksmanager')
 
 from .utils import VSDKTransform
 from bambou import NURESTModelController

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('Garuda.GAPluginController')
+logger = logging.getLogger('garuda.plugincontroller')
 
 from garuda.core.plugins.abstracts import GAPlugin
 
@@ -36,7 +36,7 @@ class GAPluginController(object):
             logger.warn("Plugin %s is already registered in controller %s" % (plugin, self))
             return
 
-        logger.info("Register plugin %s in controller %s" % (plugin, self))
+        logger.info("Registering plugin '%s (%s)'" % (plugin.manifest().identifier, plugin.manifest().name))
 
         plugin.core_controller = self.core_controller
 

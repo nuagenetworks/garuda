@@ -12,15 +12,6 @@ class GACommunicationChannel(GAPlugin):
     CHANNEL_TYPE_XMPP = 1
     CHANNEL_TYPE_OTHER = 2
 
-    @property
-    def manifest(self):
-        """
-        """
-        return GAPluginManifest(name='ReST Communication Channel',
-                                version=1.0,
-                                identifier="garuda.plugins.comm.rest")
-
-
     def channel_type(self):
         """
         """

@@ -3,7 +3,7 @@
 import logging
 logging.getLogger
 
-logger = logging.getLogger('Garuda.GASessionsManager')
+logger = logging.getLogger('garuda.sessionsmanager')
 
 import redis
 

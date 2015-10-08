@@ -2,7 +2,7 @@
 
 import logging
 
-logger = logging.getLogger('Garuda.GACoreController')
+logger = logging.getLogger('garuda.corecontroller')
 
 from .model_controller import GAModelController
 from .operations_manager import GAOperationsManager
