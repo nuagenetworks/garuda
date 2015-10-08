@@ -30,6 +30,10 @@ def main():
     """
     from garuda.plugins import DefaultAuthenticationPlugin, DefaultModelControllerPlugin, DefaultPermissionsControllerPlugin
     from garuda.core.lib import SDKsManager
+    from garuda.channels.rest import RESTCommunicationChannel
+
+    rest_comm_channel = RESTCommunicationChannel(host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
+
 
     sdks_manager = SDKsManager()
     sdks_manager.register_sdk(identifier="vspk32", sdk=importlib.import_module('vspk.v3_2'))
@@ -39,10 +43,11 @@ def main():
     default_authentication_plugin = DefaultAuthenticationPlugin()
     default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
-    core = CoreController(sdks_manager=sdks_manager,
-                          authentication_plugins=[default_authentication_plugin],
-                          model_controller_plugins=[default_model_controller],
-                          permission_controller_plugins=[default_permission_controller_plugin])
+    core = CoreController(  sdks_manager=sdks_manager,
+                            communication_channels=[rest_comm_channel],
+                            authentication_plugins=[default_authentication_plugin],
+                            model_controller_plugins=[default_model_controller],
+                            permission_controller_plugins=[default_permission_controller_plugin])
     core.start()
 
     logger.info('Garuda is now ready. (Press CTRL+C to quit)')

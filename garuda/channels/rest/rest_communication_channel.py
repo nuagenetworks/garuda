@@ -18,21 +18,21 @@ from .utils.constants import RESTConstants
 from garuda.core.config import GAConfig
 from garuda.core.lib import PathParser
 from garuda.core.models import GARequest, GAResponse, GAError, GAPushNotification
-from garuda.core.models.abstracts import CommunicationChannel
+from garuda.core.plugins import GACommunicationChannel
 
 
-class RESTCommunicationChannel(CommunicationChannel):
+class RESTCommunicationChannel(GACommunicationChannel):
     """
 
     """
-    def __init__(self, controller, **kwargs):
+    def __init__(self, **kwargs):
         """
         """
         self._uuid = str(uuid4())
         self._is_running = False
-        self.controller = controller
-        self.app = Flask(self.__class__.__name__)
+        self._controller = None
 
+        self.app = Flask(self.__class__.__name__)
         self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
 
         # Authentication
@@ -58,6 +58,18 @@ class RESTCommunicationChannel(CommunicationChannel):
         """
         """
         return self._is_running
+
+    @property
+    def controller(self):
+        """
+        """
+        return self._controller
+
+    @controller.setter
+    def controller(self, value):
+        """
+        """
+        self._controller = value
 
     def channel_type(self):
         """

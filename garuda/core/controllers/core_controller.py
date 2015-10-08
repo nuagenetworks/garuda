@@ -12,7 +12,6 @@ from .sessions_manager import SessionsManager
 from .permissions_controller import PermissionsController
 
 from garuda.core.lib import SDKsManager
-from garuda.channels.rest import RESTCommunicationChannel
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError, GAPushEvent
 
 from uuid import uuid4
@@ -23,7 +22,7 @@ class CoreController(object):
     """
 
     """
-    def __init__(self, sdks_manager, authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
+    def __init__(self, sdks_manager, communication_channels=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
@@ -35,11 +34,9 @@ class CoreController(object):
         self._permissions_controller = PermissionsController(plugins=permission_controller_plugins)
         self._sdks_manager = sdks_manager
 
-        flask2000 = RESTCommunicationChannel(controller=self, host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
-        flask3000 = RESTCommunicationChannel(controller=self, host="0.0.0.0", port=3000, threaded=True, debug=True, use_reloader=False)
+        for channel in communication_channels:
+            self.register_channel(channel)
 
-        self.register_channel(flask2000)
-        # self.register_channel(flask3000)
 
     @property
     def uuid(self):
@@ -82,6 +79,7 @@ class CoreController(object):
         """
         logger.debug('Register channel %s' % channel)
         if channel not in self._channels:
+            channel.controller = self
             self._channels.append(channel)
 
     def unregister_channel(self, channel):
