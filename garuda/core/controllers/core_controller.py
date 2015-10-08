@@ -35,8 +35,8 @@ class CoreController(object):
         self._permissions_controller = PermissionsController(plugins=permission_controller_plugins)
         self._sdks_manager = sdks_manager
 
-        flask2000 = RESTCommunicationChannel(controller=self, port=2000, threaded=True, debug=True, use_reloader=False)
-        flask3000 = RESTCommunicationChannel(controller=self, port=3000, threaded=True, debug=True, use_reloader=False)
+        flask2000 = RESTCommunicationChannel(controller=self, host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
+        flask3000 = RESTCommunicationChannel(controller=self, host="0.0.0.0", port=3000, threaded=True, debug=True, use_reloader=False)
 
         self.register_channel(flask2000)
         # self.register_channel(flask3000)
