@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 import logging
-
-logger = logging.getLogger('garuda.corecontroller')
+import ssl
+from uuid import uuid4
 
 from .model_controller import GAModelController
 from .operations_controller import GAOperationsController
@@ -14,9 +15,8 @@ from .communication_channels_controller import GACommunicationChannelsController
 from garuda.core.lib import SDKsManager
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError
 
-from uuid import uuid4
+logger = logging.getLogger('garuda.corecontroller')
 
-import ssl
 
 class GACoreController(object):
     """
@@ -25,16 +25,21 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_manager, communication_channel_plugins=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
+    def __init__(self, sdks_info, communication_channel_plugins=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
         """
         """
+
+        self._sdks_manager = SDKsManager()
+
+        for sdk_info in sdks_info:
+            self._sdks_manager.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
+
         self._uuid = str(uuid4())
         self._model_controller = GAModelController(plugins=model_controller_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
         self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins, core_controller=self)
         self._communication_channels_controller = GACommunicationChannelsController(plugins=communication_channel_plugins, core_controller=self)
-        self._sdks_manager = sdks_manager
 
     @property
     def uuid(self):

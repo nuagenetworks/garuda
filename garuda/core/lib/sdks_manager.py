@@ -4,6 +4,7 @@ import logging
 logger = logging.getLogger('garuda.sdksmanager')
 
 from .utils import VSDKTransform
+from garuda.core.exceptions import InternalInconsistencyException
 from bambou import NURESTModelController
 from garuda.core.lib.utils import Singleton
 from collections import OrderedDict
@@ -35,12 +36,11 @@ class SDKsManager(object):
     def get_sdk(self, identifier):
         """
         """
-        if identifier in self._sdks:
-            logger.debug("SDK version found for identifier %s" % identifier)
-            return self._sdks[identifier]
+        if not identifier in self._sdks:
+            logger.error("SDK version not found for identifier"  % identifier)
+            return None
 
-        logger.warn("SDK version not found for identifier %s" % identifier)
-        return None
+        return self._sdks[identifier]
 
     def get_sdk_session_class(self, identifier):
         """

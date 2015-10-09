@@ -1,87 +1,36 @@
 # -*- coding: utf-8 -*-
+from uuid import uuid4
+from bambou import NURESTModelController
 
 from garuda.core.plugins import GAModelControllerPlugin, GAPluginManifest
 from garuda.core.models import GAError
 from garuda.core.lib import SDKsManager
-from uuid import uuid4
 
 class TDLStoragePlugin(GAModelControllerPlugin):
     """
     """
+    MAX_ID = 1
 
     @classmethod
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='TDL Storage',
-                                version=1.0,
-                                identifier="garuda.plugins.model.tdl")
+        return GAPluginManifest(name='TDL SQLite Storage', version=1.0, identifier="garuda.plugins.tdl.storage.sqlite")
 
     def did_register(self):
         """
         """
         self._sdk = SDKsManager().get_sdk("tdldk")
-        self._database = {
-            "list": [
-                {
-                    "ID": "1",
-                    "title": "Shopping List",
-                    "description": "Things to buy"
-                },
-                {
-                    "ID": "2",
-                    "title": "Secret List",
-                    "description": "You should not see this"
-                }
-            ],
-            "task": [
-                {
-                        "ID": "11",
-                        "parentID": "1",
-                        "parentType": "list",
-                        "title": "Buy Milk",
-                        "description": "because it is good",
-                        "status": "TODO"
-                    },
-                    {
-                        "ID": "12",
-                        "parentID": "1",
-                        "parentType": "list",
-                        "title": "Buy Chocolate",
-                        "description": "because it is even better",
-                        "status": "TODO"
-                    },
-                    {
-                        "ID": "21",
-                        "parentID": "2",
-                        "parentType": "list",
-                        "title": "Explain Monolithe",
-                        "description": "We are doing it right now",
-                        "status": "TODO"
-                    },
-                    {
-                        "ID": "22",
-                        "parentID": "2",
-                        "parentType": "list",
-                        "title": "Make Garuda popular",
-                        "description": "Almost done",
-                        "status": "TODO"
-                    },
-                    {
-                        "ID": "23",
-                        "parentID": "2",
-                        "parentType": "list",
-                        "title": "Dominate the world",
-                        "description": "That is the plan",
-                        "status": "TODO"
-                    }
-            ],
-            "root": [{
-                "ID": "root-id-1",
-                "userName": "root",
-                "password": "password"
-            }]
-        }
+        self._database = {}
+
+        for models in NURESTModelController.get_all_models():
+
+            model = models[0]
+
+            self._database[model.rest_name] = []
+
+            if model.rest_name == self._sdk.SDKInfo.root_object_class().rest_name:
+                self._database[model.rest_name].append({"ID": "0", "userName": "root", "password": "password"})
 
     def should_manage(self, resource_name, identifier):
         """
@@ -91,15 +40,8 @@ class TDLStoragePlugin(GAModelControllerPlugin):
     def instantiate(self, resource_name):
         """
         """
-
-        if resource_name == "list":
-            return self._sdk.GAList()
-
-        if resource_name == "task":
-            return self._sdk.GATask()
-
-        if resource_name == "root":
-            return self._sdk.GARoot()
+        klass = NURESTModelController.get_first_model(resource_name)
+        return klass()
 
     def get(self, resource_name, identifier):
         """
@@ -117,17 +59,16 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         """
         ret = []
 
-        if resource_name == "list":
+        for item in self._database[resource_name]:
 
-            for item in self._database["list"]:
-                l = self.instantiate("list")
-                l.from_dict(item)
-                ret.append(l)
-        else:
+            obj_id = item["ID"]
 
-            for item in self._database["task"]:
+            if parent:
                 if item["parentID"] == parent.id:
-                    ret.append(self.get(resource_name, item["ID"]))
+                    ret.append(self.get(resource_name, obj_id))
+
+            else:
+                ret.append(self.get(resource_name, obj_id))
 
         return ret
 
@@ -137,14 +78,15 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         validation = self._validate(resource)
         if validation: return validation
 
-        resource.id = str(uuid4())
+        resource.id = str(self.MAX_ID)
+
+        self.MAX_ID += 1
 
         if parent:
-            resource.parent_type = "list"
+            resource.parent_type = parent.rest_name
             resource.parent_id = parent.id
-            self._database["task"].append(resource.to_dict())
-        else:
-            self._database["list"].append(resource.to_dict())
+
+        self._database[resource.rest_name].append(resource.to_dict())
 
     def update(self, resource):
         """

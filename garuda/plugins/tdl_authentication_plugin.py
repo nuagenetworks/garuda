@@ -16,7 +16,7 @@ class TDLAuthenticationPlugin(GAAuthenticationPlugin):
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='TDL Authentifcation', version=1.0, identifier="garuda.plugins.vsd.authentication")
+        return GAPluginManifest(name='TDL Authentifation', version=1.0, identifier="garuda.plugins.tdl.authentication")
 
     def should_manage(self, request):
         """
@@ -34,7 +34,7 @@ class TDLAuthenticationPlugin(GAAuthenticationPlugin):
         if request.resources[0].name != "root":
             return None
 
-        root = self.core_controller.model_controller.get('root', 'root-id-1')
+        root = self.core_controller.model_controller.get('root', '0')
 
         if request.parameters["username"] == root.user_name and request.parameters["password"] == root.password:
             root.api_key = session.uuid

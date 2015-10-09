@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import importlib
 import logging
 
 # Logger
@@ -37,10 +36,6 @@ def start():
     from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
     tdl_authentication_plugin = TDLAuthenticationPlugin()
 
-    from garuda.core.lib import SDKsManager
-    sdks_manager = SDKsManager()
-    sdks_manager.register_sdk(identifier="tdldk", sdk=importlib.import_module('tdldk.v1_0'))
-
 
     # Instanciate plugins
     # from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultPermissionsControllerPlugin
@@ -48,14 +43,14 @@ def start():
     # default_authentication_plugin = DefaultAuthenticationPlugin()
     # default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
-    core = GACoreController(    sdks_manager=sdks_manager,
+    core = GACoreController(    sdks_info=[{'identifier': 'tdldk', 'module': 'tdldk.v1_0'}],
                                 communication_channel_plugins=[rest_comm_channel],
                                 authentication_plugins=[tdl_authentication_plugin],
                                 model_controller_plugins=[tdl_storage_plugin],
                                 permission_controller_plugins=[])
     core.start()
 
-    logger.info('Garuda is now ready. (Press CTRL+C to quit)')
+    logger.info('Garuda is initialized and ready to rock! (Press CTRL+C to quit)')
     while True:
         try:
             sleep(3000)
