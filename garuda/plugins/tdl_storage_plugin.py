@@ -1,15 +1,23 @@
 # -*- coding: utf-8 -*-
 from uuid import uuid4
 from bambou import NURESTModelController
+import sqlite3
+from time import time
 
 from garuda.core.plugins import GAModelControllerPlugin, GAPluginManifest
 from garuda.core.models import GAError
 from garuda.core.lib import SDKsManager
 
+
 class TDLStoragePlugin(GAModelControllerPlugin):
     """
     """
-    MAX_ID = 1
+
+    def __init__(self, db_path):
+        """
+        """
+        self._db_path = db_path
+
 
     @classmethod
     def manifest(cls):
@@ -20,17 +28,72 @@ class TDLStoragePlugin(GAModelControllerPlugin):
     def did_register(self):
         """
         """
-        self._sdk = SDKsManager().get_sdk("tdldk")
         self._database = {}
+        self._sdk = SDKsManager().get_sdk("tdldk")
+
+        import os
+        db_needs_init = not os.path.exists(self._db_path)
+
+        self._db = sqlite3.connect(self._db_path, check_same_thread=False)
+        self._db.row_factory = sqlite3.Row
+
+        if db_needs_init:
+            self._initialize_database()
+
+    def _convert_type(self, typ):
+        """
+        """
+        if typ is str: return 'text'
+        if typ is float: return 'real'
+        if typ is int: return 'integer'
+        if typ is time: return 'text'
+
+    def _row_to_dict(self, row):
+        """
+        """
+        ret = {}
+        for key in row.keys():
+            ret[key] = row[key]
+        return ret
+
+    def _ressource_to_attr_arrays(self, resource):
+        """
+        """
+        attrs = []
+        values = []
+        for attribute in resource.get_attributes():
+            attrs.append(attribute.remote_name)
+            values.append(getattr(resource, attribute.local_name))
+        return (attrs, values)
+
+    def _initialize_database(self):
+        """
+        """
+        self._sdk = SDKsManager().get_sdk("tdldk")
 
         for models in NURESTModelController.get_all_models():
 
-            model = models[0]
+            model = models[0]()
 
-            self._database[model.rest_name] = []
+            columns = []
+
+            for attribute in model.get_attributes():
+                name = attribute.remote_name
+                typ = self._convert_type(attribute.attribute_type)
+
+                if name == "ID":
+                    columns.append('%s text primary key' % name)
+                else:
+                    columns.append('%s %s' % (name, typ))
+
+            create_tbl_query = 'create table %s (%s)' % (model.rest_name, ", ".join(columns))
+
+            self._db.execute(create_tbl_query)
 
             if model.rest_name == self._sdk.SDKInfo.root_object_class().rest_name:
-                self._database[model.rest_name].append({"ID": "0", "userName": "root", "password": "password"})
+                self._db.execute('insert into %s (ID, userName, password) values ("1", "root", "password")' % model.rest_name)
+
+        self._db.commit()
 
     def should_manage(self, resource_name, identifier):
         """
@@ -46,30 +109,38 @@ class TDLStoragePlugin(GAModelControllerPlugin):
     def get(self, resource_name, identifier):
         """
         """
-        table = self._database[resource_name]
-        obj = self.instantiate(resource_name)
+        c = self._db.cursor()
+        c.execute('select * from %s where ID=?' % resource_name, (identifier,))
 
-        for item in table:
-            if item["ID"] == identifier:
-                obj.from_dict(item)
-                return obj
+        row = c.fetchone()
+
+        if not row:
+            return None
+
+        obj = self.instantiate(resource_name)
+        obj.from_dict(self._row_to_dict(row))
+
+        return obj
 
     def get_all(self, parent, resource_name):
         """
         """
         ret = []
 
-        for item in self._database[resource_name]:
+        c = self._db.cursor()
 
-            obj_id = item["ID"]
+        if parent:
+            print parent.id
+            c.execute('select * from %s where parentID=?' % resource_name, (parent.id,))
+        else:
+            c.execute('select * from %s' % resource_name)
 
-            if parent:
-                if item["parentID"] == parent.id:
-                    ret.append(self.get(resource_name, obj_id))
+        for row in c.fetchall():
+            obj = self.instantiate(resource_name)
+            obj.from_dict(self._row_to_dict(row))
+            ret.append(obj)
 
-            else:
-                ret.append(self.get(resource_name, obj_id))
-
+        print ret
         return ret
 
     def create(self, resource, parent=None):
@@ -78,15 +149,17 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         validation = self._validate(resource)
         if validation: return validation
 
-        resource.id = str(self.MAX_ID)
-
-        self.MAX_ID += 1
+        resource.id = str(uuid4())
 
         if parent:
             resource.parent_type = parent.rest_name
             resource.parent_id = parent.id
 
-        self._database[resource.rest_name].append(resource.to_dict())
+        attrs, values = self._ressource_to_attr_arrays(resource)
+
+        insert_query = 'insert into %s (%s) values (%s)' % (resource.rest_name, ", ".join(attrs), ", ".join(["?" for v in values]))
+        self._db.execute(insert_query, values)
+        self._db.commit()
 
     def update(self, resource):
         """
@@ -95,24 +168,31 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         validation = self._validate(resource)
         if validation: return validation
 
-        data = self._get_raw_data(resource.rest_name, resource.id)
+        current_obj = self.get(resource.rest_name, resource.id)
 
-        if not data:
-            return GAError(type=GAError.TYPE_NOTFOUND, title="Cannot find that shit", description="Wesh no")
-
-        if (resource.__class__(data=data)).rest_equals(resource):
+        if current_obj.rest_equals(resource):
             return GAError(type=GAError.TYPE_CONFLICT, title="No changes to modify the entity", description="There are no attribute changes to modify the entity.")
 
-        data.update(resource.to_dict())
+        attrs, values = self._ressource_to_attr_arrays(resource)
+
+        vals = []
+        for attr in attrs:
+            vals.append("%s=?" % attr)
+
+        update_query = 'update  %s set %s where ID=?' % (resource.rest_name, ", ".join(vals))
+
+        values.append(resource.id)
+        self._db.execute(update_query, values)
+        self._db.commit()
 
     def delete(self, resource):
         """
         """
-        table = self._database[resource.rest_name]
 
-        for item in table:
-            if item["ID"] == resource.id:
-                table.remove(item)
+        delete_query = 'delete from %s where ID=?' % (resource.rest_name)
+        self._db.execute(delete_query, (resource.id,))
+        self._db.commit()
+
 
     def _validate(self, resource):
         """
