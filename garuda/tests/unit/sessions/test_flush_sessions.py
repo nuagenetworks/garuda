@@ -4,10 +4,10 @@ from mock import patch
 
 from garuda.core.models import GASession
 from garuda.core.controllers import GAAuthenticationController
-from garuda.tests.unit.sessions import GASessionsManagerTestCase
+from garuda.tests.unit.sessions import GASessionsControllerTestCase
 
 
-class TestFlushSession(GASessionsManagerTestCase):
+class TestFlushSession(GASessionsControllerTestCase):
     """
     """
 

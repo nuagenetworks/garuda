@@ -12,7 +12,7 @@ from Queue import Queue
 from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext
 from garuda.core.config import GAConfig
 
-from .operations_manager import GAOperationsManager
+from .operations_controller import GAOperationsController
 
 
 class GAPushController(object):
@@ -59,7 +59,7 @@ class GAPushController(object):
     def _send_events_to_garuda(self, garuda_uuid, events):
         """
         """
-        session_uuids = self.core_controller.sessions_manager.get_all_sessions(garuda_uuid=garuda_uuid, listening=True)
+        session_uuids = self.core_controller.sessions_controller.get_all_sessions(garuda_uuid=garuda_uuid, listening=True)
 
         jobs = []
         for session_uuid in session_uuids:
@@ -75,7 +75,7 @@ class GAPushController(object):
 
         events_to_send = []
         queue = self._queues[session_uuid]
-        session = self.core_controller.sessions_manager.get_session(session_uuid=session_uuid)
+        session = self.core_controller.sessions_controller.get_session(session_uuid=session_uuid)
 
         for event in events:
 
@@ -89,7 +89,7 @@ class GAPushController(object):
             context = GAContext(request=request, session=session)
             context.object = entity
 
-            operation_manager = GAOperationsManager(context=context, model_controller=self.core_controller.model_controller)
+            operation_manager = GAOperationsController(context=context, model_controller=self.core_controller.model_controller)
             operation_manager.run()
 
             if not context.has_errors():

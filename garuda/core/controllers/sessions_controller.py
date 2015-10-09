@@ -20,20 +20,20 @@ REDIS_GARUDA_KEY = 'garuda:'
 REDIS_SESSION_TTL = 3600
 
 
-class GASessionsManager(GAPluginController):
+class GASessionsController(GAPluginController):
     """
     """
     def __init__(self, plugins, core_controller):
         """
 
         """
-        super(GASessionsManager, self).__init__(plugins=plugins, core_controller=core_controller)
+        super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller)
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
 
     def register_plugin(self, plugin):
         """
         """
-        super(GASessionsManager, self).register_plugin(plugin=plugin, plugin_type=GAAuthenticationPlugin)
+        super(GASessionsController, self).register_plugin(plugin=plugin, plugin_type=GAAuthenticationPlugin)
 
 
     def send_event(self, event, content):

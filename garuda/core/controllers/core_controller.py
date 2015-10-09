@@ -5,9 +5,9 @@ import logging
 logger = logging.getLogger('garuda.corecontroller')
 
 from .model_controller import GAModelController
-from .operations_manager import GAOperationsManager
+from .operations_controller import GAOperationsController
 from .push_controller import GAPushController
-from .sessions_manager import GASessionsManager
+from .sessions_controller import GASessionsController
 from .permissions_controller import GAPermissionsController
 from .communication_channels_controller import GACommunicationChannelsController
 
@@ -30,7 +30,7 @@ class GACoreController(object):
         """
         self._uuid = str(uuid4())
         self._model_controller = GAModelController(plugins=model_controller_plugins, core_controller=self)
-        self._sessions_manager = GASessionsManager(plugins=authentication_plugins, core_controller=self)
+        self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
         self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins, core_controller=self)
         self._communication_channels_controller = GACommunicationChannelsController(plugins=communication_channel_plugins, core_controller=self)
@@ -61,10 +61,10 @@ class GACoreController(object):
         return self._permissions_controller
 
     @property
-    def sessions_manager(self):
+    def sessions_controller(self):
         """
         """
-        return self._sessions_manager
+        return self._sessions_controller
 
     @property
     def communication_channels_controller(self):
@@ -92,18 +92,18 @@ class GACoreController(object):
         logger.debug('Stopping core controller')
         self.push_controller.stop()
         self.communication_channels_controller.stop()
-        self.sessions_manager.flush_garuda(self.uuid)
+        self.sessions_controller.flush_garuda(self.uuid)
 
     def execute(self, request):
         """
         """
-        session_uuid = self.sessions_manager.get_session_identifier(request=request)
+        session_uuid = self.sessions_controller.get_session_identifier(request=request)
 
         if session_uuid:
-            session = self.sessions_manager.get_session(session_uuid=session_uuid)
+            session = self.sessions_controller.get_session(session_uuid=session_uuid)
 
         if not session:
-            session = self.sessions_manager.create_session(request=request, garuda_uuid=self.uuid)
+            session = self.sessions_controller.create_session(request=request, garuda_uuid=self.uuid)
 
             if session:
                 return GAResponse(status=GAResponse.STATUS_SUCCESS, content=[session.root_object])
@@ -121,8 +121,8 @@ class GACoreController(object):
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
-        manager = GAOperationsManager(context=context, model_controller=self.model_controller)
-        manager.run()
+        operations_controller = GAOperationsController(context=context, model_controller=self.model_controller)
+        operations_controller.run()
 
         if context.has_errors():
             return GAResponse(status=context.errors.type, content=context.errors)
@@ -140,7 +140,7 @@ class GACoreController(object):
         """
 
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
-        session = self.sessions_manager.get_session(session_uuid=session_uuid)
+        session = self.sessions_controller.get_session(session_uuid=session_uuid)
         # context = GAContext(session=session, request=request)
 
         if session is None:
@@ -151,7 +151,7 @@ class GACoreController(object):
         logger.debug('Set listening %s session UUID=%s for push notification' % (request.action, session_uuid))
 
         session.is_listening_push_notifications = True
-        self.sessions_manager.save(session)
+        self.sessions_controller.save(session)
 
         queue = self.push_controller.get_queue_for_session(session.uuid)
 

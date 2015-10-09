@@ -1,18 +1,18 @@
 # -*- coding:utf-8 -*-
 
-from garuda.core.controllers import GASessionsManager
+from garuda.core.controllers import GASessionsController
 from garuda.tests import UnitTestCase
 from bambou import NURESTRootObject
 
 
-class GASessionsManagerTestCase(UnitTestCase):
+class GASessionsControllerTestCase(UnitTestCase):
     """
     """
     def __init__(self, name):
         """
         """
-        super(GASessionsManagerTestCase, self).__init__(name)
-        self.manager = GASessionsManager(plugins=[])
+        super(GASessionsControllerTestCase, self).__init__(name)
+        self.session_controller = GASessionsController(plugins=[])
 
     def get_valid_garuda_uuid(self):
         """
@@ -26,7 +26,7 @@ class GASessionsManagerTestCase(UnitTestCase):
             garuda_uuid = self.get_valid_garuda_uuid()
 
 
-        session = self.manager.create_session(request=request, garuda_uuid=garuda_uuid)
+        session = self.session_controller.create_session(request=request, garuda_uuid=garuda_uuid)
 
         if is_listening_push_notifications:
             session.is_listening_push_notifications = True
@@ -37,7 +37,7 @@ class GASessionsManagerTestCase(UnitTestCase):
     def save_session(self, session):
         """
         """
-        return self.manager.save(session)
+        return self.session_controller.save(session)
 
     def flush_sessions(self, garuda_uuid=None):
         """
@@ -45,12 +45,12 @@ class GASessionsManagerTestCase(UnitTestCase):
         if garuda_uuid is None:
             garuda_uuid = self.get_valid_garuda_uuid()
 
-        self.manager.flush_garuda(self.get_valid_garuda_uuid())
+        self.session_controller.flush_garuda(self.get_valid_garuda_uuid())
 
     def get_session(self, session_uuid):
         """
         """
-        return self.manager.get(session_uuid)
+        return self.session_controller.get(session_uuid)
 
     def get_default_user(self):
         """
@@ -64,4 +64,4 @@ class GASessionsManagerTestCase(UnitTestCase):
     def assertNoSessionsForGaruda(self, garuda_uuid):
         """
         """
-        self.assertEquals(len(self.manager.get_all(garuda_uuid=garuda_uuid)), 0)
+        self.assertEquals(len(self.session_controller.get_all(garuda_uuid=garuda_uuid)), 0)

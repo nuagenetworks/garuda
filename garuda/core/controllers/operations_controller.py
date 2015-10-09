@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GARequest, GAError, GAPushEvent
-from .business_logic_plugins_manager import GABusinessLogicPluginsManager
+from .logic_plugins_controller import GALogicPluginsController
 
-class GAOperationsManager(object):
+class GAOperationsController(object):
     """
 
     """
@@ -51,20 +51,20 @@ class GAOperationsManager(object):
         if self.context.has_errors():
             return
 
-        plugin_manager = GABusinessLogicPluginsManager(context=self.context)
+        logic_plugins_controller = GALogicPluginsController(context=self.context)
 
-        plugin_manager.perform_delegate(delegate='begin_read_operation')
+        logic_plugins_controller.perform_delegate(delegate='begin_read_operation')
 
         # Manage one object at a time
-        plugin_manager.perform_delegate(delegate='should_perform_read', object=self.context.object)
+        logic_plugins_controller.perform_delegate(delegate='should_perform_read', object=self.context.object)
 
         if self.context.has_errors():
             return
 
-        plugin_manager.perform_delegate(delegate='preprocess_read')
+        logic_plugins_controller.perform_delegate(delegate='preprocess_read')
         # End manage
 
-        plugin_manager.perform_delegate(delegate='end_read_operation')
+        logic_plugins_controller.perform_delegate(delegate='end_read_operation')
 
     def _prepare_context_for_readall_operation(self):
         """
@@ -109,21 +109,21 @@ class GAOperationsManager(object):
         if self.context.has_errors():
             return
 
-        plugin_manager = GABusinessLogicPluginsManager(context=self.context)
+        logic_plugins_controller = GALogicPluginsController(context=self.context)
 
-        plugin_manager.perform_delegate(delegate='begin_readall_operation')
+        logic_plugins_controller.perform_delegate(delegate='begin_readall_operation')
 
         for object in self.context.objects:
             # Manage one object at a time
-            plugin_manager.perform_delegate(delegate='should_perform_readall', object=object)
+            logic_plugins_controller.perform_delegate(delegate='should_perform_readall', object=object)
 
             if self.context.has_errors():
                 return
 
-            plugin_manager.perform_delegate(delegate='preprocess_readall', object=object)
+            logic_plugins_controller.perform_delegate(delegate='preprocess_readall', object=object)
             # End manage
 
-        plugin_manager.perform_delegate(delegate='end_readall_operation')
+        logic_plugins_controller.perform_delegate(delegate='end_readall_operation')
 
     def _prepare_context_for_write_operation(self):
         """
@@ -190,16 +190,16 @@ class GAOperationsManager(object):
         if self.context.has_errors():
             return
 
-        plugin_manager = GABusinessLogicPluginsManager(context=self.context)
+        logic_plugins_controller = GALogicPluginsController(context=self.context)
 
-        plugin_manager.perform_delegate(delegate='begin_write_operation')
+        logic_plugins_controller.perform_delegate(delegate='begin_write_operation')
 
-        plugin_manager.perform_delegate(delegate='should_perform_write')
+        logic_plugins_controller.perform_delegate(delegate='should_perform_write')
 
         if self.context.has_errors():
             return
 
-        plugin_manager.perform_delegate(delegate='preprocess_write')
+        logic_plugins_controller.perform_delegate(delegate='preprocess_write')
 
         err = None
         if self.context.request.action == GARequest.ACTION_DELETE:
@@ -233,8 +233,8 @@ class GAOperationsManager(object):
 
             return
 
-        plugin_manager.perform_delegate(delegate='did_perform_write')
+        logic_plugins_controller.perform_delegate(delegate='did_perform_write')
 
-        plugin_manager.perform_delegate(delegate='end_write_operation')
+        logic_plugins_controller.perform_delegate(delegate='end_write_operation')
 
         self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))

@@ -3,15 +3,15 @@
 __all__ = ['GACoreController',
            'GACommunicationChannelsController',
            'GAModelController',
-           'GAOperationsManager',
-           'GABusinessLogicPluginsManager',
+           'GAOperationsController',
+           'GALogicPluginsController',
            'GAPushController',
-           'GASessionsManager']
+           'GASessionsController']
 
 from .core_controller import GACoreController
 from .model_controller import GAModelController
-from .operations_manager import GAOperationsManager
-from .business_logic_plugins_manager import GABusinessLogicPluginsManager
+from .operations_controller import GAOperationsController
+from .logic_plugins_controller import GALogicPluginsController
 from .push_controller import GAPushController
-from .sessions_manager import GASessionsManager
+from .sessions_controller import GASessionsController
 from .communication_channels_controller import GACommunicationChannelsController
