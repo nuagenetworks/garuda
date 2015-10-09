@@ -31,7 +31,7 @@ def start():
     rest_comm_channel = RESTCommunicationChannel(host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
 
     from garuda.plugins.tdl_storage_plugin import TDLStoragePlugin
-    tdl_storage_plugin = TDLStoragePlugin()
+    tdl_storage_plugin = TDLStoragePlugin(db_path='/tmp/garuda.sqlite')
 
     from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
     tdl_authentication_plugin = TDLAuthenticationPlugin()
