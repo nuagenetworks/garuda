@@ -43,7 +43,7 @@ def start():
     # default_authentication_plugin = DefaultAuthenticationPlugin()
     # default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
-    core = GACoreController(    sdks_info=[{'identifier': 'tdldk', 'module': 'tdldk.v1_0'}],
+    core = GACoreController(    sdks_info=[{'identifier': 'current', 'module': 'tdldk.v1_0'}],
                                 communication_channel_plugins=[rest_comm_channel],
                                 authentication_plugins=[tdl_authentication_plugin],
                                 model_controller_plugins=[tdl_storage_plugin],

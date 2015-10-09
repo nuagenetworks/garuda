@@ -29,7 +29,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         """
         """
         self._database = {}
-        self._sdk = SDKsManager().get_sdk("tdldk")
+        self._sdk = SDKsManager().get_sdk("current")
 
         import os
         db_needs_init = not os.path.exists(self._db_path)
@@ -46,7 +46,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         if typ is str: return 'text'
         if typ is float: return 'real'
         if typ is int: return 'integer'
-        if typ is time: return 'text'
+        return 'text'
 
     def _row_to_dict(self, row):
         """
@@ -69,7 +69,6 @@ class TDLStoragePlugin(GAModelControllerPlugin):
     def _initialize_database(self):
         """
         """
-        self._sdk = SDKsManager().get_sdk("tdldk")
 
         for models in NURESTModelController.get_all_models():
 
@@ -86,12 +85,21 @@ class TDLStoragePlugin(GAModelControllerPlugin):
                 else:
                     columns.append('%s %s' % (name, typ))
 
-            create_tbl_query = 'create table %s (%s)' % (model.rest_name, ", ".join(columns))
-
-            self._db.execute(create_tbl_query)
+            create_query = 'create table "%s" (%s)' % (model.rest_name, ", ".join(columns))
+            self._db.execute(create_query)
 
             if model.rest_name == self._sdk.SDKInfo.root_object_class().rest_name:
                 self._db.execute('insert into %s (ID, userName, password) values ("1", "root", "password")' % model.rest_name)
+
+
+            # if model.rest_name == self._sdk.SDKInfo.root_object_class().rest_name:
+            #     self._db.execute('insert into %s (ID, userName, password, enterpriseID) values ("1", "root", "password", "2")' % model.rest_name)
+            #
+            # if model.rest_name == "enterprise":
+            #     self._db.execute('insert into %s (ID, name) values ("2", "csp")' % model.rest_name)
+            #
+            # if model.rest_name == "systemconfig":
+            #     self._db.execute('insert into %s (ID) values ("3")' % model.rest_name)
 
         self._db.commit()
 
@@ -110,7 +118,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         """
         """
         c = self._db.cursor()
-        c.execute('select * from %s where ID=?' % resource_name, (identifier,))
+        c.execute('select * from "%s" where ID=?' % resource_name, (identifier,))
 
         row = c.fetchone()
 
@@ -131,9 +139,9 @@ class TDLStoragePlugin(GAModelControllerPlugin):
 
         if parent:
             print parent.id
-            c.execute('select * from %s where parentID=?' % resource_name, (parent.id,))
+            c.execute('select * from "%s" where parentID=?' % resource_name, (parent.id,))
         else:
-            c.execute('select * from %s' % resource_name)
+            c.execute('select * from "%s"' % resource_name)
 
         for row in c.fetchall():
             obj = self.instantiate(resource_name)
@@ -146,6 +154,10 @@ class TDLStoragePlugin(GAModelControllerPlugin):
     def create(self, resource, parent=None):
         """
         """
+        resource.last_updated_date = "now"
+        resource.last_updated_by = "me"
+        resource.owner = "me"
+
         validation = self._validate(resource)
         if validation: return validation
 
@@ -157,13 +169,25 @@ class TDLStoragePlugin(GAModelControllerPlugin):
 
         attrs, values = self._ressource_to_attr_arrays(resource)
 
-        insert_query = 'insert into %s (%s) values (%s)' % (resource.rest_name, ", ".join(attrs), ", ".join(["?" for v in values]))
-        self._db.execute(insert_query, values)
+        insert_query = 'insert into "%s" (%s) values (%s)' % (resource.rest_name, ", ".join(attrs), ", ".join(["?" for v in values]))
+
+        try:
+            self._db.execute(insert_query, values)
+        except:
+
+            print insert_query
+            print values
+            print values[16]
+            raise
+
         self._db.commit()
 
     def update(self, resource):
         """
         """
+
+        resource.last_updated_date = "now"
+        resource.last_updated_by = "me"
 
         validation = self._validate(resource)
         if validation: return validation
@@ -179,7 +203,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         for attr in attrs:
             vals.append("%s=?" % attr)
 
-        update_query = 'update  %s set %s where ID=?' % (resource.rest_name, ", ".join(vals))
+        update_query = 'update "%s" set %s where ID=?' % (resource.rest_name, ", ".join(vals))
 
         values.append(resource.id)
         self._db.execute(update_query, values)
@@ -189,7 +213,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         """
         """
 
-        delete_query = 'delete from %s where ID=?' % (resource.rest_name)
+        delete_query = 'delete from "%s" where ID=?' % (resource.rest_name)
         self._db.execute(delete_query, (resource.id,))
         self._db.commit()
 
