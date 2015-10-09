@@ -58,3 +58,9 @@ class GAPluginController(object):
         plugin.did_unregister()
 
         plugin.core_controller = None
+
+    def unregister_all_plugins(self):
+        """
+        """
+        for plugin in self._plugins:
+            self.unregister_plugin(plugin)

@@ -95,6 +95,12 @@ class GACoreController(object):
         """
         """
         logger.debug('Stopping core controller')
+
+        self.model_controller.unregister_all_plugins()
+        self.permissions_controller.unregister_all_plugins()
+        self.sessions_controller.unregister_all_plugins()
+        self.communication_channels_controller.unregister_all_plugins()
+
         self.push_controller.stop()
         self.communication_channels_controller.stop()
         self.sessions_controller.flush_garuda(self.uuid)
