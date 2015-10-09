@@ -31,10 +31,12 @@ class TDLAuthenticationPlugin(GAAuthenticationPlugin):
     def authenticate(self, request, session):
         """
         """
-        if request.resources[0].name != "root":
+        root_rest_name = SDKsManager().get_sdk("current").SDKInfo.root_object_class().rest_name
+
+        if request.resources[0].name != root_rest_name:
             return None
 
-        root = self.core_controller.model_controller.get('root', '1')
+        root = self.core_controller.model_controller.get(root_rest_name, '1')
 
         if request.parameters["username"] == root.user_name and request.parameters["password"] == root.password:
             root.api_key = session.uuid
