@@ -16,7 +16,7 @@ from flask import Flask, request, make_response
 
 from .utils.constants import RESTConstants
 from garuda.core.config import GAConfig
-from garuda.core.lib import PathParser
+from garuda.core.lib import PathParser, SDKsManager
 from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification
 from garuda.core.plugins import GACommunicationChannel, GAPluginManifest
 
@@ -232,7 +232,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
-        resources = parser.parse(path=path, url_prefix='api/')
+        resources = parser.parse(path=path, url_prefix="%s/" % SDKsManager().get_sdk("current").SDKInfo.api_prefix())
 
         action = self.determine_action(method, resources)
 
