@@ -34,7 +34,7 @@ class TDLAuthenticationPlugin(GAAuthenticationPlugin):
         if request.resources[0].name != "root":
             return None
 
-        root = self.core_controller.model_controller.get('root', '0')
+        root = self.core_controller.model_controller.get('root', '1')
 
         if request.parameters["username"] == root.user_name and request.parameters["password"] == root.password:
             root.api_key = session.uuid
