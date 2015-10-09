@@ -57,7 +57,7 @@ class GAPushController(object):
         garuda_uuid = data['garuda_uuid']
         events = [GAPushEvent.from_dict(event) for event in data['events']]
 
-        session_uuids = self.core_controller.sessions_manager.get_all(garuda_uuid=garuda_uuid, listening=True)
+        session_uuids = self.core_controller.sessions_manager.get_all_sessions(garuda_uuid=garuda_uuid, listening=True)
 
         jobs = []
         for session_uuid in session_uuids:
@@ -73,7 +73,7 @@ class GAPushController(object):
 
         events_to_send = []
         queue = self._queues[session_uuid]
-        session = self.core_controller.sessions_manager.get(session_uuid=session_uuid)
+        session = self.core_controller.sessions_manager.get_session(session_uuid=session_uuid)
 
         for event in events:
             entity = event.entity

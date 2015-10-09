@@ -12,7 +12,7 @@ from .permissions_controller import GAPermissionsController
 from .communication_channels_controller import GACommunicationChannelsController
 
 from garuda.core.lib import SDKsManager
-from garuda.core.models import GAContext, GAResponse, GARequest, GAError, GAPushEvent
+from garuda.core.models import GAContext, GAResponse, GARequest, GAError
 
 from uuid import uuid4
 
@@ -127,29 +127,12 @@ class GACoreController(object):
 
         return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
 
-    def execute_authenticate(self, request):
-        """
-        """
-        session = self.sessions_manager.create_session(request=request, garuda_uuid=self.uuid)
-        context = GAContext(session=session, request=request)
-
-        logger.debug('Execute action %s on session UUID=%s' % (request.action, session.uuid if session else None))
-
-        if session is None:
-            description = 'Unable to authenticate'
-            context.report_error(type=GAError.TYPE_AUTHENTICATIONFAILURE, property='', title='Authentication failed!', description=description)
-
-        if context.has_errors():
-            return GAResponse(status=context.errors.type, content=context.errors)
-
-        return GAResponse(status=GAResponse.STATUS_SUCCESS, content=[session.user])
-
     def get_queue(self, request):
         """
         """
 
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
-        session = self.sessions_manager.get(session_uuid=session_uuid)
+        session = self.sessions_manager.get_session(session_uuid=session_uuid)
         # context = GAContext(session=session, request=request)
 
         if session is None:

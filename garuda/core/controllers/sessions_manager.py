@@ -55,7 +55,7 @@ class GASessionsManager(GAPluginController):
 
         return self._redis.hmset(REDIS_SESSION_KEY + session.uuid, session.to_hash())
 
-    def get_all(self, garuda_uuid=None, listening=None):
+    def get_all_sessions(self, garuda_uuid=None, listening=None):
         """
         """
         if garuda_uuid is None:

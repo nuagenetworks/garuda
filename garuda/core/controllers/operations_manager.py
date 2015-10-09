@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from garuda.core.models import GARequest, GAError
+from garuda.core.models import GARequest, GAError, GAPushEvent
 from .business_logic_plugins_manager import GABusinessLogicPluginsManager
-
 
 class GAOperationsManager(object):
     """
@@ -189,3 +188,5 @@ class GAOperationsManager(object):
         plugin_manager.perform_delegate(delegate='did_perform_write')
 
         plugin_manager.perform_delegate(delegate='end_write_operation')
+
+        self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))

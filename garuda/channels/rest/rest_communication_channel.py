@@ -258,26 +258,6 @@ class RESTCommunicationChannel(GACommunicationChannel):
 
         return response
 
-    # def authenticate(self, path):
-    #     """
-    #     """
-    #     content = self._extract_content(request)
-    #     parameters = self._extract_parameters(request.headers)
-    #
-    #     logger.info('>>>> Authenticate on %s %s from %s ---' % (request.method, request.path, parameters['Host']))
-    #     logger.debug(json.dumps(parameters, indent=4))
-    #
-    #     parser = PathParser()
-    #     resources = parser.parse(path)
-    #     action = GARequest.ACTION_AUTHENTICATE
-    #
-    #     ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
-    #     ga_response = self.core_controller.execute_authenticate(request=ga_request)
-    #
-    #     logger.info('<<<< Response for %s %s authentication to %s' % (request.method, request.path, parameters['Host']))
-    #
-    #     return self.make_http_response(action=action, response=ga_response)
-
     def listen_events(self, path):
         """
         """
