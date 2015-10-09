@@ -104,8 +104,8 @@ class GAOperationsController(object):
                 self._report_resource_not_found(resources=parent_resource)
                 return
 
-        self.context.parent = parent
-        self.context.objects = self.model_controller.get_all(self.context.parent, resource.name)
+        self.context.parent_object = parent
+        self.context.objects = self.model_controller.get_all(self.context.parent_object, resource.name)
 
         if self.context.objects is None: self._report_resource_not_found(resource=resource)
 
@@ -190,12 +190,11 @@ class GAOperationsController(object):
             return
 
         if len(resources) != 1:
-
             parent_resource = resources[0]
 
-            self.context.parent = self.model_controller.get(parent_resource.name, parent_resource.value)
+            self.context.parent_object = self.model_controller.get(parent_resource.name, parent_resource.value)
 
-            if self.context.parent is None:
+            if self.context.parent_object is None:
                 self._report_resource_not_found(resource=parent_resource)
                 return
 
@@ -240,7 +239,7 @@ class GAOperationsController(object):
             err = self.model_controller.delete(resource=self.context.object)
 
         elif self.context.request.action == GARequest.ACTION_ASSIGN:
-            err = self.model_controller.assign(resources=self.context.objects, parent=self.context.parent_object)
+            err = self.model_controller.assign(resource_name=self.context.request.resources[-1], resources=self.context.objects, parent=self.context.parent_object)
 
         if err:
             if isinstance(err, list):

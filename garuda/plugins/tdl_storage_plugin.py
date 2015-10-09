@@ -56,7 +56,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
             ret[key] = row[key]
         return ret
 
-    def _ressource_to_attr_arrays(self, resource):
+    def _resource_to_attr_arrays(self, resource):
         """
         """
         attrs = []
@@ -167,7 +167,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
             resource.parent_type = parent.rest_name
             resource.parent_id = parent.id
 
-        attrs, values = self._ressource_to_attr_arrays(resource)
+        attrs, values = self._resource_to_attr_arrays(resource)
 
         insert_query = 'insert into "%s" (%s) values (%s)' % (resource.rest_name, ", ".join(attrs), ", ".join(["?" for v in values]))
 
@@ -197,7 +197,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         if current_obj.rest_equals(resource):
             return GAError(type=GAError.TYPE_CONFLICT, title="No changes to modify the entity", description="There are no attribute changes to modify the entity.")
 
-        attrs, values = self._ressource_to_attr_arrays(resource)
+        attrs, values = self._resource_to_attr_arrays(resource)
 
         vals = []
         for attr in attrs:
@@ -217,10 +217,10 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         self._db.execute(delete_query, (resource.id,))
         self._db.commit()
 
-    def assign(self, resource, parent):
+    def assign(self, resource_name, resources, parent):
         """
         """
-        print "ASSIGNED"
+        print "ASSIGNED objects %s of type %s to parent %s %s" % (resources, resource_name, parent.rest_name, parent.id)
 
     def _validate(self, resource):
         """

@@ -75,11 +75,11 @@ class GAModelController(GAPluginController):
         plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
         return plugin.delete(resource=resource) if plugin else None
 
-    def assign(self, resource, parent):
+    def assign(self, resource_name, resources, parent):
         """
         """
-        plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
-        return plugin.delete(resource=resource, parent=parent) if plugin else None
+        plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
+        return plugin.assign(resource_name=resource_name, resources=resources, parent=parent) if plugin else None
 
     # Utils
 
