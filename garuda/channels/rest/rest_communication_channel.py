@@ -44,10 +44,6 @@ class RESTCommunicationChannel(GACommunicationChannel):
         self.app = Flask(self.__class__.__name__)
         self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
 
-        # Authentication
-        self.app.add_url_rule('/me', 'authenticate', self.authenticate, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
-        self.app.add_url_rule('/<path:path>me', 'authenticate', self.authenticate, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
-
         # Events
         self.app.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
         self.app.add_url_rule('/<path:path>events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
@@ -241,7 +237,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
-        resources = parser.parse(path=path)
+        resources = parser.parse(path=path, url_prefix='api/')
 
         action = self.determine_action(method, resources)
 
@@ -262,25 +258,25 @@ class RESTCommunicationChannel(GACommunicationChannel):
 
         return response
 
-    def authenticate(self, path):
-        """
-        """
-        content = self._extract_content(request)
-        parameters = self._extract_parameters(request.headers)
-
-        logger.info('>>>> Authenticate on %s %s from %s ---' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(parameters, indent=4))
-
-        parser = PathParser()
-        resources = parser.parse(path)
-        action = GARequest.ACTION_AUTHENTICATE
-
-        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
-        ga_response = self.core_controller.execute_authenticate(request=ga_request)
-
-        logger.info('<<<< Response for %s %s authentication to %s' % (request.method, request.path, parameters['Host']))
-
-        return self.make_http_response(action=action, response=ga_response)
+    # def authenticate(self, path):
+    #     """
+    #     """
+    #     content = self._extract_content(request)
+    #     parameters = self._extract_parameters(request.headers)
+    #
+    #     logger.info('>>>> Authenticate on %s %s from %s ---' % (request.method, request.path, parameters['Host']))
+    #     logger.debug(json.dumps(parameters, indent=4))
+    #
+    #     parser = PathParser()
+    #     resources = parser.parse(path)
+    #     action = GARequest.ACTION_AUTHENTICATE
+    #
+    #     ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
+    #     ga_response = self.core_controller.execute_authenticate(request=ga_request)
+    #
+    #     logger.info('<<<< Response for %s %s authentication to %s' % (request.method, request.path, parameters['Host']))
+    #
+    #     return self.make_http_response(action=action, response=ga_response)
 
     def listen_events(self, path):
         """

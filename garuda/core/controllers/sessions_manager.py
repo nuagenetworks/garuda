@@ -7,8 +7,8 @@ logger = logging.getLogger('garuda.sessionsmanager')
 
 import redis
 
-from .authentication_controller import GAAuthenticationController
-
+from garuda.core.controllers.abstracts import GAPluginController
+from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.models import GASession
 from garuda.core.config import GAConfig
 
@@ -20,16 +20,21 @@ REDIS_GARUDA_KEY = 'garuda:'
 REDIS_SESSION_TTL = 3600
 
 
-class GASessionsManager(object):
+class GASessionsManager(GAPluginController):
     """
     """
     def __init__(self, plugins, core_controller):
         """
 
         """
-        self.core_controller = core_controller
-        self._plugins = plugins  # TODO: Should GASessionsManager be a GAPluginController ?! Can we register plugins ?!
+        super(GASessionsManager, self).__init__(plugins=plugins, core_controller=core_controller)
         self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
+
+    def register_plugin(self, plugin):
+        """
+        """
+        super(GASessionsManager, self).register_plugin(plugin=plugin, plugin_type=GAAuthenticationPlugin)
+
 
     def send_event(self, event, content):
         """
@@ -69,7 +74,7 @@ class GASessionsManager(object):
 
         return self._redis.sdiff(garuda_key, REDIS_LISTENING_KEY)
 
-    def get(self, session_uuid):
+    def get_session(self, session_uuid):
         """
         """
 
@@ -90,24 +95,35 @@ class GASessionsManager(object):
 
         return session
 
+    def _plugin_for_request(self, request):
+        """
+        """
+        for plugin in self._plugins:
+            if plugin.should_manage(request):
+                return plugin
+        return None
+
+    def get_session_identifier(self, request):
+        """
+        """
+        plugin = self._plugin_for_request(request)
+        return plugin.get_session_identifier(request) if plugin else None
+
     def create_session(self, request, garuda_uuid):
         """
         """
         logger.debug('Creating session for garuda_uuid=%s' % garuda_uuid)
         session = GASession(garuda_uuid=garuda_uuid)
+        plugin = self._plugin_for_request(request)
 
-        authentication_controller = GAAuthenticationController(plugins=self._plugins, core_controller=self.core_controller)
-        user = authentication_controller.authenticate(request=request)
+        root_object = plugin.authenticate(request=request, session=session)
 
-        if user is None or user.api_key is None:
+        if not root_object:
             return None
 
-        # TODO: Should be removed from the session
-        # Temporary used to send the user in the REST Communication channel
-        user.api_key = session.uuid
-        session.user = user
-
+        session.root_object = root_object
         self.save(session)
+
         return session
 
     def flush_garuda(self, garuda_uuid):

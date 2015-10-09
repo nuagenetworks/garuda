@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['GAAuthenticationController',
-           'GACoreController',
+__all__ = ['GACoreController',
            'GACommunicationChannelsController',
            'GAModelController',
            'GAOperationsManager',
@@ -9,7 +8,6 @@ __all__ = ['GAAuthenticationController',
            'GAPushController',
            'GASessionsManager']
 
-from .authentication_controller import GAAuthenticationController
 from .core_controller import GACoreController
 from .model_controller import GAModelController
 from .operations_manager import GAOperationsManager

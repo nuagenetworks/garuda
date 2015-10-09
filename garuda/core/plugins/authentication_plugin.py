@@ -12,6 +12,11 @@ class GAAuthenticationPlugin(GAPlugin):
         """
         return True
 
+    def extract_session_identifier(self, request):
+        ""
+        ""
+        return
+
     def authenticate(self, request):
         """
         """

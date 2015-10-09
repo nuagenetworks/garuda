@@ -94,15 +94,24 @@ class GACoreController(object):
     def execute(self, request):
         """
         """
-        session_uuid = request.parameters['password'] if 'password' in request.parameters else None
-        session = self.sessions_manager.get(session_uuid=session_uuid)
+        session_uuid = self.sessions_manager.get_session_identifier(request=request)
+
+        if session_uuid:
+            session = self.sessions_manager.get_session(session_uuid=session_uuid)
+
+        if not session:
+            session = self.sessions_manager.create_session(request=request, garuda_uuid=self.uuid)
+
+            if session:
+                return GAResponse(status=GAResponse.STATUS_SUCCESS, content=[session.root_object])
+
         context = GAContext(session=session, request=request)
 
-        logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
-
-        if session is None:
+        if not session:
             context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
             return GAResponse(status=context.errors.type, content=context.errors)
+
+        logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
         manager = GAOperationsManager(context=context, model_controller=self.model_controller)
         manager.run()
@@ -112,11 +121,6 @@ class GACoreController(object):
 
         if request.action is GARequest.ACTION_READALL:
             return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
-
-        # Sample code
-        context.add_event(GAPushEvent(action='TOTO', entity=context.object))
-        context.add_event(GAPushEvent(action=request.action, entity=context.object))
-        # End sample code
 
         if len(context.events) > 0:
             self.push_controller.add_events(events=context.events)

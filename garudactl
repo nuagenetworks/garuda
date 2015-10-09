@@ -28,26 +28,31 @@ def start():
 
     """
     """
-    from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultPermissionsControllerPlugin
-    from garuda.core.lib import SDKsManager
     from garuda.channels.rest import RESTCommunicationChannel
-
     rest_comm_channel = RESTCommunicationChannel(host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
 
+    from garuda.plugins.tdl_storage_plugin import TDLStoragePlugin
+    tdl_storage_plugin = TDLStoragePlugin()
 
+    from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
+    tdl_authentication_plugin = TDLAuthenticationPlugin()
+
+    from garuda.core.lib import SDKsManager
     sdks_manager = SDKsManager()
-    sdks_manager.register_sdk(identifier="vspk32", sdk=importlib.import_module('vspk.v3_2'))
+    sdks_manager.register_sdk(identifier="tdldk", sdk=importlib.import_module('tdldk.v1_0'))
+
 
     # Instanciate plugins
-    default_model_controller = DefaultGAModelControllerPlugin()
-    default_authentication_plugin = DefaultAuthenticationPlugin()
-    default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
+    # from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultPermissionsControllerPlugin
+    # default_model_controller = DefaultGAModelControllerPlugin()
+    # default_authentication_plugin = DefaultAuthenticationPlugin()
+    # default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
-    core = GACoreController(  sdks_manager=sdks_manager,
-                            communication_channel_plugins=[rest_comm_channel],
-                            authentication_plugins=[default_authentication_plugin],
-                            model_controller_plugins=[default_model_controller],
-                            permission_controller_plugins=[default_permission_controller_plugin])
+    core = GACoreController(    sdks_manager=sdks_manager,
+                                communication_channel_plugins=[rest_comm_channel],
+                                authentication_plugins=[tdl_authentication_plugin],
+                                model_controller_plugins=[tdl_storage_plugin],
+                                permission_controller_plugins=[])
     core.start()
 
     logger.info('Garuda is now ready. (Press CTRL+C to quit)')
