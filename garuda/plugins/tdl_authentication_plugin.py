@@ -31,6 +31,9 @@ class TDLAuthenticationPlugin(GAAuthenticationPlugin):
     def authenticate(self, request, session):
         """
         """
+        if request.resources[0].name != "root":
+            return None
+
         root = self.core_controller.model_controller.get('root', 'root-id-1')
 
         if request.parameters["username"] == root.user_name and request.parameters["password"] == root.password:

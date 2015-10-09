@@ -22,6 +22,9 @@ class GACoreController(object):
     """
 
     """
+
+    GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
+
     def __init__(self, sdks_manager, communication_channel_plugins=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
         """
         """
@@ -87,9 +90,9 @@ class GACoreController(object):
         """
         """
         logger.debug('Stopping core controller')
-        self.communication_channels_controller.stop()
-        self.push_controller.flush(garuda_uuid=self.uuid)
         self.push_controller.stop()
+        self.communication_channels_controller.stop()
+        self.sessions_manager.flush_garuda(self.uuid)
 
     def execute(self, request):
         """
@@ -108,7 +111,12 @@ class GACoreController(object):
         context = GAContext(session=session, request=request)
 
         if not session:
-            context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
+            error = GAError(type=GAError.TYPE_UNAUTHORIZED,
+                    title='Unauthorized access',
+                    description='Could not grant access. Please log in.')
+
+            context.report_error(error)
+
             return GAResponse(status=context.errors.type, content=context.errors)
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))

@@ -35,4 +35,7 @@ class GACommunicationChannelsController(GAPluginController):
     def stop(self):
         """
         """
+        for channel in self._plugins:
+            channel.stop()
+
         self._thread_manager.stop_all()

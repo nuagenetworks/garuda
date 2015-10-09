@@ -64,11 +64,15 @@ class GAContext(object):
         """
         return self._errors_list.has_errors()
 
+    def report_errors(self, errors):
+        """
+        """
+        self._errors_list.add_errors(errors)
 
-    def report_error(self, type, property, title, description, suggestion=None):
+    def report_error(self, error):
         """
         """
-        self._errors_list.add_error(type=type, property=property, title=title, description=description, suggestion=suggestion)
+        self._errors_list.add_error(error)
 
     def clear_errors(self):
         """

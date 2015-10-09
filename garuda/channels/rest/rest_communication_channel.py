@@ -3,7 +3,7 @@
 import json
 import logging
 
-logger = logging.getLogger('ext.restcommunicationchannel')
+logger = logging.getLogger('garuda.restcommunicationchannel')
 
 from base64 import urlsafe_b64decode
 
@@ -17,7 +17,7 @@ from flask import Flask, request, make_response
 from .utils.constants import RESTConstants
 from garuda.core.config import GAConfig
 from garuda.core.lib import PathParser
-from garuda.core.models import GARequest, GAResponse, GAError, GAPushNotification
+from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification
 from garuda.core.plugins import GACommunicationChannel, GAPluginManifest
 
 
@@ -130,19 +130,14 @@ class RESTCommunicationChannel(GACommunicationChannel):
         """
         """
 
-        if type(content) is list:
-            results = []
+        if type(content) is GAErrorsList:
+            return {"errors": content.to_dict()}
 
-            for obj in content:
-                if hasattr(obj, 'to_dict'):
-                    results.append(obj.to_dict())
-                else:
-                    results.append(str(content))
+        elif type(content) is list:
+            return [obj.to_dict() for obj in content]
 
-            return results
-
-        if hasattr(content, 'to_dict'):
-            return content.to_dict()
+        elif hasattr(content, 'to_dict'):
+            return [content.to_dict()]
 
         return str(content)
 
@@ -276,7 +271,12 @@ class RESTCommunicationChannel(GACommunicationChannel):
 
         try:
             events = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
-            ga_notification = GAPushNotification(events=events)
+
+            if events[0].action == self.core_controller.GARUDA_TERMINATE_EVENT:
+                ga_notification = GAPushNotification()
+            else:
+                ga_notification = GAPushNotification(events=events)
+
             logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
             queue.task_done()
         except Empty:

@@ -132,7 +132,7 @@ class GASessionsManager(GAPluginController):
         logger.debug('Flushing Garuda Sessions')
         garuda_key = REDIS_GARUDA_KEY + garuda_uuid
 
-        session_keys = self.get_all(garuda_uuid=garuda_uuid)
+        session_keys = self.get_all_sessions(garuda_uuid=garuda_uuid)
 
         if len(session_keys) == 0:
             return

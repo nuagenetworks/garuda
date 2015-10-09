@@ -20,4 +20,4 @@ class GAConfig(object):
     VSD_API_URL = 'https://api.nuagenetworks.net:8443'
 
     # Push notification
-    PUSH_TIMEOUT = 5
+    PUSH_TIMEOUT = 60

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.plugins import GAModelControllerPlugin, GAPluginManifest
+from garuda.core.models import GAError
 from garuda.core.lib import SDKsManager
 from uuid import uuid4
 
@@ -130,17 +131,37 @@ class TDLStoragePlugin(GAModelControllerPlugin):
 
         return ret
 
-    def save(self, resource, parent=None):
+    def create(self, resource, parent=None):
         """
         """
+        validation = self._validate(resource)
+        if validation: return validation
+
         resource.id = str(uuid4())
 
-        if not parent:
-            self._database["list"].append(resource.to_dict())
-        else:
+        if parent:
             resource.parent_type = "list"
             resource.parent_id = parent.id
             self._database["task"].append(resource.to_dict())
+        else:
+            self._database["list"].append(resource.to_dict())
+
+    def update(self, resource):
+        """
+        """
+
+        validation = self._validate(resource)
+        if validation: return validation
+
+        data = self._get_raw_data(resource.rest_name, resource.id)
+
+        if not data:
+            return GAError(type=GAError.TYPE_NOTFOUND, title="Cannot find that shit", description="Wesh no")
+
+        if (resource.__class__(data=data)).rest_equals(resource):
+            return GAError(type=GAError.TYPE_CONFLICT, title="No changes to modify the entity", description="There are no attribute changes to modify the entity.")
+
+        data.update(resource.to_dict())
 
     def delete(self, resource):
         """
@@ -150,3 +171,22 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         for item in table:
             if item["ID"] == resource.id:
                 table.remove(item)
+
+    def _validate(self, resource):
+        """
+        """
+        if resource.validate():
+            return None
+
+        errors = []
+        for property_name, error in resource.errors.iteritems():
+            errors.append(GAError(type=GAError.TYPE_CONFLICT, title=error["title"], description=error["description"], property_name=property_name))
+        return errors
+
+    def _get_raw_data(self, resource_name, identifier):
+        """
+        """
+        table = self._database[resource_name]
+        for item in table:
+            if item["ID"] == identifier:
+                return item

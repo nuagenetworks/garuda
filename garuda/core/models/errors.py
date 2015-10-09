@@ -6,31 +6,31 @@ class GAPropertyError(object):
 
     """
 
-    def __init__(self, type, property):
+    def __init__(self, type, property_name):
         """
         """
         self.type = type
-        self.property = property
+        self.property_name = property_name
         self.errors = []
 
-    def add_error(self, title, description, suggestion):
+    def add_error(self, error):
         """
         """
-        self.errors.append(GAError(title=title, description=description, suggestion=suggestion))
+        self.errors.append(error)
 
     def add_errors(self, errors):
         """
         """
         for error in errors:
-            self.errors.append(error)
+            self.add_error(error)
 
     def to_dict(self):
         """
         """
         d = dict()
 
-        d['property'] = self.property
-        d['type'] = self.type
+        d['property'] = self.property_name
+        # d['type'] = self.type
         d['descriptions'] = [error.to_dict() for error in self.errors]  # descriptions to match VSD behavior
 
         return d
@@ -47,12 +47,14 @@ class GAError(object):
     TYPE_AUTHENTICATIONFAILURE = 'authentication failed'
     TYPE_UNAUTHORIZED = 'unauthorized'
 
-    def __init__(self, title, description, suggestion):
+    def __init__(self, type, title, description, suggestion=None, property_name=''):
         """
         """
+        self.type = type
         self.title = title
         self.description = description
         self.suggestion = suggestion
+        self.property_name = property_name
 
     def to_dict(self):
         """
@@ -61,7 +63,7 @@ class GAError(object):
 
         d['title'] = self.title
         d['description'] = self.description
-        d['suggestion'] = self.suggestion
+        # d['suggestion'] = self.suggestion
 
         return d
 
@@ -74,17 +76,24 @@ class GAErrorsList(list):
         """
         self.type = None
 
-    def add_error(self, type, property, title, description, suggestion=None):
+    def add_errors(self, errors):
+        """
+
+        """
+        for error in errors:
+            property_error = self._get_property_error(error.property_name)
+
+            if property_error is None:
+                self.type = error.type # that really sucks
+                property_error = GAPropertyError(type=error.type, property_name=error.property_name)
+                self.append(property_error)
+
+            property_error.add_error(error)
+
+    def add_error(self, error):
         """
         """
-        self.type = type
-        property_error = self._get_property_error(property)
-
-        if property_error is None:
-            property_error = GAPropertyError(type=type, property=property)
-            self.append(property_error)
-
-        property_error.add_error(title=title, description=description, suggestion=suggestion)
+        self.add_errors([error])
 
     def merge(self, error_list):
         """
@@ -97,11 +106,11 @@ class GAErrorsList(list):
             else:
                 property_error.add_errors(perror.errors)
 
-    def _get_property_error(self, property):
+    def _get_property_error(self, property_name):
         """
         """
         for error in self:
-            if error.property == property:
+            if error.property_name == property_name:
                 return error
 
         return None

@@ -11,6 +11,7 @@ class GAPushNotification(GASerializable):
     """
 
     """
+
     def __init__(self, events=[]):
         """
         """

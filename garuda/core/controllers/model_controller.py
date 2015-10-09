@@ -52,12 +52,21 @@ class GAModelController(GAPluginController):
 
         return None
 
-    def save(self, resource, parent=None):
+    def create(self, resource, parent=None):
         """
         """
         for plugin in self._plugins:
             if plugin.should_manage(resource_name=resource.rest_resource_name, identifier=resource.id):
-                return plugin.save(resource=resource, parent=parent)
+                return plugin.create(resource=resource, parent=parent)
+
+        return None
+
+    def update(self, resource):
+        """
+        """
+        for plugin in self._plugins:
+            if plugin.should_manage(resource_name=resource.rest_resource_name, identifier=resource.id):
+                return plugin.update(resource=resource)
 
         return None
 

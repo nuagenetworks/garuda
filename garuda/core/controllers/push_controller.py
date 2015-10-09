@@ -37,14 +37,11 @@ class GAPushController(object):
 
         self._thread = p.run_in_thread(sleep_time=0.001)
 
-    def flush(self, garuda_uuid):
-        """
-        """
-        self.core_controller.sessions_manager.flush_garuda(garuda_uuid)
-
     def stop(self):
         """
         """
+        self._send_events_to_garuda(garuda_uuid=self.core_controller.uuid, events=[GAPushEvent(action=self.core_controller.GARUDA_TERMINATE_EVENT)])
+
         if self._thread:
             self._thread.stop()
 
@@ -57,6 +54,11 @@ class GAPushController(object):
         garuda_uuid = data['garuda_uuid']
         events = [GAPushEvent.from_dict(event) for event in data['events']]
 
+        self._send_events_to_garuda(garuda_uuid=garuda_uuid, events=events)
+
+    def _send_events_to_garuda(self, garuda_uuid, events):
+        """
+        """
         session_uuids = self.core_controller.sessions_manager.get_all_sessions(garuda_uuid=garuda_uuid, listening=True)
 
         jobs = []
@@ -76,6 +78,11 @@ class GAPushController(object):
         session = self.core_controller.sessions_manager.get_session(session_uuid=session_uuid)
 
         for event in events:
+
+            if event.action == self.core_controller.GARUDA_TERMINATE_EVENT:
+                events_to_send.append(event)
+                continue
+
             entity = event.entity
             resources = [GAResource(name=entity.rest_name, value=entity.id)]
             request = GARequest(action=GARequest.ACTION_READ, resources=resources)

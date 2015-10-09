@@ -13,7 +13,7 @@ class GAPushEvent(GASerializable):
     def __init__(self, action=None, entity=None):
         """
         """
-        GASerializable.__init__(self)
+        super(GAPushEvent, self).__init__()
 
         self.action = action
         self.entity = entity
