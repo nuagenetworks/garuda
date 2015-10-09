@@ -206,7 +206,10 @@ class RESTCommunicationChannel(GACommunicationChannel):
             return GARequest.ACTION_CREATE
 
         elif method == RESTConstants.HTTP_PUT:
-            return GARequest.ACTION_UPDATE
+            if len(resources) == 2: # this is a PUT /A/id/B, which means this is an membership relationship
+                return GARequest.ACTION_ASSIGN
+            else:
+                return GARequest.ACTION_UPDATE
 
         elif method == RESTConstants.HTTP_DELETE:
             return GARequest.ACTION_DELETE

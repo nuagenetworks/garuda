@@ -12,6 +12,7 @@ class GARequest(object):
     ACTION_DELETE = 'delete'
     ACTION_READ = 'read'
     ACTION_READALL = 'readall'
+    ACTION_ASSIGN = 'assign'
     ACTION_AUTHENTICATE = 'authenticate'
     ACTION_LISTENEVENTS = 'listen events'
 

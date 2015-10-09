@@ -15,6 +15,7 @@ class GAModelController(GAPluginController):
         """
         """
         super(GAModelController, self).__init__(plugins=plugins, core_controller=core_controller)
+        self._managing_plugin_registry = {}
 
     # Override
 
@@ -23,58 +24,74 @@ class GAModelController(GAPluginController):
         """
         super(GAModelController, self).register_plugin(plugin=plugin, plugin_type=GAModelControllerPlugin)
 
+    def unregister_plugin(self, plugin):
+        """
+        """
+        super(GAModelController, self).register_plugin(plugin=plugin, plugin_type=GAModelControllerPlugin)
+
+        keys_to_remove = []
+        for resource_name, plugin in self._managing_plugin_registry.iteritems():
+            if self._managing_plugin_registry[resource_name] == plugin:
+                keys_to_remove.append(resource_name)
+
+        for key in keys_to_remove:
+            del self._managing_plugin_registry[key]
+
     # Implementation
 
     def instantiate(self, resource_name):
         """
         """
-        for plugin in self._plugins:
-            if plugin.should_manage(resource_name=resource_name, identifier=None):
-                return plugin.instantiate(resource_name=resource_name)
-
-        return None
+        plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
+        return plugin.instantiate(resource_name=resource_name) if plugin else None
 
     def get(self, resource_name, identifier):
         """
         """
-        for plugin in self._plugins:
-            if plugin.should_manage(resource_name=resource_name, identifier=identifier):
-                return plugin.get(resource_name=resource_name, identifier=identifier)
-
-        return None
+        plugin = self._managing_plugin(resource_name=resource_name, identifier=identifier)
+        return plugin.get(resource_name=resource_name, identifier=identifier) if plugin else None
 
     def get_all(self, parent, resource_name):
         """
         """
-        for plugin in self._plugins:
-            if plugin.should_manage(resource_name=resource_name, identifier=None):
-                return plugin.get_all(parent=parent, resource_name=resource_name)
-
-        return None
+        plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
+        return plugin.get_all(parent=parent, resource_name=resource_name) if plugin else None
 
     def create(self, resource, parent=None):
         """
         """
-        for plugin in self._plugins:
-            if plugin.should_manage(resource_name=resource.rest_resource_name, identifier=resource.id):
-                return plugin.create(resource=resource, parent=parent)
-
-        return None
+        plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
+        return plugin.create(resource=resource, parent=parent) if plugin else None
 
     def update(self, resource):
         """
         """
-        for plugin in self._plugins:
-            if plugin.should_manage(resource_name=resource.rest_resource_name, identifier=resource.id):
-                return plugin.update(resource=resource)
-
-        return None
+        plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
+        return plugin.update(resource=resource) if plugin else None
 
     def delete(self, resource):
         """
         """
+        plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
+        return plugin.delete(resource=resource) if plugin else None
+
+    def assign(self, resource, parent):
+        """
+        """
+        plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
+        return plugin.delete(resource=resource, parent=parent) if plugin else None
+
+    # Utils
+
+    def _managing_plugin(self, resource_name, identifier=None):
+        """
+        """
+        if resource_name in self._managing_plugin_registry:
+            return self._managing_plugin_registry[resource_name]
+
         for plugin in self._plugins:
-            if plugin.should_manage(resource_name=resource.rest_resource_name, identifier=resource.id):
-                return plugin.delete(resource=resource)
+            if plugin.should_manage(resource_name=resource_name, identifier=identifier):
+                self._managing_plugin_registry[resource_name] = plugin
+                return plugin
 
         return None

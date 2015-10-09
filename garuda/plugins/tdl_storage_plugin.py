@@ -217,6 +217,10 @@ class TDLStoragePlugin(GAModelControllerPlugin):
         self._db.execute(delete_query, (resource.id,))
         self._db.commit()
 
+    def assign(self, resource, parent):
+        """
+        """
+        print "ASSIGNED"
 
     def _validate(self, resource):
         """
@@ -226,7 +230,7 @@ class TDLStoragePlugin(GAModelControllerPlugin):
 
         errors = []
         for property_name, error in resource.errors.iteritems():
-            errors.append(GAError(type=GAError.TYPE_CONFLICT, title=error["title"], description=error["description"], property_name=property_name))
+            errors.append(GAError(type=GAError.TYPE_CONFLICT, title=error["title"], description=error["description"], property_name=error['remote_name']))
         return errors
 
     def _get_raw_data(self, resource_name, identifier):

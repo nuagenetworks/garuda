@@ -32,6 +32,7 @@ def start():
 
     from garuda.plugins.tdl_storage_plugin import TDLStoragePlugin
     tdl_storage_plugin = TDLStoragePlugin(db_path='/tmp/garuda.sqlite')
+    # tdl_storage_plugin = TDLStoragePlugin(db_path='/tmp/vsd.sqlite')
 
     from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
     tdl_authentication_plugin = TDLAuthenticationPlugin()
@@ -43,7 +44,10 @@ def start():
     # default_authentication_plugin = DefaultAuthenticationPlugin()
     # default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
-    core = GACoreController(    sdks_info=[{'identifier': 'current', 'module': 'tdldk.v1_0'}],
+    sdk_infos = [{'identifier': 'current', 'module': 'tdldk.v1_0'}]
+    # sdk_infos = [{'identifier': 'current', 'module': 'vspk.v3_2'}]
+
+    core = GACoreController(    sdks_info=sdk_infos,
                                 communication_channel_plugins=[rest_comm_channel],
                                 authentication_plugins=[tdl_authentication_plugin],
                                 model_controller_plugins=[tdl_storage_plugin],
