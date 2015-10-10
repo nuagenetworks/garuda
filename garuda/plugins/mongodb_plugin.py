@@ -130,7 +130,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def _validate(self, resource):
         """
         """
-        return None
         if resource.validate():
             return None
 
