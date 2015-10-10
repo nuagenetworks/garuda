@@ -4,7 +4,7 @@ __all__ = ['GACommunicationChannel', 'GAAuthenticationPlugin', 'GAPluginControll
 
 from .communication_channel import GACommunicationChannel
 from .plugin_manifest import GAPluginManifest
-from .business_logic_plugin import GABusinessLoginPlugin
+from .logic_plugin import GALoginPlugin
 from .authentication_plugin import GAAuthenticationPlugin
 from .storage_plugin import GAStoragePlugin
 from .permissions_plugin import GAPermissionsPlugin

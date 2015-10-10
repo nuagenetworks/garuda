@@ -11,12 +11,12 @@ from .push_controller import GAPushController
 from .sessions_controller import GASessionsController
 from .permissions_controller import GAPermissionsController
 from .communication_channels_controller import GACommunicationChannelsController
+from .logic_controller import GALogicController
 
 from garuda.core.lib import SDKsManager
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError
 
-logger = logging.getLogger('garuda.corecontroller')
-
+logger = logging.getLogger('garuda')
 
 class GACoreController(object):
     """
@@ -25,9 +25,32 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_info, communication_channel_plugins=[], authentication_plugins=[], storage_plugins=[], permission_controller_plugins=[]):
+    def __init__(self, sdks_info, communication_channel_plugins=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_controller_plugins=[], log_level=logging.INFO):
         """
         """
+
+        print """
+                       1y9~
+             .,:---,      "9"R
+         ,N"`    ,jyjjRN,   `n ?
+       #^   y&T        `"hQ   y 'y
+     (L  ;R@l                 ^a \w
+    (   #^4                    Q  @
+    Q  # ,W                    W  ]V
+   |# @L Q                    W   Q|
+    V @  Vp                  ;   #^[
+    ^.R[ 'Q@               ,4  .& ,T
+     (QQ  'Q4p           (R  ,BL (T
+       hQ   H,`"QQQL}Q"`,;&RR   x
+         "g   YQ,    ```     :F`
+           "E,  `"B@MD&DR@B`
+               '"N***xD"`
+"""
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('[%(levelname)s] %(name)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(log_level)
 
         self._sdks_manager = SDKsManager()
 
@@ -35,6 +58,7 @@ class GACoreController(object):
             self._sdks_manager.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
 
         self._uuid = str(uuid4())
+        self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
@@ -52,6 +76,12 @@ class GACoreController(object):
         """
         """
         return self._storage_controller
+
+    @property
+    def logic_controller(self):
+        """
+        """
+        return self._logic_controller
 
     @property
     def push_controller(self):
@@ -90,6 +120,8 @@ class GACoreController(object):
 
         self.push_controller.start()
         self.communication_channels_controller.start()
+
+        logger.info('Garuda is initialized and ready to rock! (Press CTRL+C to quit)')
 
     def stop(self, signal=None, frame=None):
         """
@@ -132,7 +164,7 @@ class GACoreController(object):
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
-        operations_controller = GAOperationsController(context=context, storage_controller=self.storage_controller)
+        operations_controller = GAOperationsController(context=context, logic_controller=self.logic_controller, storage_controller=self.storage_controller)
         operations_controller.run()
 
         if context.has_errors():

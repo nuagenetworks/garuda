@@ -36,7 +36,7 @@ class GAPluginController(object):
             logger.warn("Plugin %s is already registered in controller %s" % (plugin, self))
             return
 
-        logger.info("Registering plugin '%s (%s)'" % (plugin.manifest().identifier, plugin.manifest().name))
+        logger.debug("Registering plugin '%s (%s)'" % (plugin.manifest().identifier, plugin.manifest().name))
 
         plugin.core_controller = self.core_controller
 

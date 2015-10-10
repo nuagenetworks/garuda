@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GARequest, GAError, GAPushEvent
-from .logic_plugins_controller import GALogicPluginsController
+from .logic_controller import GALogicController
 
 class GAOperationsController(object):
     """
 
     """
-    def __init__(self, context, storage_controller):
+    def __init__(self, context, logic_controller, storage_controller):
         """
         """
         self.context = context
         self.storage_controller = storage_controller
+        self.logic_controller = logic_controller
 
     def run(self):
         """
@@ -77,16 +78,14 @@ class GAOperationsController(object):
         if self.context.has_errors():
             return
 
-        logic_plugins_controller = GALogicPluginsController(context=self.context)
-
-        logic_plugins_controller.perform_delegate(delegate='begin_read_operation')
-        logic_plugins_controller.perform_delegate(delegate='should_perform_read', object=self.context.object)
+        self.logic_controller.perform_delegate(delegate='begin_read_operation', context=self.context)
+        self.logic_controller.perform_delegate(delegate='should_perform_read', context=self.context)
 
         if self.context.has_errors():
             return
 
-        logic_plugins_controller.perform_delegate(delegate='preprocess_read')
-        logic_plugins_controller.perform_delegate(delegate='end_read_operation')
+        self.logic_controller.perform_delegate(delegate='preprocess_read', context=self.context)
+        self.logic_controller.perform_delegate(delegate='end_read_operation', context=self.context)
 
     def _prepare_context_for_readall_operation(self):
         """
@@ -117,20 +116,14 @@ class GAOperationsController(object):
         if self.context.has_errors():
             return
 
-        logic_plugins_controller = GALogicPluginsController(context=self.context)
+        self.logic_controller.perform_delegate(delegate='begin_readall_operation', context=self.context)
+        self.logic_controller.perform_delegate(delegate='should_perform_readall', context=self.context)
 
-        logic_plugins_controller.perform_delegate(delegate='begin_readall_operation')
+        if self.context.has_errors():
+            return
 
-        for obj in self.context.objects:
-
-            logic_plugins_controller.perform_delegate(delegate='should_perform_readall', object=obj)
-
-            if self.context.has_errors():
-                return
-
-            logic_plugins_controller.perform_delegate(delegate='preprocess_readall', object=obj)
-
-        logic_plugins_controller.perform_delegate(delegate='end_readall_operation')
+        self.logic_controller.perform_delegate(delegate='preprocess_readall', context=self.context)
+        self.logic_controller.perform_delegate(delegate='end_readall_operation', context=self.context)
 
 
     ## WRITE OPERATIONS
@@ -218,15 +211,27 @@ class GAOperationsController(object):
         if self.context.has_errors():
             return
 
-        logic_plugins_controller = GALogicPluginsController(context=self.context)
+        self.logic_controller.perform_delegate(delegate='begin_write_operation', context=self.context)
+        self.logic_controller.perform_delegate(delegate='should_perform_write', context=self.context)
 
-        logic_plugins_controller.perform_delegate(delegate='begin_write_operation')
-        logic_plugins_controller.perform_delegate(delegate='should_perform_write')
+        if self.context.has_errors():
+            return
 
-        if self.context.has_errors(): return
+        self.logic_controller.perform_delegate(delegate='preprocess_write', context=self.context)
 
-        logic_plugins_controller.perform_delegate(delegate='preprocess_write')
+        self._perform_store()
 
+        if self.context.has_errors():
+            return
+
+        self.logic_controller.perform_delegate(delegate='did_perform_write', context=self.context)
+        self.logic_controller.perform_delegate(delegate='end_write_operation', context=self.context)
+
+        self._perform_push()
+
+    def _perform_store(self):
+        """
+        """
         err = None
 
         if self.context.request.action == GARequest.ACTION_CREATE:
@@ -246,13 +251,12 @@ class GAOperationsController(object):
                 self.context.report_errors(err)
             else:
                 self.context.report_error(err)
-            return
 
-        logic_plugins_controller.perform_delegate(delegate='did_perform_write')
-
-        logic_plugins_controller.perform_delegate(delegate='end_write_operation')
-
+    def _perform_push(self):
+        """
+        """
         if self.context.request.action == GARequest.ACTION_ASSIGN:
             self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.parent_object))
         else:
             self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))
+

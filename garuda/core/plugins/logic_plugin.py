@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from .abstracts import GAPlugin
-from garuda.core.exceptions import NotImplementedException
 
-
-class GABusinessLoginPlugin(GAPlugin):
+class GALoginPlugin(GAPlugin):
     """
 
     """
 
-    def is_listening(self, rest_name, action=None):
+    def should_manage(self, rest_name, action=None):
         """
 
         """
