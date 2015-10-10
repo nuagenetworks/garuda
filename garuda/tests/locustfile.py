@@ -2,14 +2,14 @@
 
 from locust import HttpLocust, TaskSet, task
 from tdldk.v1_0 import *
-
+import json
 
 class UserBehavior(TaskSet):
     """
     """
-    AUTH    = 'cm9vdDoxMjJkZWE1ZC02YjhjLTQ3MWMtOGQ3NC1iNDk1ODE4OTc5YTM='
-    LIST_ID = 'cc2ba6ad-33f4-4b4d-9fad-034df4d7db1f'
-    TASK_ID = 'c5781f4f-2f92-44fe-b96b-84eef98914d9'
+    AUTH    = 'cm9vdDo4ZTI2ODU3YS04NDNhLTQ0ZmUtOWQ4Ny1kOWZmM2ZmYzQyMzI='
+    LIST_ID = '19651d37-8334-481f-986c-4f1428bbf40f'
+    TASK_ID = '628d097c-63c3-4239-9185-b09132797963'
 
     def on_start(self):
         pass
@@ -37,6 +37,14 @@ class UserBehavior(TaskSet):
         """
         """
         self.client.get("/tasks/%s/users" % self.TASK_ID, headers={'Authorization': 'XREST %s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
+
+    @task
+    def create_delete_list(self):
+        """
+        """
+        response = self.client.post("/lists", data=json.dumps({'title': 'test', 'description': 'test'}), headers={'Authorization': 'XREST %s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
+        data = json.loads(response.content)
+        self.client.delete("/lists/%s" % data[0]["ID"], headers={'Authorization': 'XREST %s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
 
 
 class WebsiteUser(HttpLocust):
