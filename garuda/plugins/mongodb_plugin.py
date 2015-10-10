@@ -8,18 +8,19 @@ from garuda.core.models import GAError
 from garuda.core.lib import SDKsManager
 
 
-class GAMongoSotragePlugin(GAModelControllerPlugin):
+class GAMongoStoragePlugin(GAModelControllerPlugin):
     """
     """
 
-    def __init__(self, db_name='garuda', mongo_uri='mongodb://127.0.0.1:27017'):
+    def __init__(self, db_name='garuda', mongo_uri='mongodb://127.0.0.1:27017', db_initialization_function=None):
         """
         """
-        super(GAMongoSotragePlugin, self).__init__()
+        super(GAMongoStoragePlugin, self).__init__()
 
         self.mongo = MongoClient(mongo_uri)
         self.db = self.mongo[db_name]
         self.sdk = None
+        self.db_initialization_function = db_initialization_function
 
     @classmethod
     def manifest(cls):
@@ -31,12 +32,10 @@ class GAMongoSotragePlugin(GAModelControllerPlugin):
         """
         """
         self.sdk = SDKsManager().get_sdk("current")
-
         root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
 
-        # insert the default user
-        if not self.db[root_rest_name].count():
-            self.db[root_rest_name].insert({'ID': '1', 'userName': 'root', 'password': 'password'})
+        if self.db_initialization_function:
+            self.db_initialization_function(db=self.db, root_rest_name=root_rest_name)
 
     def should_manage(self, resource_name, identifier):
         """
@@ -131,6 +130,7 @@ class GAMongoSotragePlugin(GAModelControllerPlugin):
     def _validate(self, resource):
         """
         """
+        return None
         if resource.validate():
             return None
 

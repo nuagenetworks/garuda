@@ -23,19 +23,41 @@ def set_log_level(level):
     """
     logger.setLevel(level)
 
+def tdl_db_init(db, root_rest_name):
+    """
+    """
+    if not db[root_rest_name].count():
+        db[root_rest_name].insert({'ID': '1', 'userName': 'root', 'password': 'password'})
+
+def vsd_db_init(db, root_rest_name):
+    """
+    """
+    if not db[root_rest_name].count():
+        db[root_rest_name].insert({'ID': '1', 'userName': 'root', 'password': 'password', 'enterpriseID': '2'})
+
+    if not db['user'].count():
+        db['user'].insert({'ID': '1'})
+
+    if not db['group'].count():
+        db['group'].insert({'ID': '3', 'name': 'Root Users', 'parentID': '2', 'parentType': 'enterprise'})
+
+    if not db['enterprise'].count():
+        db['enterprise'].insert({'ID': '2', 'name': 'csp', 'description': 'default enterprise'})
+
+    if not db['systemconfig'].count():
+        db['systemconfig'].insert({'ID': '3'})
+
+
 def start():
 
     """
     """
     from garuda.channels.rest import RESTCommunicationChannel
-    communication_channel = RESTCommunicationChannel(host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
+    communication_channel = RESTCommunicationChannel(host='0.0.0.0', port=2000, threaded=True, debug=True, use_reloader=False)
 
-    # from garuda.plugins.tdl_storage_plugin import TDLStoragePlugin
-    # storage_plugin = TDLStoragePlugin(db_path='/tmp/garuda.sqlite')
-    # storage_plugin = TDLStoragePlugin(db_path='/tmp/vsd.sqlite')
-
-    from garuda.plugins.mongodb_plugin import GAMongoSotragePlugin
-    storage_plugin = GAMongoSotragePlugin()
+    from garuda.plugins.mongodb_plugin import GAMongoStoragePlugin
+    # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
+    storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
 
     from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
     authentication_plugin = TDLAuthenticationPlugin()
