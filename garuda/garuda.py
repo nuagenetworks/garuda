@@ -48,24 +48,36 @@ class Garuda(object):
     def start(self):
         """
         """
+        all_sdks = ', '.join([item['module'] for item in self._sdks_info])
+        all_channels = ', '.join([channel.manifest().name for channel in self._channels])
+        all_storages = ', '.join([plugin.manifest().name for plugin in self._storage_plugins])
+        all_auth = ', '.join([plugin.manifest().name for plugin in self._authentication_plugins])
+        all_perms = ', '.join([plugin.manifest().name for plugin in self._permission_plugins])
+
         print """
                        1y9~
-             .,:---,      "9"R
-         ,N"`    ,jyjjRN,   `n ?            Garuda %s
-       #^   y&T        `"hQ   y 'y          ==========
-     (L  ;R@l                 ^a \w
+             .,:---,      "9"R            Garuda %s
+         ,N"`    ,jyjjRN,   `n ?          ==========
+       #^   y&T        `"hQ   y 'y
+     (L  ;R@l                 ^a \w       github.com/nuagenetworks/garuda
     (   #^4                    Q  @
-    Q  # ,W                    W  ]V        %d communications channels
-   |# @L Q                    W   Q|
-    V @  Vp                  ;   #^[        %d storage plugins, %d logic plugins
-    ^.R[ 'Q@               ,4  .& ,T        %d permission plugins, %d authentication plugins
-     (QQ  'Q4p           (R  ,BL (T
+    Q  # ,W                    W  ]V      %d channel%s           %s
+   |# @L Q                    W   Q|      %s sdk%s               %s
+    V @  Vp                  ;   #^[      %d storage plugin%s    %s
+    ^.R[ 'Q@               ,4  .& ,T      %d auth plugin%s       %s
+     (QQ  'Q4p           (R  ,BL (T       %d permission plugin%s %s
        hQ   H,`"QQQL}Q"`,;&RR   x
-         "g   YQ,    ```     :F`            garuda.io
+         "g   YQ,    ```     :F`          %d logic plugin%s
            "E,  `"B@MD&DR@B`
                '"N***xD"`
 
-               """ % (__version__, len(self._channels), len(self._storage_plugins), len(self._logic_plugins), len(self._authentication_plugins), len(self._permission_plugins))
+               """ % (__version__,
+                       len(self._channels), "s" if len(self._channels) > 1 else "", ": %s" % all_channels if len(all_channels) else "",
+                       len(self._sdks_info), "s" if len(self._sdks_info) > 1 else "", ": %s" % all_sdks if len(all_sdks) else "",
+                       len(self._storage_plugins), "s" if len(self._storage_plugins) > 1 else "", ": %s" % all_storages if len(all_storages) else "",
+                       len(self._authentication_plugins), "s" if len(self._authentication_plugins) > 1 else "", ": %s" % all_auth if len(all_auth) else "",
+                       len(self._permission_plugins), "s" if len(self._permission_plugins) > 1 else "", ": %s" % all_perms if len(all_perms) else "",
+                    len(self._logic_plugins), "s" if len(self._logic_plugins) > 1 else "")
 
         self.run()
 

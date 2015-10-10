@@ -31,7 +31,7 @@ class GARESTChannel(GAChannel):
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='ReST Communication Channel', version=1.0, identifier="garuda.communicationchannels.rest")
+        return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.rest")
 
     def __init__(self, host='0.0.0.0', port=2000):
         """
@@ -235,7 +235,7 @@ class GARESTChannel(GAChannel):
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
-        resources = parser.parse(path=path, url_prefix="%s/" % SDKsManager().get_sdk("current").SDKInfo.api_prefix())
+        resources = parser.parse(path=path, url_prefix="%s/" % SDKsManager().get_sdk('default').SDKInfo.api_prefix())
 
         action = self.determine_action(method, resources)
 

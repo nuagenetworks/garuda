@@ -26,12 +26,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='Garuda MongoDB Storage Plugin', version=1.0, identifier="garuda.plugins.storage.mongodb")
+        return GAPluginManifest(name='mongodb', version=1.0, identifier="garuda.plugins.storage.mongodb")
 
     def did_register(self):
         """
         """
-        self.sdk = SDKsManager().get_sdk("current")
+        self.sdk = SDKsManager().get_sdk('default')
         root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
 
         if self.db_initialization_function:

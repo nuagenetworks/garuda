@@ -23,7 +23,7 @@ class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='Simple Authentifation', version=1.0, identifier='garuda.plugin.authentication.simple')
+        return GAPluginManifest(name='simple', version=1.0, identifier='garuda.plugin.authentication.simple')
 
     def should_manage(self, request):
         """
@@ -38,7 +38,7 @@ class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):
     def authenticate(self, request, session):
         """
         """
-        root_api = SDKsManager().get_sdk('current').SDKInfo.root_object_class().rest_name
+        root_api = SDKsManager().get_sdk('default').SDKInfo.root_object_class().rest_name
 
         if request.resources[0].name != root_api:
             return None
