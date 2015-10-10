@@ -4,10 +4,10 @@ class GAPlugin(object):
     """
     """
 
-    def __init__(self, core_controller=None):
+    def __init__(self):
         """
         """
-        self.core_controller = core_controller
+        self.core_controller = None
 
     def will_register(self):
         """

@@ -4,8 +4,7 @@
 from garuda import Garuda
 from garuda.core.channels.rest import RESTChannel
 from garuda.core.plugins.storage import GAMongoStoragePlugin
-
-from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
+from garuda.core.plugins.authentication import GASimpleAuthenticationPlugin
 
 
 def tdl_db_init(db, root_rest_name):
@@ -32,6 +31,21 @@ def vsd_db_init(db, root_rest_name):
     if not db['systemconfig'].count():
         db['systemconfig'].insert({'ID': '3'})
 
+def auth_function(request, session, root_api, storage_controller):
+    """
+    """
+    print "HERE"
+    # add a filter here
+    auth = storage_controller.get(root_api, '1')
+
+    if request.parameters["username"] == auth.user_name and request.parameters["password"] == auth.password:
+        auth.api_key = session.uuid
+        auth.password = None
+        return auth
+
+    return None
+
+
 
 
 def start():
@@ -41,7 +55,7 @@ def start():
     channel = RESTChannel()
     # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
-    authentication_plugin = TDLAuthenticationPlugin()
+    authentication_plugin = GASimpleAuthenticationPlugin(auth_function=auth_function)
 
 
     sdk_infos = [{'identifier': 'current', 'module': 'tdldk.v1_0'}]
