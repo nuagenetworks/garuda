@@ -27,7 +27,7 @@ class GAStorageController(GAPluginController):
     def unregister_plugin(self, plugin):
         """
         """
-        super(GAStorageController, self).register_plugin(plugin=plugin, plugin_type=GAStoragePlugin)
+        super(GAStorageController, self).unregister_plugin(plugin=plugin)
 
         keys_to_remove = []
         for resource_name, plugin in self._managing_plugin_registry.iteritems():

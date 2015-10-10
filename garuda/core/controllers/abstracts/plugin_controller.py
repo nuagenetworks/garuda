@@ -30,14 +30,12 @@ class GAPluginController(object):
         """
         """
         if not isinstance(plugin, plugin_type):
-            logger.error("Plugin %s cannot be registered to %s" % (plugin, self))
+            logger.error("'%s' cannot register '%s': not a valid '%s'." % (self.__class__.__name__, plugin.manifest().identifier, plugin_type.__name__))
             return
 
         if plugin in self._plugins:
-            logger.warn("Plugin %s is already registered in controller %s" % (plugin, self))
+            logger.warn("'%s' cannot register '%s': already registered." % (self.__class__.__name__, plugin.manifest().identifier))
             return
-
-        logger.debug("Registering plugin '%s (%s)'" % (plugin.manifest().identifier, plugin.manifest().name))
 
         plugin.core_controller = self.core_controller
 
@@ -45,20 +43,22 @@ class GAPluginController(object):
         self._plugins.append(plugin)
         plugin.did_register()
 
+        logger.debug("'%s': successfuly registered '%s'" % (self.__class__.__name__, plugin.manifest().identifier))
+
     def unregister_plugin(self, plugin):
         """
         """
 
-        if plugin not in self._plugins:
-            logger.warn("No plugin %s registered in controller %s" % (plugin, self))
+        if not plugin in self._plugins:
+            logger.warn("'%s' cannot unregister '%s': not registered." % (self.__class__.__name__, plugin.manifest().identifier))
             return
 
-        logger.info("Unregister plugin %s in controller %s" % (plugin, self))
         plugin.will_unregister()
         self._plugins.remove(plugin)
         plugin.did_unregister()
-
         plugin.core_controller = None
+
+        logger.debug("'%s': successfuly unregistered '%s'" % (self.__class__.__name__, plugin.manifest().identifier))
 
     def unregister_all_plugins(self):
         """

@@ -17,13 +17,14 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.DEBUG, log_handler=None):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.DEBUG, log_handler=None, runloop=True, banner=True):
         """
         """
 
         BambouConfig.set_should_raise_bambou_http_error(False)
 
         self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
+        self._runloop = runloop
         self._sdks_info = sdks_info
         self._channels = channels
         self._authentication_plugins = []
@@ -39,6 +40,9 @@ class Garuda(object):
             elif isinstance(plugin, GAPermissionsPlugin): self._permission_plugins.append(plugin)
             elif isinstance(plugin, GALogicPlugin): self._logic_plugins.append(plugin)
 
+        if banner:
+            self.print_banner()
+
         if not log_handler:
             log_handler = logging.StreamHandler()
             log_handler.setFormatter(logging.Formatter('[%(levelname)s] %(name)s: %(message)s'))
@@ -46,8 +50,16 @@ class Garuda(object):
 
         logger.setLevel(log_level)
 
+        self.core = GACoreController(   sdks_info=self._sdks_info,
+                                        redis_info=self._redis_info,
+                                        channels=self._channels,
+                                        logic_plugins=self._logic_plugins,
+                                        authentication_plugins=self._authentication_plugins,
+                                        storage_plugins=self._storage_plugins,
+                                        permission_plugins=self._permission_plugins)
 
-    def start(self):
+
+    def print_banner(self):
         """
         """
         all_sdks = ', '.join([item['module'] for item in self._sdks_info])
@@ -79,32 +91,24 @@ class Garuda(object):
                        len(self._storage_plugins), "s" if len(self._storage_plugins) > 1 else "", ": %s" % all_storages if len(all_storages) else "",
                        len(self._authentication_plugins), "s" if len(self._authentication_plugins) > 1 else "", ": %s" % all_auth if len(all_auth) else "",
                        len(self._permission_plugins), "s" if len(self._permission_plugins) > 1 else "", ": %s" % all_perms if len(all_perms) else "",
-                    len(self._logic_plugins), "s" if len(self._logic_plugins) > 1 else "")
+                       len(self._logic_plugins), "s" if len(self._logic_plugins) > 1 else "")
 
-        self.run()
+    def start(self):
+        """
+        """
+        self.core.start()
+
+        if self._runloop:
+            while True:
+                try:
+                    sleep(300000)
+                except KeyboardInterrupt:
+                    break
+
+        self.core.stop()
 
     def stop(self):
         """
         """
-        raise KeyboardInterrupt()
-
-    def run(self):
-        """
-        """
-        core = GACoreController(    sdks_info=self._sdks_info,
-                                    redis_info=self._redis_info,
-                                    channels=self._channels,
-                                    logic_plugins=self._logic_plugins,
-                                    authentication_plugins=self._authentication_plugins,
-                                    storage_plugins=self._storage_plugins,
-                                    permission_plugins=self._permission_plugins)
-        core.start()
-
-        while True:
-            try:
-                sleep(3)
-            except KeyboardInterrupt:
-                break
-
-        core.stop()
+        self.core.stop()
 

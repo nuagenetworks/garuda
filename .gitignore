@@ -2,6 +2,7 @@
 _build/*
 .DS_Store
 MANIFEST
+dump.rdb
 
 # C extensions
 *.so
