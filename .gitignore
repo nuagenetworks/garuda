@@ -1,8 +1,37 @@
-*.pyc
+*.py[cod]
+_build/*
+.DS_Store
+MANIFEST
 
+# C extensions
+*.so
+# Packages
+*.egg
+*.egg-info
+build
+eggs
+parts
+bin
+var
+sdist
+dist
+develop-eggs
+.installed.cfg
 
-test.py
+# Installer logs
+pip-log.txt
 
-dump.rdb
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+.noseids
 
-trash.py
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+.tmp
