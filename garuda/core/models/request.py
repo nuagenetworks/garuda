@@ -7,14 +7,13 @@ class GARequest(object):
     """
 
     """
-    ACTION_CREATE = 'create'
-    ACTION_UPDATE = 'update'
-    ACTION_DELETE = 'delete'
-    ACTION_READ = 'read'
-    ACTION_READALL = 'readall'
-    ACTION_ASSIGN = 'assign'
-    ACTION_AUTHENTICATE = 'authenticate'
-    ACTION_LISTENEVENTS = 'listen events'
+    ACTION_CREATE = 'CREATE'
+    ACTION_UPDATE = 'UPDATE'
+    ACTION_DELETE = 'DELETE'
+    ACTION_READ = 'READ'
+    ACTION_READALL = 'READ_ALL'
+    ACTION_ASSIGN = 'ASSIGN'
+    ACTION_LISTENEVENTS = 'LISTEN'
 
     def __init__(self, action, channel=None, content={}, resources=[], parameters={}, cookies=None):
         """

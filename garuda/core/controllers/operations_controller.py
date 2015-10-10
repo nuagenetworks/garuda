@@ -252,4 +252,7 @@ class GAOperationsController(object):
 
         logic_plugins_controller.perform_delegate(delegate='end_write_operation')
 
-        self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))
+        if self.context.request.action == GARequest.ACTION_ASSIGN:
+            self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.parent_object))
+        else:
+            self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))

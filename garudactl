@@ -28,14 +28,17 @@ def start():
     """
     """
     from garuda.channels.rest import RESTCommunicationChannel
-    rest_comm_channel = RESTCommunicationChannel(host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
+    communication_channel = RESTCommunicationChannel(host="0.0.0.0", port=2000, threaded=True, debug=True, use_reloader=False)
 
-    from garuda.plugins.tdl_storage_plugin import TDLStoragePlugin
-    tdl_storage_plugin = TDLStoragePlugin(db_path='/tmp/garuda.sqlite')
-    # tdl_storage_plugin = TDLStoragePlugin(db_path='/tmp/vsd.sqlite')
+    # from garuda.plugins.tdl_storage_plugin import TDLStoragePlugin
+    # storage_plugin = TDLStoragePlugin(db_path='/tmp/garuda.sqlite')
+    # storage_plugin = TDLStoragePlugin(db_path='/tmp/vsd.sqlite')
+
+    from garuda.plugins.mongodb_plugin import GAMongoSotragePlugin
+    storage_plugin = GAMongoSotragePlugin()
 
     from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
-    tdl_authentication_plugin = TDLAuthenticationPlugin()
+    authentication_plugin = TDLAuthenticationPlugin()
 
 
     # Instanciate plugins
@@ -48,9 +51,9 @@ def start():
     # sdk_infos = [{'identifier': 'current', 'module': 'vspk.v3_2'}]
 
     core = GACoreController(    sdks_info=sdk_infos,
-                                communication_channel_plugins=[rest_comm_channel],
-                                authentication_plugins=[tdl_authentication_plugin],
-                                model_controller_plugins=[tdl_storage_plugin],
+                                communication_channel_plugins=[communication_channel],
+                                authentication_plugins=[authentication_plugin],
+                                model_controller_plugins=[storage_plugin],
                                 permission_controller_plugins=[])
     core.start()
 

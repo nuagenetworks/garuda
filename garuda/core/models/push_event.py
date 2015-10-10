@@ -5,11 +5,15 @@ from datetime import datetime
 from .abstracts import GASerializable
 from garuda.core.lib import SDKsManager
 
-
 class GAPushEvent(GASerializable):
     """
 
     """
+
+    UPDATE_MECHANISM_DEFAULT = 'DEFAULT'
+    UPDATE_MECHANISM_REFETCH = 'REFETCH'
+    UPDATE_MECHANISM_REFETCH_HIERARCHY = 'REFETCH_HIERARCHY'
+
     def __init__(self, action=None, entity=None):
         """
         """
@@ -20,7 +24,7 @@ class GAPushEvent(GASerializable):
         self.entity_type = entity.rest_resource_name if entity else None
         self.event_received_time = datetime.now()
         self.source_enterprise_id = None
-        self.update_mechanism = 'DEFAULT'
+        self.update_mechanism = self.UPDATE_MECHANISM_DEFAULT
 
         self.register_attribute(type=str, internal_name='action', name='type')
         self.register_attribute(type=object, internal_name='entity')
