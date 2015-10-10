@@ -3,7 +3,8 @@
 
 from garuda import Garuda
 from garuda.channels.rest import RESTCommunicationChannel
-from garuda.plugins.mongodb_plugin import GAMongoStoragePlugin
+from garuda.core.plugins.storage import GAMongoStoragePlugin
+
 from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
 
 

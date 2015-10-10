@@ -8,7 +8,7 @@ logger = logging.getLogger('garuda.controller.sessions')
 import redis
 
 from garuda.core.controllers.abstracts import GAPluginController
-from garuda.core.plugins import GAAuthenticationPlugin
+from garuda.core.plugins.abstracts import GAAuthenticationPlugin
 from garuda.core.models import GASession
 from garuda.core.config import GAConfig
 

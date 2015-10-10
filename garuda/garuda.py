@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from time import sleep
 import logging
+from time import sleep
 from bambou import BambouConfig
 
 from .core.controllers import GACoreController
-from .core.plugins import GACommunicationChannel, GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
+from .core.plugins.abstracts import GACommunicationChannel, GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
 __version__ = '1.0'
 

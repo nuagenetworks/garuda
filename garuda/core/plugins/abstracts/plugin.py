@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .plugin import GAPlugin
-
 class GAPlugin(object):
     """
     """

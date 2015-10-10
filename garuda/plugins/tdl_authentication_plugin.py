@@ -4,8 +4,8 @@ import logging
 logger = logging.getLogger('ext.tdlauthenticationplugin')
 
 from garuda.core.lib import SDKsManager
-from garuda.core.plugins import GAAuthenticationPlugin, GAPluginManifest
-from garuda.core.config import GAConfig
+from garuda.core.plugins import GAPluginManifest
+from garuda.core.plugins.abstracts import GAAuthenticationPlugin
 
 
 class TDLAuthenticationPlugin(GAAuthenticationPlugin):

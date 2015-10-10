@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['GACommunicationChannel', 'GAAuthenticationPlugin', 'GAPluginController', 'GAPermissionsPlugin', 'GABusinessLogicPlugin', 'GAPluginManifest']
+__all__ = ['GAPluginManifest']
 
-from .communication_channel import GACommunicationChannel
-from .plugin_manifest import GAPluginManifest
-from .logic_plugin import GALogicPlugin
-from .authentication_plugin import GAAuthenticationPlugin
-from .storage_plugin import GAStoragePlugin
-from .permissions_plugin import GAPermissionsPlugin
+from .manifest import GAPluginManifest

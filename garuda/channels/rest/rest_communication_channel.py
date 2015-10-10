@@ -18,7 +18,8 @@ from .utils.constants import RESTConstants
 from garuda.core.config import GAConfig
 from garuda.core.lib import PathParser, SDKsManager
 from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification
-from garuda.core.plugins import GACommunicationChannel, GAPluginManifest
+from garuda.core.plugins import GAPluginManifest
+from garuda.core.plugins.abstracts import GACommunicationChannel
 
 
 class RESTCommunicationChannel(GACommunicationChannel):

@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger('garuda.controller.storage')
 
 from garuda.core.controllers.abstracts import GAPluginController
-from garuda.core.plugins import GAStoragePlugin
+from garuda.core.plugins.abstracts import GAStoragePlugin
 
 
 class GAStorageController(GAPluginController):

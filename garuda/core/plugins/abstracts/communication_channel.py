@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from .plugin import GAPlugin
-from garuda.core.exceptions import NotImplementedException
 
 class GACommunicationChannel(GAPlugin):
     """
@@ -15,38 +14,38 @@ class GACommunicationChannel(GAPlugin):
     def channel_type(self):
         """
         """
-        raise NotImplementedException('CommunicationChannel should implement channel_type method')
+        raise NotImplemented('CommunicationChannel should implement channel_type method')
 
     def start(self):
         """
         """
-        raise NotImplementedException('CommunicationChannel should implement start method')
+        raise NotImplemented('CommunicationChannel should implement start method')
 
     def stop(self):
         """
         """
-        raise NotImplementedException('CommunicationChannel should implement stop method')
+        raise NotImplemented('CommunicationChannel should implement stop method')
 
     def is_running(self):
         """
 
         """
-        raise NotImplementedException('CommunicationChannel should implement is running method')
+        raise NotImplemented('CommunicationChannel should implement is running method')
 
     def receive(self):
         """
 
         """
-        raise NotImplementedException('CommunicationChannel should implement receive method')
+        raise NotImplemented('CommunicationChannel should implement receive method')
 
     def send(self):
         """
 
         """
-        raise NotImplementedException('CommunicationChannel should implement send method')
+        raise NotImplemented('CommunicationChannel should implement send method')
 
     def push(self):
         """
 
         """
-        raise NotImplementedException('CommunicationChannel should implement push method')
+        raise NotImplemented('CommunicationChannel should implement push method')

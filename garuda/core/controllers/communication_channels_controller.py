@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger('garuda.controller.communicationchannels')
 
 from garuda.core.controllers.abstracts import GAPluginController
-from garuda.core.plugins import GACommunicationChannel
+from garuda.core.plugins.abstracts import GACommunicationChannel
 from garuda.core.lib import ThreadManager
 
 class GACommunicationChannelsController(GAPluginController):

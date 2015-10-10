@@ -3,7 +3,8 @@ from uuid import uuid4
 from bambou import NURESTModelController
 from pymongo import MongoClient
 
-from garuda.core.plugins import GAStoragePlugin, GAPluginManifest
+from garuda.core.plugins.abstracts import GAStoragePlugin
+from garuda.core.plugins import GAPluginManifest
 from garuda.core.models import GAError
 from garuda.core.lib import SDKsManager
 
