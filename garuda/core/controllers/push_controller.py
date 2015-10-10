@@ -49,7 +49,7 @@ class GAPushController(object):
         """
         """
         data = json.loads(content['data'])
-        logger.info('Receives message:\n%s' % json.dumps(data, indent=4))
+        logger.debug('Receives message:\n%s' % json.dumps(data, indent=4))
 
         garuda_uuid = data['garuda_uuid']
         events = [GAPushEvent.from_dict(event) for event in data['events']]

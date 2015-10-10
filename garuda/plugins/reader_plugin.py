@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GAError
-from garuda.core.plugins import GAPluginManifest, GALoginPlugin
+from garuda.core.plugins import GAPluginManifest, GALogicPlugin
 
 from time import sleep
 
-class ReaderPlugin(GALoginPlugin):
+class ReaderPlugin(GALogicPlugin):
     """
 
     """

@@ -25,27 +25,10 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_info, communication_channel_plugins=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_controller_plugins=[], log_level=logging.INFO):
+    def __init__(self, sdks_info, communication_channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[], log_level=logging.INFO):
         """
         """
 
-        print """
-                       1y9~
-             .,:---,      "9"R
-         ,N"`    ,jyjjRN,   `n ?
-       #^   y&T        `"hQ   y 'y
-     (L  ;R@l                 ^a \w
-    (   #^4                    Q  @
-    Q  # ,W                    W  ]V
-   |# @L Q                    W   Q|
-    V @  Vp                  ;   #^[
-    ^.R[ 'Q@               ,4  .& ,T
-     (QQ  'Q4p           (R  ,BL (T
-       hQ   H,`"QQQL}Q"`,;&RR   x
-         "g   YQ,    ```     :F`
-           "E,  `"B@MD&DR@B`
-               '"N***xD"`
-"""
         handler = logging.StreamHandler()
         formatter = logging.Formatter('[%(levelname)s] %(name)s - %(message)s')
         handler.setFormatter(formatter)
@@ -62,8 +45,8 @@ class GACoreController(object):
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
-        self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins, core_controller=self)
-        self._communication_channels_controller = GACommunicationChannelsController(plugins=communication_channel_plugins, core_controller=self)
+        self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self)
+        self._communication_channels_controller = GACommunicationChannelsController(plugins=communication_channels, core_controller=self)
 
     @property
     def uuid(self):
@@ -136,6 +119,8 @@ class GACoreController(object):
         self.push_controller.stop()
         self.communication_channels_controller.stop()
         self.sessions_controller.flush_garuda(self.uuid)
+
+        logger.info('Garuda has stopped.')
 
     def execute(self, request):
         """

@@ -2,7 +2,7 @@
 
 from .abstracts import GAPlugin
 
-class GALoginPlugin(GAPlugin):
+class GALogicPlugin(GAPlugin):
     """
 
     """

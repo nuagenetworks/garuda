@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from time import sleep
-
-from bambou import BambouConfig
-BambouConfig.set_should_raise_bambou_http_error(False)
-
-from garuda.core.controllers import GACoreController, GALogicController
+from garuda import Garuda
+from garuda.channels.rest import RESTCommunicationChannel
+from garuda.plugins.mongodb_plugin import GAMongoStoragePlugin
+from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
 
 
 def tdl_db_init(db, root_rest_name):
@@ -34,39 +32,22 @@ def vsd_db_init(db, root_rest_name):
         db['systemconfig'].insert({'ID': '3'})
 
 
+
 def start():
 
     """
     """
-    from garuda.channels.rest import RESTCommunicationChannel
-    communication_channel = RESTCommunicationChannel(host='0.0.0.0', port=2000, threaded=True, debug=True, use_reloader=False)
-
-    from garuda.plugins.mongodb_plugin import GAMongoStoragePlugin
+    communication_channel = RESTCommunicationChannel()
     # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
-
-    from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
     authentication_plugin = TDLAuthenticationPlugin()
 
 
     sdk_infos = [{'identifier': 'current', 'module': 'tdldk.v1_0'}]
     # sdk_infos = [{'identifier': 'current', 'module': 'vspk.v3_2'}]
 
-    core = GACoreController(    sdks_info=sdk_infos,
-                                communication_channel_plugins=[communication_channel],
-                                authentication_plugins=[authentication_plugin],
-                                storage_plugins=[storage_plugin],
-                                permission_controller_plugins=[])
-    core.start()
-
-    while True:
-        try:
-            sleep(3000)
-        except KeyboardInterrupt:
-            break
-
-    core.stop()
-    logger.info('Garuda has stopped.')
+    garuda = Garuda(sdks_info=sdk_infos, communication_channels=[communication_channel], plugins=[storage_plugin, authentication_plugin])
+    garuda.start()
 
 
 if __name__ == '__main__':

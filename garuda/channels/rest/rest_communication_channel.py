@@ -30,27 +30,30 @@ class RESTCommunicationChannel(GACommunicationChannel):
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='ReST Communication Channel',
-                                version=1.0,
-                                identifier="garuda.plugins.comm.rest")
+        return GAPluginManifest(name='ReST Communication Channel', version=1.0, identifier="garuda.communicationchannels.rest")
 
-    def __init__(self, **kwargs):
+    def __init__(self, host='0.0.0.0', port=2000):
         """
         """
+        # mute flask logging for now
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
+
         self._uuid = str(uuid4())
         self._is_running = False
         self._controller = None
+        self._host = host
+        self._port = port
 
-        self.app = Flask(self.__class__.__name__)
-        self.app.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
+        self._flask = Flask(self.__class__.__name__)
+        self._flask.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
 
         # Events
-        self.app.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
-        self.app.add_url_rule('/<path:path>events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
+        self._flask.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
+        self._flask.add_url_rule('/<path:path>events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
 
         # Other requests
-        self.app.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
-        self.start_parameters = kwargs
+        self._flask.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
 
     @property
     def uuid(self):
@@ -88,8 +91,9 @@ class RESTCommunicationChannel(GACommunicationChannel):
             return
 
         self._is_running = True
-        logger.debug('Channel starting')
-        self.app.run(**self.start_parameters)
+
+        logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
+        self._flask.run(host=self._host, port=self._port, threaded=True, debug=False, use_reloader=False)
 
     def stop(self):
         """
@@ -231,7 +235,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         parameters = self._extract_parameters(request.headers)
         method = request.method.upper()
 
-        logger.info('>>>> Request on %s %s from %s' % (request.method, request.path, parameters['Host']))
+        logger.info('> Request on %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
@@ -242,7 +246,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.core_controller.execute(request=ga_request)
 
-        logger.info('<<<< Response for %s %s to %s' % (request.method, request.path, parameters['Host']))
+        logger.info('< Response for %s %s to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_http_response(action=action, response=ga_response)
 
@@ -262,7 +266,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         content = self._extract_content(request)
         parameters = self._extract_parameters(request.headers)
 
-        logger.info('>>>> Listening %s %s from %s' % (request.method, request.path, parameters['Host']))
+        logger.info('> Listening %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
@@ -285,6 +289,6 @@ class RESTCommunicationChannel(GACommunicationChannel):
         except Empty:
             ga_notification = GAPushNotification()
 
-        logger.info('<<<< Response for %s %s events to %s' % (request.method, request.path, parameters['Host']))
+        logger.info('< Response for %s %s events to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_notification_response(notification=ga_notification)
