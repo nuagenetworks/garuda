@@ -100,7 +100,7 @@ class GAOperationsController(object):
             parent = self.storage_controller.get(parent_resource.name, parent_resource.value)
 
             if parent is None:
-                self._report_resource_not_found(resources=parent_resource)
+                self._report_resource_not_found(resource=parent_resource)
                 return
 
         self.context.parent_object = parent
