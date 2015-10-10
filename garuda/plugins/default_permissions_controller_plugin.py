@@ -6,10 +6,10 @@ logger = logging.getLogger('ext.defaultpermissionscontrollerplugin')
 import redis
 
 from garuda.core.config import GAConfig
-from garuda.core.plugins import GAPermissionsControllerPlugin, GAPluginManifest
+from garuda.core.plugins import GAPermissionsPlugin, GAPluginManifest
 
 
-class DefaultPermissionsControllerPlugin(GAPermissionsControllerPlugin):
+class DefaultPermissionsControllerPlugin(GAPermissionsPlugin):
     """
     """
     DEFAULT_ACTION = 'read'

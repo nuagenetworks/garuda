@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from garuda.plugins.default_permissions_controller_plugin import DefaultPermissionsControllerPlugin
+from garuda.plugins.default_permissions_plugin import DefaultPermissionsControllerPlugin
 from garuda.tests import UnitTestCase
 
 class CustomObject(object):

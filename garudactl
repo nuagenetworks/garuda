@@ -64,8 +64,8 @@ def start():
 
 
     # Instanciate plugins
-    # from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAModelControllerPlugin, DefaultPermissionsControllerPlugin
-    # default_model_controller = DefaultGAModelControllerPlugin()
+    # from garuda.plugins import DefaultAuthenticationPlugin, DefaultGAStoragePlugin, DefaultPermissionsControllerPlugin
+    # default_storage_controller = DefaultGAStoragePlugin()
     # default_authentication_plugin = DefaultAuthenticationPlugin()
     # default_permission_controller_plugin = DefaultPermissionsControllerPlugin()
 
@@ -75,7 +75,7 @@ def start():
     core = GACoreController(    sdks_info=sdk_infos,
                                 communication_channel_plugins=[communication_channel],
                                 authentication_plugins=[authentication_plugin],
-                                model_controller_plugins=[storage_plugin],
+                                storage_plugins=[storage_plugin],
                                 permission_controller_plugins=[])
     core.start()
 

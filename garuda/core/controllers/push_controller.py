@@ -89,7 +89,7 @@ class GAPushController(object):
             context = GAContext(request=request, session=session)
             context.object = entity
 
-            operation_manager = GAOperationsController(context=context, model_controller=self.core_controller.model_controller)
+            operation_manager = GAOperationsController(context=context, storage_controller=self.core_controller.storage_controller)
             operation_manager.run()
 
             if not context.has_errors():

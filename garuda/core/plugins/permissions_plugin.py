@@ -3,7 +3,7 @@
 from .abstracts import GAPlugin
 
 
-class GAPermissionsControllerPlugin(GAPlugin):
+class GAPermissionsPlugin(GAPlugin):
     """
     """
 

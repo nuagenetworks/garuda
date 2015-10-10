@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('garuda.modelcontroller')
+logger = logging.getLogger('garuda.storagecontroller')
 
 from garuda.core.controllers.abstracts import GAPluginController
-from garuda.core.plugins import GAModelControllerPlugin
+from garuda.core.plugins import GAStoragePlugin
 
 
-class GAModelController(GAPluginController):
+class GAStorageController(GAPluginController):
     """
 
     """
     def __init__(self, plugins, core_controller):
         """
         """
-        super(GAModelController, self).__init__(plugins=plugins, core_controller=core_controller)
+        super(GAStorageController, self).__init__(plugins=plugins, core_controller=core_controller)
         self._managing_plugin_registry = {}
 
     # Override
@@ -22,12 +22,12 @@ class GAModelController(GAPluginController):
     def register_plugin(self, plugin):
         """
         """
-        super(GAModelController, self).register_plugin(plugin=plugin, plugin_type=GAModelControllerPlugin)
+        super(GAStorageController, self).register_plugin(plugin=plugin, plugin_type=GAStoragePlugin)
 
     def unregister_plugin(self, plugin):
         """
         """
-        super(GAModelController, self).register_plugin(plugin=plugin, plugin_type=GAModelControllerPlugin)
+        super(GAStorageController, self).register_plugin(plugin=plugin, plugin_type=GAStoragePlugin)
 
         keys_to_remove = []
         for resource_name, plugin in self._managing_plugin_registry.iteritems():

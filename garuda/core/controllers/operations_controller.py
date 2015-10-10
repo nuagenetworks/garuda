@@ -7,11 +7,11 @@ class GAOperationsController(object):
     """
 
     """
-    def __init__(self, context, model_controller):
+    def __init__(self, context, storage_controller):
         """
         """
         self.context = context
-        self.model_controller = model_controller
+        self.storage_controller = storage_controller
 
     def run(self):
         """
@@ -62,7 +62,7 @@ class GAOperationsController(object):
         resources = self.context.request.resources
         resource = resources[-1]
 
-        self.context.object = self.model_controller.get(resource.name, resource.value)
+        self.context.object = self.storage_controller.get(resource.name, resource.value)
 
         if self.context.object is None: self._report_resource_not_found(resource=resource)
 
@@ -98,14 +98,14 @@ class GAOperationsController(object):
         if len(resources) != 1:
             parent_resource = resources[0]
 
-            parent = self.model_controller.get(parent_resource.name, parent_resource.value)
+            parent = self.storage_controller.get(parent_resource.name, parent_resource.value)
 
             if parent is None:
                 self._report_resource_not_found(resources=parent_resource)
                 return
 
         self.context.parent_object = parent
-        self.context.objects = self.model_controller.get_all(self.context.parent_object, resource.name)
+        self.context.objects = self.storage_controller.get_all(self.context.parent_object, resource.name)
 
         if self.context.objects is None: self._report_resource_not_found(resource=resource)
 
@@ -138,7 +138,7 @@ class GAOperationsController(object):
     def _populate_context_for_create_with_resource(self, resource):
         """
         """
-        self.context.object = self.model_controller.instantiate(resource.name)
+        self.context.object = self.storage_controller.instantiate(resource.name)
 
         if self.context.object is None: self._report_resource_not_found(resource=resource)
 
@@ -150,7 +150,7 @@ class GAOperationsController(object):
     def _populate_context_for_update_with_resource(self, resource):
         """
         """
-        self.context.object = self.model_controller.get(resource.name, resource.value)
+        self.context.object = self.storage_controller.get(resource.name, resource.value)
 
         if self.context.object is None: self._report_resource_not_found(resource=resource)
 
@@ -161,7 +161,7 @@ class GAOperationsController(object):
     def _populate_context_for_delete_with_resource(self, resource):
         """
         """
-        self.context.object = self.model_controller.get(resource.name, resource.value)
+        self.context.object = self.storage_controller.get(resource.name, resource.value)
 
         if self.context.object is None: self._report_resource_not_found(resource=resource)
 
@@ -170,7 +170,7 @@ class GAOperationsController(object):
         """
         """
         for object_id in self.context.request.content:
-            assigned_object = self.model_controller.get(resource.name, object_id)
+            assigned_object = self.storage_controller.get(resource.name, object_id)
 
             if not assigned_object:
                 self._report_resource_not_found(resource=resource)
@@ -192,7 +192,7 @@ class GAOperationsController(object):
         if len(resources) != 1:
             parent_resource = resources[0]
 
-            self.context.parent_object = self.model_controller.get(parent_resource.name, parent_resource.value)
+            self.context.parent_object = self.storage_controller.get(parent_resource.name, parent_resource.value)
 
             if self.context.parent_object is None:
                 self._report_resource_not_found(resource=parent_resource)
@@ -230,16 +230,16 @@ class GAOperationsController(object):
         err = None
 
         if self.context.request.action == GARequest.ACTION_CREATE:
-            err = self.model_controller.create(resource=self.context.object, parent=self.context.parent_object)
+            err = self.storage_controller.create(resource=self.context.object, parent=self.context.parent_object)
 
         elif self.context.request.action == GARequest.ACTION_UPDATE:
-            err = self.model_controller.update(resource=self.context.object)
+            err = self.storage_controller.update(resource=self.context.object)
 
         elif self.context.request.action == GARequest.ACTION_DELETE:
-            err = self.model_controller.delete(resource=self.context.object)
+            err = self.storage_controller.delete(resource=self.context.object)
 
         elif self.context.request.action == GARequest.ACTION_ASSIGN:
-            err = self.model_controller.assign(resource_name=self.context.request.resources[-1].name, resources=self.context.objects, parent=self.context.parent_object)
+            err = self.storage_controller.assign(resource_name=self.context.request.resources[-1].name, resources=self.context.objects, parent=self.context.parent_object)
 
         if err:
             if isinstance(err, list):

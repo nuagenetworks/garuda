@@ -5,7 +5,7 @@ import logging
 import ssl
 from uuid import uuid4
 
-from .model_controller import GAModelController
+from .storage_controller import GAStorageController
 from .operations_controller import GAOperationsController
 from .push_controller import GAPushController
 from .sessions_controller import GASessionsController
@@ -25,7 +25,7 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_info, communication_channel_plugins=[], authentication_plugins=[], model_controller_plugins=[], permission_controller_plugins=[]):
+    def __init__(self, sdks_info, communication_channel_plugins=[], authentication_plugins=[], storage_plugins=[], permission_controller_plugins=[]):
         """
         """
 
@@ -35,7 +35,7 @@ class GACoreController(object):
             self._sdks_manager.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
 
         self._uuid = str(uuid4())
-        self._model_controller = GAModelController(plugins=model_controller_plugins, core_controller=self)
+        self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
         self._permissions_controller = GAPermissionsController(plugins=permission_controller_plugins, core_controller=self)
@@ -48,10 +48,10 @@ class GACoreController(object):
         return self._uuid
 
     @property
-    def model_controller(self):
+    def storage_controller(self):
         """
         """
-        return self._model_controller
+        return self._storage_controller
 
     @property
     def push_controller(self):
@@ -96,7 +96,7 @@ class GACoreController(object):
         """
         logger.debug('Stopping core controller')
 
-        self.model_controller.unregister_all_plugins()
+        self.storage_controller.unregister_all_plugins()
         self.permissions_controller.unregister_all_plugins()
         self.sessions_controller.unregister_all_plugins()
         self.communication_channels_controller.unregister_all_plugins()
@@ -132,7 +132,7 @@ class GACoreController(object):
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
-        operations_controller = GAOperationsController(context=context, model_controller=self.model_controller)
+        operations_controller = GAOperationsController(context=context, storage_controller=self.storage_controller)
         operations_controller.run()
 
         if context.has_errors():
