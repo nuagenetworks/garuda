@@ -2,11 +2,7 @@
 
 import json
 import logging
-
-logger = logging.getLogger('garuda.comm.rest')
-
 from base64 import urlsafe_b64decode
-
 from copy import deepcopy
 from Queue import Empty
 from urlparse import urlparse
@@ -14,12 +10,15 @@ from uuid import uuid4
 
 from flask import Flask, request, make_response
 
-from .constants import RESTConstants
-
 from garuda.core.config import GAConfig
-from garuda.core.lib import PathParser, SDKsManager
+from garuda.core.lib import SDKLibrary
 from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification, GAPluginManifest
 from garuda.core.channels import GAChannel
+
+from .constants import RESTConstants
+from .parser import PathParser
+
+logger = logging.getLogger('garuda.comm.rest')
 
 
 class GARESTChannel(GAChannel):
@@ -235,7 +234,7 @@ class GARESTChannel(GAChannel):
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
-        resources = parser.parse(path=path, url_prefix="%s/" % SDKsManager().get_sdk('default').SDKInfo.api_prefix())
+        resources = parser.parse(path=path, url_prefix="%s/" % SDKLibrary().get_sdk('default').SDKInfo.api_prefix())
 
         action = self.determine_action(method, resources)
 

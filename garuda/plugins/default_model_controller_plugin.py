@@ -8,7 +8,7 @@ from bambou.nurest_session import _NURESTSessionCurrentContext
 from garuda.core.config import GAConfig
 from garuda.core.models import GAPluginManifest
 from garuda.core.plugins import GAStoragePlugin
-from garuda.core.lib import SDKsManager
+from garuda.core.lib import SDKLibrary
 
 
 class DefaultGAStoragePlugin(GAStoragePlugin):
@@ -34,8 +34,8 @@ class DefaultGAStoragePlugin(GAStoragePlugin):
         """
         """
         if self._sdk_session is None:
-            sdks_manager = SDKsManager()
-            session_class = sdks_manager.get_sdk_session_class('vspk32')
+            sdk_library = SDKLibrary()
+            session_class = sdk_library.get_sdk_session_class('vspk32')
 
             if session_class:
                 self._sdk_session = session_class(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)

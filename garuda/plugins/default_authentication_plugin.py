@@ -3,7 +3,7 @@
 import logging
 logger = logging.getLogger('ext.defaultauthenticationplugin')
 
-from garuda.core.lib import SDKsManager
+from garuda.core.lib import SDKLibrary
 from garuda.core.models import GAPluginManifest
 from garuda.core.plugins import GAAuthenticationPlugin
 
@@ -42,8 +42,8 @@ class DefaultAuthenticationPlugin(GAAuthenticationPlugin):
 
         logger.debug("Authenticate user with username=%s, password=%s, enterprise=%s" % (username, password, enterprise))
 
-        sdks_manager = SDKsManager()
-        sdk_session_class = sdks_manager.get_sdk_session_class('vspk32')
+        sdk_library = SDKLibrary()
+        sdk_session_class = sdk_library.get_sdk_session_class('vspk32')
         session = sdk_session_class(username=username, password=password, enterprise=enterprise, api_url="put that as a parameter")
         session.start()
 

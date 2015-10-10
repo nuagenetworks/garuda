@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from .abstracts import GASerializable
-from garuda.core.lib import SDKsManager
+from garuda.core.lib import SDKLibrary
 
 class GAPushEvent(GASerializable):
     """
@@ -36,7 +36,7 @@ class GAPushEvent(GASerializable):
     def from_dict(cls, data):
         """
         """
-        sdk_manager = SDKsManager()
+        sdk_manager = SDKLibrary()
 
         instance = super(GAPushEvent, cls).from_dict(data=data)
         instance.entity = sdk_manager.get_instance(data['entityType'], **data['entity'])

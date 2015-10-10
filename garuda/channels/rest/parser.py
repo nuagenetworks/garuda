@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
-from .utils import VSDKTransform
-
+from garuda.core.lib import SDKTransformer
 from garuda.core.models import GAResource
 
 RESOURCE_MAPPING = {'allalarms': 'alarms'}
@@ -72,7 +71,7 @@ class PathParser(object):
                 value = infos[index] if index < len(infos) and len(infos[index]) > 0 else None
 
                 name = self._get_resource(resource)
-                result.append(GAResource(VSDKTransform.get_singular_name(name), value))
+                result.append(GAResource(SDKTransformer.get_singular_name(name), value))
 
             index = index + 1
 

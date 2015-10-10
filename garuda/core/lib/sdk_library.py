@@ -3,14 +3,14 @@
 import logging
 logger = logging.getLogger('garuda.sdksmanager')
 
-from .utils import VSDKTransform
+from garuda.core.lib import SDKTransformer
 from garuda.core.exceptions import InternalInconsistencyException
 from bambou import NURESTModelController
-from garuda.core.lib.utils import Singleton
+from garuda.core.lib import Singleton
 from collections import OrderedDict
 
 
-class SDKsManager(object):
+class SDKLibrary(object):
     """
     """
     __metaclass__ = Singleton
@@ -75,14 +75,14 @@ class SDKsManager(object):
     def get_instance(self, resource_name, **attributes):
         """
         """
-        rest_name = VSDKTransform.get_singular_name(resource_name)
+        rest_name = SDKTransformer.get_singular_name(resource_name)
         klass = NURESTModelController.get_first_model(rest_name)
 
         if klass:
             python_attributes = dict()
 
             for attribute_name, attribute_value in attributes.iteritems():
-                python_name = VSDKTransform.get_python_name(attribute_name)
+                python_name = SDKTransformer.get_python_name(attribute_name)
                 python_attributes[python_name] = attribute_value
 
             return klass(**python_attributes)

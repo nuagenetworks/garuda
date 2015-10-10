@@ -13,7 +13,7 @@ from .permissions_controller import GAPermissionsController
 from .channels_controller import GAChannelsController
 from .logic_controller import GALogicController
 
-from garuda.core.lib import SDKsManager
+from garuda.core.lib import SDKLibrary
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError
 
 logger = logging.getLogger('garuda.core')
@@ -28,10 +28,10 @@ class GACoreController(object):
     def __init__(self, sdks_info, channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
-        self._sdks_manager = SDKsManager()
+        self._sdk_library = SDKLibrary()
 
         for sdk_info in sdks_info:
-            self._sdks_manager.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
+            self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
 
         self._uuid = str(uuid4())
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
@@ -84,10 +84,10 @@ class GACoreController(object):
         return self._channels_controller
 
     @property
-    def sdks_manager(self):
+    def sdk_library(self):
         """
         """
-        return self._sdks_manager
+        return self._sdk_library
 
     def start(self):
         """

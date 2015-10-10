@@ -5,7 +5,7 @@ from pymongo import MongoClient
 
 from garuda.core.models import GAError, GAPluginManifest
 from garuda.core.plugins import GAStoragePlugin
-from garuda.core.lib import SDKsManager
+from garuda.core.lib import SDKLibrary
 
 
 class GAMongoStoragePlugin(GAStoragePlugin):
@@ -31,7 +31,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def did_register(self):
         """
         """
-        self.sdk = SDKsManager().get_sdk('default')
+        self.sdk = SDKLibrary().get_sdk('default')
         root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
 
         if self.db_initialization_function:

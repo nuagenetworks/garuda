@@ -3,11 +3,11 @@
 import logging
 import re
 
-logger = logging.getLogger('garuda.vsdktransform')
+logger = logging.getLogger('garuda.sdktransformer')
 
 
-class VSDKTransform(object):
-    """ VSDKTransformation Utilities
+class SDKTransformer(object):
+    """ SDKTransformeration Utilities
 
     """
 
@@ -41,7 +41,7 @@ class VSDKTransform(object):
 
     @classmethod
     def get_python_name(cls, name):
-        """ VSDKTransform a given name to python name
+        """ SDKTransformer a given name to python name
 
             Args:
                 name (string): the name to convert
@@ -107,13 +107,13 @@ class VSDKTransform(object):
             Returns:
                 Return the singular of the plural name
         """
-        if plural_name in VSDKTransform.INVARIANT_NAMES:
+        if plural_name in SDKTransformer.INVARIANT_NAMES:
             return plural_name
 
         if plural_name[-3:] == 'ies':
             return plural_name[:-3] + 'y'
 
-        if plural_name[-1] == 's' and plural_name not in VSDKTransform.PLURABLE_NAMES:
+        if plural_name[-1] == 's' and plural_name not in SDKTransformer.PLURABLE_NAMES:
             return plural_name[:-1]
 
         return plural_name
@@ -131,13 +131,13 @@ class VSDKTransform(object):
                 The pluralized version of the singular name
 
         """
-        if singular_name in VSDKTransform.INVARIANT_NAMES:
+        if singular_name in SDKTransformer.INVARIANT_NAMES:
             return singular_name
 
-        if singular_name[-1] == 'y' and singular_name[-2] not in VSDKTransform.VOWELS:
+        if singular_name[-1] == 'y' and singular_name[-2] not in SDKTransformer.VOWELS:
             return singular_name[:-1] + 'ies'
 
-        if singular_name[-1] != 's' and singular_name in VSDKTransform.PLURABLE_NAMES:
+        if singular_name[-1] != 's' and singular_name in SDKTransformer.PLURABLE_NAMES:
             return singular_name + 's'
 
         return singular_name
