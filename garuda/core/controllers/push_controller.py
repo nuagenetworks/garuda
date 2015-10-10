@@ -10,7 +10,6 @@ logger = logging.getLogger('garuda.controller.push')
 from Queue import Queue
 
 from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext
-from garuda.core.config import GAConfig
 
 from .operations_controller import GAOperationsController
 
@@ -19,11 +18,11 @@ class GAPushController(object):
     """
 
     """
-    def __init__(self, core_controller):
+    def __init__(self, core_controller, redis_conn):
         """
         """
         self.core_controller = core_controller
-        self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
+        self._redis = redis_conn
         self._queues = dict()
         self._thread = None
 

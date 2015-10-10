@@ -10,7 +10,6 @@ from uuid import uuid4
 
 from flask import Flask, request, make_response
 
-from garuda.core.config import GAConfig
 from garuda.core.lib import SDKLibrary
 from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification, GAPluginManifest
 from garuda.core.channels import GAChannel
@@ -32,7 +31,7 @@ class GARESTChannel(GAChannel):
         """
         return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.rest")
 
-    def __init__(self, host='0.0.0.0', port=2000):
+    def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
         """
         """
         # mute flask logging for now
@@ -44,6 +43,7 @@ class GARESTChannel(GAChannel):
         self._controller = None
         self._host = host
         self._port = port
+        self._push_timeout = push_timeout
 
         self._flask = Flask(self.__class__.__name__)
         self._flask.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
@@ -88,7 +88,7 @@ class GARESTChannel(GAChannel):
         self._is_running = True
 
         logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
-        self._flask.run(host=self._host, port=self._port, threaded=True, debug=False, use_reloader=False)
+        self._flask.run(host=self._host, port=self._port, threaded=True, debug=True, use_reloader=False)
 
     def stop(self):
         """
@@ -272,7 +272,7 @@ class GARESTChannel(GAChannel):
             return self.make_http_response(action='FUCK', response=GAResponse(status='UNAUTHORIZED', content='Queue is None!'))
 
         try:
-            events = queue.get(timeout=GAConfig.PUSH_TIMEOUT)
+            events = queue.get(timeout=self._push_timeout)
 
             if events[0].action == self.core_controller.GARUDA_TERMINATE_EVENT:
                 ga_notification = GAPushNotification()

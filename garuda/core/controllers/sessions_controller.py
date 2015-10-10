@@ -10,7 +10,6 @@ import redis
 from garuda.core.controllers.abstracts import GAPluginController
 from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.models import GASession
-from garuda.core.config import GAConfig
 
 REDIS_ALL_KEY = '*'
 REDIS_LISTENING_KEY = 'sessions:listen-for-push'
@@ -23,12 +22,12 @@ REDIS_SESSION_TTL = 3600
 class GASessionsController(GAPluginController):
     """
     """
-    def __init__(self, plugins, core_controller):
+    def __init__(self, plugins, core_controller, redis_conn):
         """
 
         """
         super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller)
-        self._redis = redis.StrictRedis(host=GAConfig.REDIS_HOST, port=GAConfig.REDIS_PORT, db=GAConfig.REDIS_DB)
+        self._redis = redis_conn
 
     def register_plugin(self, plugin):
         """

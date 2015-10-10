@@ -3,6 +3,7 @@
 import importlib
 import ssl
 import logging
+import redis
 from uuid import uuid4
 
 from .storage_controller import GAStorageController
@@ -25,21 +26,24 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_info, channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
+    def __init__(self, sdks_info, redis_info, channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
+        self._uuid = str(uuid4())
         self._sdk_library = SDKLibrary()
+        self._redis = redis.StrictRedis(host=redis_info['host'], port=redis_info['port'], db=redis_info['db'])
 
         for sdk_info in sdks_info:
             self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
 
-        self._uuid = str(uuid4())
+
+        self._channels_controller = GAChannelsController(plugins=channels, core_controller=self)
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
-        self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
-        self._push_controller = GAPushController(core_controller=self)
+        self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self, redis_conn=self._redis)
         self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self)
-        self._channels_controller = GAChannelsController(plugins=channels, core_controller=self)
+
+        self._push_controller = GAPushController(core_controller=self, redis_conn=self._redis)
 
     @property
     def uuid(self):

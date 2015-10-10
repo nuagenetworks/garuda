@@ -6,8 +6,6 @@ import json
 from collections import namedtuple
 from datetime import datetime
 
-from garuda.core.config import GAConfig
-
 GASerializableAttribute = namedtuple('GASerializableAttribute', ['internal_name', 'name', 'type', 'children_type'])
 
 
@@ -17,6 +15,8 @@ class GASerializable(object):
     """
 
     """
+    DATE_FORMAT = '%Y-%m-%d %H %M %S %f'
+
     def __init__(self):
         """
         """
@@ -94,7 +94,7 @@ class GASerializable(object):
                 result[attribute.name] = json.dumps(d) if hash_children else d
 
             elif value is not None and attribute.type is datetime:
-                result[attribute.name] = value.strftime(GAConfig.DATE_FORMAT)
+                result[attribute.name] = value.strftime(self.DATE_FORMAT)
 
             else:
                 result[attribute.name] = value
@@ -146,7 +146,7 @@ class GASerializable(object):
 
                 # Datetime
                 elif attribute.type is datetime:
-                    setattr(instance, attribute.internal_name, datetime.strptime(value, GAConfig.DATE_FORMAT))
+                    setattr(instance, attribute.internal_name, datetime.strptime(value, cls.DATE_FORMAT))
 
                 # Boolean
                 elif attribute.type is bool:

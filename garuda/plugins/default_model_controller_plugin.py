@@ -5,7 +5,6 @@ logger = logging.getLogger('ext.defaultgamodelcontrollerplugin')
 
 from bambou import NURESTModelController
 from bambou.nurest_session import _NURESTSessionCurrentContext
-from garuda.core.config import GAConfig
 from garuda.core.models import GAPluginManifest
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import SDKLibrary
@@ -37,8 +36,8 @@ class DefaultGAStoragePlugin(GAStoragePlugin):
             sdk_library = SDKLibrary()
             session_class = sdk_library.get_sdk_session_class('vspk32')
 
-            if session_class:
-                self._sdk_session = session_class(username=GAConfig.VSD_USERNAME, password=GAConfig.VSD_PASSWORD, enterprise=GAConfig.VSD_ENTERPRISE, api_url=GAConfig.VSD_API_URL)
+            if session_class:# parametrize that
+                self._sdk_session = session_class(username='VSD_USERNAME', password='VSD_PASSWORD', enterprise='VSD_ENTERPRISE', api_url='VSD_API_URL')
                 self._sdk_session.start()
                 logger.debug('Started SDK Session with user %s' % self._sdk_session.user.user_name)
 

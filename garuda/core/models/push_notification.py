@@ -2,8 +2,6 @@
 
 from uuid import uuid4
 from datetime import datetime
-
-from garuda.core.config import GAConfig
 from .abstracts import GASerializable
 
 

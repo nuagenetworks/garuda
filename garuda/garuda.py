@@ -3,25 +3,27 @@ import logging
 from time import sleep
 from bambou import BambouConfig
 
+logger = logging.getLogger('garuda')
+
 from .core.controllers import GACoreController
 from .core.channels import GAChannel
 from .core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
 __version__ = '1.0'
 
-logger = logging.getLogger('garuda')
 
 
 class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, channels, plugins, log_level=logging.INFO, log_handler=None):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.DEBUG, log_handler=None):
         """
         """
 
         BambouConfig.set_should_raise_bambou_http_error(False)
 
+        self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
         self._sdks_info = sdks_info
         self._channels = channels
         self._authentication_plugins = []
@@ -90,6 +92,7 @@ class Garuda(object):
         """
         """
         core = GACoreController(    sdks_info=self._sdks_info,
+                                    redis_info=self._redis_info,
                                     channels=self._channels,
                                     logic_plugins=self._logic_plugins,
                                     authentication_plugins=self._authentication_plugins,
@@ -99,7 +102,7 @@ class Garuda(object):
 
         while True:
             try:
-                sleep(3000000)
+                sleep(3)
             except KeyboardInterrupt:
                 break
 
