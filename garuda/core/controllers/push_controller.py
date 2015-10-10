@@ -5,7 +5,7 @@ import json
 import redis
 import logging
 
-logger = logging.getLogger('garuda.pushcontroller')
+logger = logging.getLogger('garuda.controller.push')
 
 from Queue import Queue
 

@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 from time import sleep
+import logging
 from bambou import BambouConfig
 
 from .core.controllers import GACoreController
 from .core.plugins import GACommunicationChannel, GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
-__version__ = "1.0"
+__version__ = '1.0'
+
+logger = logging.getLogger('garuda')
+
 
 class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, communication_channels, plugins):
+    def __init__(self, sdks_info, communication_channels, plugins, log_level=logging.INFO, log_handler=None):
         """
         """
 
@@ -31,6 +35,14 @@ class Garuda(object):
             elif isinstance(plugin, GAStoragePlugin): self._storage_plugins.append(plugin)
             elif isinstance(plugin, GAPermissionsPlugin): self._permission_plugins.append(plugin)
             elif isinstance(plugin, GALogicPlugin): self._logic_plugins.append(plugin)
+
+        if not log_handler:
+            log_handler = logging.StreamHandler()
+            log_handler.setFormatter(logging.Formatter('[%(levelname)s] %(name)s: %(message)s'))
+            logger.addHandler(log_handler)
+
+        logger.setLevel(log_level)
+
 
     def start(self):
         """

@@ -3,7 +3,7 @@
 import gevent
 import logging
 
-logger = logging.getLogger('garuda.logicpluginscontroller')
+logger = logging.getLogger('garuda.controller.logic')
 
 from garuda.core.controllers.abstracts import GAPluginController
 

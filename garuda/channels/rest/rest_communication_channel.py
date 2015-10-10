@@ -3,7 +3,7 @@
 import json
 import logging
 
-logger = logging.getLogger('garuda.restcommunicationchannel')
+logger = logging.getLogger('garuda.comm.rest')
 
 from base64 import urlsafe_b64decode
 
@@ -235,7 +235,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         parameters = self._extract_parameters(request.headers)
         method = request.method.upper()
 
-        logger.info('> Request on %s %s from %s' % (request.method, request.path, parameters['Host']))
+        logger.info('> %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         parser = PathParser()
@@ -246,7 +246,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
         ga_response = self.core_controller.execute(request=ga_request)
 
-        logger.info('< Response for %s %s to %s' % (request.method, request.path, parameters['Host']))
+        logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_http_response(action=action, response=ga_response)
 
@@ -266,7 +266,7 @@ class RESTCommunicationChannel(GACommunicationChannel):
         content = self._extract_content(request)
         parameters = self._extract_parameters(request.headers)
 
-        logger.info('> Listening %s %s from %s' % (request.method, request.path, parameters['Host']))
+        logger.info('= %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
@@ -289,6 +289,6 @@ class RESTCommunicationChannel(GACommunicationChannel):
         except Empty:
             ga_notification = GAPushNotification()
 
-        logger.info('< Response for %s %s events to %s' % (request.method, request.path, parameters['Host']))
+        logger.info('< %s %s events to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_notification_response(notification=ga_notification)

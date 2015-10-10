@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('garuda.plugincontroller')
+logger = logging.getLogger('garuda.controller.plugin')
 
 from garuda.core.plugins.abstracts import GAPlugin
 

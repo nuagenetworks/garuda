@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-import logging
 import ssl
+import logging
 from uuid import uuid4
 
 from .storage_controller import GAStorageController
@@ -16,7 +16,7 @@ from .logic_controller import GALogicController
 from garuda.core.lib import SDKsManager
 from garuda.core.models import GAContext, GAResponse, GARequest, GAError
 
-logger = logging.getLogger('garuda')
+logger = logging.getLogger('garuda.core')
 
 class GACoreController(object):
     """
@@ -25,16 +25,9 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_info, communication_channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[], log_level=logging.INFO):
+    def __init__(self, sdks_info, communication_channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
-
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('[%(levelname)s] %(name)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(log_level)
-
         self._sdks_manager = SDKsManager()
 
         for sdk_info in sdks_info:

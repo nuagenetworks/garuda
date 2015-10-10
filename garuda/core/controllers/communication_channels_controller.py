@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('garuda.communicationchannelscontroller')
+logger = logging.getLogger('garuda.controller.communicationchannels')
 
 from garuda.core.controllers.abstracts import GAPluginController
 from garuda.core.plugins import GACommunicationChannel
