@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GAError
-from garuda.core.plugins import GAPluginManifest, GABusinessLogicPlugin
+from garuda.core.models import GAPluginManifest
+from garuda.core.plugins import GABusinessLogicPlugin
 
 
 class AnotherPlugin(GABusinessLogicPlugin):

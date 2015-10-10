@@ -34,7 +34,6 @@ def vsd_db_init(db, root_rest_name):
 def auth_function(request, session, root_api, storage_controller):
     """
     """
-    print "HERE"
     # add a filter here
     auth = storage_controller.get(root_api, '1')
 

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['GAContext', 'GAError', 'GAErrorsList', 'GAPushEvent', 'GAPushNotification',  'GARequest', 'GAResource', 'GAResponse', 'GASession', 'GAPlugin']
+__all__ = ['GAContext', 'GAError', 'GAErrorsList', 'GAPushEvent', 'GAPushNotification',  'GARequest', 'GAResource', 'GAResponse', 'GASession', 'GAPlugin', 'c']
 
 from collections import namedtuple
 GAResource = namedtuple('GAResource', ['name', 'value'])
+
+from .plugin_manifest import GAPluginManifest
 
 from .plugin import GAPlugin
 from .context import GAContext
