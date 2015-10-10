@@ -35,7 +35,7 @@ class GAMongoSotragePlugin(GAModelControllerPlugin):
         root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
 
         # insert the default user
-        if not self.db['root_rest_name'].count():
+        if not self.db[root_rest_name].count():
             self.db[root_rest_name].insert({'ID': '1', 'userName': 'root', 'password': 'password'})
 
     def should_manage(self, resource_name, identifier):
@@ -64,9 +64,18 @@ class GAMongoSotragePlugin(GAModelControllerPlugin):
         """
         """
         ret = []
+        data = []
 
         if parent:
-            data = self.db[resource_name].find({'parentID': parent.id})
+            if parent.fetcher_for_rest_name(resource_name).relationship == "child":
+                data = self.db[resource_name].find({'parentID': parent.id})
+            else:
+                association_key = '_%s' % resource_name
+                association_data = self.db[parent.rest_name].find_one({'ID': parent.id}, {association_key: 1})
+
+                if not association_key in association_data: return []
+
+                data = self.db[resource_name].find({'ID': {'$in': association_data[association_key]}})
         else:
             data = self.db[resource_name].find()
 
@@ -108,7 +117,6 @@ class GAMongoSotragePlugin(GAModelControllerPlugin):
 
         self.db[resource.rest_name].update({'ID': {'$eq': resource.id}}, {'$set': resource.to_dict()})
 
-
     def delete(self, resource):
         """
         """
@@ -118,7 +126,7 @@ class GAMongoSotragePlugin(GAModelControllerPlugin):
     def assign(self, resource_name, resources, parent):
         """
         """
-        print "ASSIGNED objects %s of type %s to parent %s %s" % (resources, resource_name, parent.rest_name, parent.id)
+        self.db[parent.rest_name].update({'ID': {'$eq': parent.id}}, {'$set': {'_%s' % resource_name: [r.id for r in resources]}})
 
     def _validate(self, resource):
         """

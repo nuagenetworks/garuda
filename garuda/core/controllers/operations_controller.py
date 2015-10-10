@@ -239,7 +239,7 @@ class GAOperationsController(object):
             err = self.model_controller.delete(resource=self.context.object)
 
         elif self.context.request.action == GARequest.ACTION_ASSIGN:
-            err = self.model_controller.assign(resource_name=self.context.request.resources[-1], resources=self.context.objects, parent=self.context.parent_object)
+            err = self.model_controller.assign(resource_name=self.context.request.resources[-1].name, resources=self.context.objects, parent=self.context.parent_object)
 
         if err:
             if isinstance(err, list):
