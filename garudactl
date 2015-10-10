@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from garuda import Garuda
-from garuda.channels.rest import RESTCommunicationChannel
+from garuda.core.channels.rest import RESTChannel
 from garuda.core.plugins.storage import GAMongoStoragePlugin
 
 from garuda.plugins.tdl_authentication_plugin import TDLAuthenticationPlugin
@@ -38,7 +38,7 @@ def start():
 
     """
     """
-    communication_channel = RESTCommunicationChannel()
+    channel = RESTChannel()
     # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
     authentication_plugin = TDLAuthenticationPlugin()
@@ -47,7 +47,7 @@ def start():
     sdk_infos = [{'identifier': 'current', 'module': 'tdldk.v1_0'}]
     # sdk_infos = [{'identifier': 'current', 'module': 'vspk.v3_2'}]
 
-    garuda = Garuda(sdks_info=sdk_infos, communication_channels=[communication_channel], plugins=[storage_plugin, authentication_plugin])
+    garuda = Garuda(sdks_info=sdk_infos, channels=[channel], plugins=[storage_plugin, authentication_plugin])
     garuda.start()
 
 

@@ -10,7 +10,7 @@ from .operations_controller import GAOperationsController
 from .push_controller import GAPushController
 from .sessions_controller import GASessionsController
 from .permissions_controller import GAPermissionsController
-from .communication_channels_controller import GACommunicationChannelsController
+from .channels_controller import GAChannelsController
 from .logic_controller import GALogicController
 
 from garuda.core.lib import SDKsManager
@@ -25,7 +25,7 @@ class GACoreController(object):
 
     GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
 
-    def __init__(self, sdks_info, communication_channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
+    def __init__(self, sdks_info, channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
         self._sdks_manager = SDKsManager()
@@ -39,7 +39,7 @@ class GACoreController(object):
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
         self._push_controller = GAPushController(core_controller=self)
         self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self)
-        self._communication_channels_controller = GACommunicationChannelsController(plugins=communication_channels, core_controller=self)
+        self._channels_controller = GAChannelsController(plugins=channels, core_controller=self)
 
     @property
     def uuid(self):
@@ -78,10 +78,10 @@ class GACoreController(object):
         return self._sessions_controller
 
     @property
-    def communication_channels_controller(self):
+    def channels_controller(self):
         """
         """
-        return self._communication_channels_controller
+        return self._channels_controller
 
     @property
     def sdks_manager(self):
@@ -95,7 +95,7 @@ class GACoreController(object):
         logger.debug('Starting core controller')
 
         self.push_controller.start()
-        self.communication_channels_controller.start()
+        self.channels_controller.start()
 
         logger.info('Garuda is initialized and ready to rock! (Press CTRL+C to quit)')
 
@@ -107,10 +107,10 @@ class GACoreController(object):
         self.storage_controller.unregister_all_plugins()
         self.permissions_controller.unregister_all_plugins()
         self.sessions_controller.unregister_all_plugins()
-        self.communication_channels_controller.unregister_all_plugins()
+        self.channels_controller.unregister_all_plugins()
 
         self.push_controller.stop()
-        self.communication_channels_controller.stop()
+        self.channels_controller.stop()
         self.sessions_controller.flush_garuda(self.uuid)
 
         logger.info('Garuda has stopped.')

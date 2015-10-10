@@ -4,7 +4,8 @@ from time import sleep
 from bambou import BambouConfig
 
 from .core.controllers import GACoreController
-from .core.plugins.abstracts import GACommunicationChannel, GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
+from .core.channels.abstracts import GAChannel
+from .core.plugins.abstracts import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
 __version__ = '1.0'
 
@@ -15,14 +16,14 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, communication_channels, plugins, log_level=logging.INFO, log_handler=None):
+    def __init__(self, sdks_info, channels, plugins, log_level=logging.INFO, log_handler=None):
         """
         """
 
         BambouConfig.set_should_raise_bambou_http_error(False)
 
         self._sdks_info = sdks_info
-        self._communication_channels = communication_channels
+        self._channels = channels
         self._authentication_plugins = []
         self._storage_plugins = []
         self._logic_plugins = []
@@ -30,7 +31,7 @@ class Garuda(object):
 
         for plugin in plugins:
 
-            if isinstance(plugin, GALogicPlugin): self._communication_channels.append(plugin)
+            if isinstance(plugin, GALogicPlugin): self._channels.append(plugin)
             elif isinstance(plugin, GAAuthenticationPlugin): self._authentication_plugins.append(plugin)
             elif isinstance(plugin, GAStoragePlugin): self._storage_plugins.append(plugin)
             elif isinstance(plugin, GAPermissionsPlugin): self._permission_plugins.append(plugin)
@@ -64,7 +65,7 @@ class Garuda(object):
            "E,  `"B@MD&DR@B`
                '"N***xD"`
 
-               """ % (__version__, len(self._communication_channels), len(self._storage_plugins), len(self._logic_plugins), len(self._authentication_plugins), len(self._permission_plugins))
+               """ % (__version__, len(self._channels), len(self._storage_plugins), len(self._logic_plugins), len(self._authentication_plugins), len(self._permission_plugins))
 
         self.run()
 
@@ -77,7 +78,7 @@ class Garuda(object):
         """
         """
         core = GACoreController(    sdks_info=self._sdks_info,
-                                    communication_channels=self._communication_channels,
+                                    channels=self._channels,
                                     logic_plugins=self._logic_plugins,
                                     authentication_plugins=self._authentication_plugins,
                                     storage_plugins=self._storage_plugins,

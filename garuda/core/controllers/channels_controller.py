@@ -4,17 +4,17 @@ import logging
 logger = logging.getLogger('garuda.controller.communicationchannels')
 
 from garuda.core.controllers.abstracts import GAPluginController
-from garuda.core.plugins.abstracts import GACommunicationChannel
+from garuda.core.channels.abstracts import GAChannel
 from garuda.core.lib import ThreadManager
 
-class GACommunicationChannelsController(GAPluginController):
+class GAChannelsController(GAPluginController):
     """
 
     """
     def __init__(self, plugins, core_controller):
         """
         """
-        super(GACommunicationChannelsController, self).__init__(plugins=plugins, core_controller=core_controller)
+        super(GAChannelsController, self).__init__(plugins=plugins, core_controller=core_controller)
         self._thread_manager = ThreadManager()
 
     # Override
@@ -22,7 +22,7 @@ class GACommunicationChannelsController(GAPluginController):
     def register_plugin(self, plugin):
         """
         """
-        super(GACommunicationChannelsController, self).register_plugin(plugin=plugin, plugin_type=GACommunicationChannel)
+        super(GAChannelsController, self).register_plugin(plugin=plugin, plugin_type=GAChannel)
 
     # Implementation
 

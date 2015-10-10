@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
-logger = logging.getLogger('garuda.controller.plugin')
-
-from garuda.core.models import GAPlugin
-from garuda.core.channels.abstracts import GAChannel
+logger = logging.getLogger('garuda.controller')
 
 
-class GAPluginController(object):
+class GACHannelController(object):
     """
     """
     def __init__(self, plugins, core_controller):
@@ -33,7 +30,7 @@ class GAPluginController(object):
             logger.error("Plugin %s cannot be registered to %s" % (plugin, self))
             return
 
-        if plugin in self._plugins:
+        if plugin in self._plugins or not isinstance(plugin, GAPlugin):
             logger.warn("Plugin %s is already registered in controller %s" % (plugin, self))
             return
 

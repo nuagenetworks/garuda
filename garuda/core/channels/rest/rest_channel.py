@@ -19,10 +19,10 @@ from garuda.core.config import GAConfig
 from garuda.core.lib import PathParser, SDKsManager
 from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification
 from garuda.core.plugins import GAPluginManifest
-from garuda.core.plugins.abstracts import GACommunicationChannel
+from garuda.core.channels.abstracts import GAChannel
 
 
-class RESTCommunicationChannel(GACommunicationChannel):
+class RESTChannel(GAChannel):
     """
 
     """
@@ -79,11 +79,6 @@ class RESTCommunicationChannel(GACommunicationChannel):
         """
         """
         self._controller = value
-
-    def channel_type(self):
-        """
-        """
-        return CommunicationChannel.CHANNEL_TYPE_REST
 
     def start(self):
         """

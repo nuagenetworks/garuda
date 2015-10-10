@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .plugin import GAPlugin
+from garuda.core.models import GAPlugin
 
 
 class GAStoragePlugin(GAPlugin):
