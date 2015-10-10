@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .abstracts import GAPlugin
+from .plugin import GAPlugin
 
 
 class GAPermissionsPlugin(GAPlugin):

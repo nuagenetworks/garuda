@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .abstracts import GAPlugin
+from .plugin import GAPlugin
 from garuda.core.exceptions import NotImplementedException
 
 class GACommunicationChannel(GAPlugin):
