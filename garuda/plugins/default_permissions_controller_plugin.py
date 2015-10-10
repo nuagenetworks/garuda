@@ -6,7 +6,7 @@ logger = logging.getLogger('ext.defaultpermissionscontrollerplugin')
 import redis
 
 from garuda.core.config import GAConfig
-from garuda.core.plugins.abstracts import GAPermissionsPlugin
+from garuda.core.plugins import GAPermissionsPlugin
 from garuda.core.plugins import GAPluginManifest
 
 

@@ -4,8 +4,8 @@ from time import sleep
 from bambou import BambouConfig
 
 from .core.controllers import GACoreController
-from .core.channels.abstracts import GAChannel
-from .core.plugins.abstracts import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
+from .core.channels import GAChannel
+from .core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
 __version__ = '1.0'
 

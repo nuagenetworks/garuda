@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger('garuda.controller.plugin')
 
 from garuda.core.models import GAPlugin
-from garuda.core.channels.abstracts import GAChannel
+from garuda.core.channels import GAChannel
 
 
 class GAPluginController(object):

@@ -4,8 +4,7 @@ import logging
 logger = logging.getLogger('garuda.plugin.authentication.simple')
 
 from garuda.core.lib import SDKsManager
-from garuda.core.plugins import GAPluginManifest
-from garuda.core.plugins.abstracts import GAAuthenticationPlugin
+from garuda.core.plugins import GAPluginManifest, GAAuthenticationPlugin
 
 
 class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):

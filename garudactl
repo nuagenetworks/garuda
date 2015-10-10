@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from garuda import Garuda
-from garuda.core.channels.rest import RESTChannel
-from garuda.core.plugins.storage import GAMongoStoragePlugin
-from garuda.core.plugins.authentication import GASimpleAuthenticationPlugin
+from garuda.channels.rest import GARESTChannel
+from garuda.plugins.storage import GAMongoStoragePlugin
+from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 
 
 def tdl_db_init(db, root_rest_name):
@@ -52,7 +52,7 @@ def start():
 
     """
     """
-    channel = RESTChannel()
+    channel = GARESTChannel()
     # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
     authentication_plugin = GASimpleAuthenticationPlugin(auth_function=auth_function)

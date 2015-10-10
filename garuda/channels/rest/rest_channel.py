@@ -14,15 +14,16 @@ from uuid import uuid4
 
 from flask import Flask, request, make_response
 
-from .utils.constants import RESTConstants
+from .constants import RESTConstants
+
 from garuda.core.config import GAConfig
 from garuda.core.lib import PathParser, SDKsManager
 from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification
 from garuda.core.plugins import GAPluginManifest
-from garuda.core.channels.abstracts import GAChannel
+from garuda.core.channels import GAChannel
 
 
-class RESTChannel(GAChannel):
+class GARESTChannel(GAChannel):
     """
 
     """
