@@ -65,7 +65,8 @@ class GAOperationsController(object):
 
         self.context.object = self.storage_controller.get(resource.name, resource.value)
 
-        if self.context.object is None: self._report_resource_not_found(resource=resource)
+        if self.context.object is None:
+            self._report_resource_not_found(resource=resource)
 
 
     def _perform_read_operation(self):
@@ -133,23 +134,28 @@ class GAOperationsController(object):
         """
         self.context.object = self.storage_controller.instantiate(resource.name)
 
-        if self.context.object is None: self._report_resource_not_found(resource=resource)
+        if self.context.object is None:
+            self._report_resource_not_found(resource=resource)
+            return
 
         self.context.object.from_dict(self.context.request.content)
 
-        if not self.context.object.is_valid(): self._report_validation_error(self.context.object)
-
+        if not self.context.object.is_valid():
+            self._report_validation_error(self.context.object)
 
     def _populate_context_for_update_with_resource(self, resource):
         """
         """
         self.context.object = self.storage_controller.get(resource.name, resource.value)
 
-        if self.context.object is None: self._report_resource_not_found(resource=resource)
+        if self.context.object is None:
+            self._report_resource_not_found(resource=resource)
+            return
 
         self.context.object.from_dict(self.context.request.content)
 
-        if not self.context.object.is_valid(): self._report_validation_error(self.context.object)
+        if not self.context.object.is_valid():
+            self._report_validation_error(self.context.object)
 
     def _populate_context_for_delete_with_resource(self, resource):
         """
