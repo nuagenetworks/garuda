@@ -43,11 +43,14 @@ class GALogicController(GAPluginController):
         jobs = []
         plugins = self._managing_plugins(resource_name=context.request.resources[-1].name, action=context.request.action)
 
+        if not len(plugins):
+            return
+
         for plugin in plugins:
             method = getattr(plugin, delegate, None)
             jobs.append(gevent.spawn(method, context=context.copy()))
 
-        gevent.joinall(jobs, timeout=timeout)
+        # gevent.wait(objects=jobs, timeout=timeout)
 
         contexts = [job.value for job in jobs]
 
