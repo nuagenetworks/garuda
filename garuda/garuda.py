@@ -17,10 +17,9 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=True):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
         """
         """
-
         BambouConfig.set_should_raise_bambou_http_error(False)
 
         self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
