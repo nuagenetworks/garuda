@@ -51,12 +51,13 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def get(self, resource_name, identifier):
         """
         """
-        data = self.db[resource_name].find_one({'ID': identifier})
+        data = self.db[resource_name].find_one({'_id': identifier})
 
         if not data: return None
 
         obj = self.instantiate(resource_name)
-        obj.from_dict(data)
+        obj.from_dict(self._convert_from_dbid(data))
+
         return obj
 
     def get_all(self, parent, resource_name):
@@ -70,18 +71,18 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data = self.db[resource_name].find({'parentID': parent.id})
             else:
                 association_key = '_%s' % resource_name
-                association_data = self.db[parent.rest_name].find_one({'ID': parent.id}, {association_key: 1})
+                association_data = self.db[parent.rest_name].find_one({'_id': parent.id}, {association_key: 1})
 
                 if not association_key in association_data: return []
 
-                data = self.db[resource_name].find({'ID': {'$in': association_data[association_key]}})
+                data = self.db[resource_name].find({'_id': {'$in': association_data[association_key]}})
         else:
             data = self.db[resource_name].find()
 
 
         for d in data:
             obj = self.instantiate(resource_name)
-            obj.from_dict(d)
+            obj.from_dict(self._convert_from_dbid(d))
             ret.append(obj)
 
         return ret
@@ -99,7 +100,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         validation = self._validate(resource)
         if validation: return validation
 
-        self.db[resource.rest_name].insert(resource.to_dict())
+        self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
     def update(self, resource):
         """
@@ -114,18 +115,18 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         validation = self._check_equals(resource)
         if validation: return validation
 
-        self.db[resource.rest_name].update({'ID': {'$eq': resource.id}}, {'$set': resource.to_dict()})
+        self.db[resource.rest_name].update({'_id': {'$eq': resource.id}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
     def delete(self, resource):
         """
         """
-        self.db[resource.rest_name].remove({'ID': resource.id})
+        self.db[resource.rest_name].remove({'_id': resource.id})
 
 
     def assign(self, resource_name, resources, parent):
         """
         """
-        self.db[parent.rest_name].update({'ID': {'$eq': parent.id}}, {'$set': {'_%s' % resource_name: [r.id for r in resources]}})
+        self.db[parent.rest_name].update({'_id': {'$eq': parent.id}}, {'$set': {'_%s' % resource_name: [r.id for r in resources]}})
 
     def _validate(self, resource):
         """
@@ -138,7 +139,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             errors.append(GAError(type=GAError.TYPE_CONFLICT, title=error["title"], description=error["description"], property_name=error['remote_name']))
         return errors
 
-
     def _check_equals(self, resource):
         """
         """
@@ -146,3 +146,19 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if not stored_obj.rest_equals(resource): return None
 
         return GAError(type=GAError.TYPE_CONFLICT, title="No changes to modify the entity", description="There are no attribute changes to modify the entity.")
+
+    def _convert_to_dbid(self, data):
+        """
+        """
+        if data and data['ID']:
+            data['_id'] = data['ID']
+            del data['ID']
+        return data
+
+    def _convert_from_dbid(self, data):
+        """
+        """
+        if data:
+            data['ID'] = data['_id']
+            del data['_id']
+        return data
