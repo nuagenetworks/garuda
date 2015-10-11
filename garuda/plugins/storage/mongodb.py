@@ -20,6 +20,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         self.mongo = MongoClient(mongo_uri)
         self.db = self.mongo[db_name]
         self.sdk = None
+
         self.db_initialization_function = db_initialization_function
 
     @classmethod
@@ -33,6 +34,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         self.sdk = SDKLibrary().get_sdk('default')
         root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
+
+        for model in NURESTModelController.get_all_models():
+            self.db[model[0].rest_name].create_index('parentID')
 
         if self.db_initialization_function:
             self.db_initialization_function(db=self.db, root_rest_name=root_rest_name)
@@ -48,7 +52,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         klass = NURESTModelController.get_first_model(resource_name)
         return klass()
 
-    def get(self, resource_name, identifier):
+    def get(self, resource_name, identifier, filter=None):
         """
         """
         data = self.db[resource_name].find_one({'_id': identifier})
@@ -60,7 +64,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return obj
 
-    def get_all(self, parent, resource_name):
+    def get_all(self, parent, resource_name, filter=None):
         """
         """
         ret = []
@@ -78,7 +82,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data = self.db[resource_name].find({'_id': {'$in': association_data[association_key]}})
         else:
             data = self.db[resource_name].find()
-
 
         for d in data:
             obj = self.instantiate(resource_name)
