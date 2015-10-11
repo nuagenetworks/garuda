@@ -99,15 +99,16 @@ class Garuda(object):
         """
         if self._debug:
             try:
-                import pdb, objgraph, resource, guppy
-                print '# DEBUGGING MODE: Debugging mode active'
-                print '# DEBUGGING MODE: Collecting initial heap snaphot...'
+                import ipdb, objgraph, resource, guppy
+                print '# MEM DBG MODE: Memory Debugging Mode active'
+                print '# MEM DBG MODE: Initial Memory Usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
+                print '# MEM DBG MODE: Collecting initial heap snaphot...'
                 hp = guppy.hpy()
                 heap_initial = hp.heap()
-                print '# DEBUGGING MODE: Initial heap snaphot collected'
-                print '# DEBUGGING MODE: Hit CTRL-C to enter the debugging mode at anytime'
+                print '# MEM DBG MODE: Initial heap snaphot collected'
+                print '# MEM DBG MODE: Hit CTRL-C to enter the debugging mode at anytime'
             except:
-                print '# DEBUGGING MODE: Cannot use debugging mode. Modules needed: `pdb`, `resource`, `objgraph` and `guppy`'
+                print '# MEM DBG MODE: Cannot use Memory Debugging Mode. Modules needed: `ipdb`, `resource`, `objgraph` and `guppy`'
                 self._debug = False
             finally:
                 print ''
@@ -122,18 +123,18 @@ class Garuda(object):
                     break
 
         if self._debug:
-            import pdb, objgraph, resource, guppy
+            import ipdb, objgraph, resource, guppy
             print ''
-            print '# DEBUGGING MODE: Entering debugging mode...'
-            print '# DEBUGGING MODE: Final Memory Usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
-            print '# DEBUGGING MODE: Collecting final heap snaphot...'
+            print '# MEM DBG MODE: Entering Memory Debugging Mode...'
+            print '# MEM DBG MODE: Final Memory Usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
+            print '# MEM DBG MODE: Collecting final heap snaphot...'
             hp = guppy.hpy()
             heap_final = hp.heap()
-            print '# DEBUGGING MODE: Final heap snaphot collected'
-            print '# DEBUGGING MODE: You can see the heap snaphots in variables `heap_initial` and `heap_final`'
-            print '# DEBUGGING MODE: Starting pdb. Type `c` to terminate Garuda.'
+            print '# MEM DBG MODE: Final heap snaphot collected'
+            print '# MEM DBG MODE: You can see the heap snaphots in variables `heap_initial` and `heap_final`'
+            print '# MEM DBG MODE: Starting ipdb. Type `c` to terminate Garuda. (NOT CTRL-C)'
             print ''
-            pdb.set_trace()
+            ipdb.set_trace()
 
         self.core.stop()
 
