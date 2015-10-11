@@ -17,7 +17,7 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
         """
         """
 
@@ -31,6 +31,7 @@ class Garuda(object):
         self._storage_plugins = []
         self._logic_plugins = []
         self._permission_plugins = []
+        self._debug = debug
 
         for plugin in plugins:
 
@@ -96,6 +97,21 @@ class Garuda(object):
     def start(self):
         """
         """
+        if self._debug:
+            try:
+                import pdb, objgraph, resource, guppy
+                print '# DEBUGGING MODE: Debugging mode active'
+                print '# DEBUGGING MODE: Collecting initial heap snaphot...'
+                hp = guppy.hpy()
+                heap_initial = hp.heap()
+                print '# DEBUGGING MODE: Initial heap snaphot collected'
+                print '# DEBUGGING MODE: Hit CTRL-C to enter the debugging mode at anytime'
+            except:
+                print '# DEBUGGING MODE: Cannot use debugging mode. Modules needed: `pdb`, `resource`, `objgraph` and `guppy`'
+                self._debug = False
+            finally:
+                print ''
+
         self.core.start()
 
         if self._runloop:
@@ -104,6 +120,20 @@ class Garuda(object):
                     sleep(300000)
                 except KeyboardInterrupt:
                     break
+
+        if self._debug:
+            import pdb, objgraph, resource, guppy
+            print ''
+            print '# DEBUGGING MODE: Entering debugging mode...'
+            print '# DEBUGGING MODE: Final Memory Usage : %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            print '# DEBUGGING MODE: Collecting final heap snaphot...'
+            hp = guppy.hpy()
+            heap_final = hp.heap()
+            print '# DEBUGGING MODE: Final heap snaphot collected'
+            print '# DEBUGGING MODE: You can see the heap snaphots in variables `heap_initial` and `heap_final`'
+            print '# DEBUGGING MODE: Starting pdb'
+            print ''
+            pdb.set_trace()
 
         self.core.stop()
 
