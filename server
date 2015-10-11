@@ -52,6 +52,7 @@ def start():
     """
     """
     channel = GARESTChannel()
+
     # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
     authentication_plugin = GASimpleAuthenticationPlugin(auth_function=auth_function)

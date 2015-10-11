@@ -17,7 +17,7 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=True):
         """
         """
 
@@ -125,13 +125,13 @@ class Garuda(object):
             import pdb, objgraph, resource, guppy
             print ''
             print '# DEBUGGING MODE: Entering debugging mode...'
-            print '# DEBUGGING MODE: Final Memory Usage : %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            print '# DEBUGGING MODE: Final Memory Usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
             print '# DEBUGGING MODE: Collecting final heap snaphot...'
             hp = guppy.hpy()
             heap_final = hp.heap()
             print '# DEBUGGING MODE: Final heap snaphot collected'
             print '# DEBUGGING MODE: You can see the heap snaphots in variables `heap_initial` and `heap_final`'
-            print '# DEBUGGING MODE: Starting pdb'
+            print '# DEBUGGING MODE: Starting pdb. Type `c` to terminate Garuda.'
             print ''
             pdb.set_trace()
 
