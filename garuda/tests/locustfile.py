@@ -3,6 +3,7 @@
 from locust import HttpLocust, TaskSet, task
 from tdldk.v1_0 import *
 import json
+import uuid
 
 class UserBehavior(TaskSet):
     """
@@ -59,6 +60,12 @@ class UserBehavior(TaskSet):
         """
         response = self.client.put("/task/%s/users" % self.TASK_ID, data=json.dumps([self.USER_ID]), headers={'Authorization': '%s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
         response = self.client.put("/task/%s/users" % self.TASK_ID, data=json.dumps([]), headers={'Authorization': '%s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
+
+    @task
+    def update(self):
+        """
+        """
+        self.client.update("/lists/%s" % self.LIST_ID, data=json.dumps({'title': str(uuid.uuid4()), 'description': 'test'}), headers={'Authorization': '%s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
 
 
 class WebsiteUser(HttpLocust):
