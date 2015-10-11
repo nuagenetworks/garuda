@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 from time import sleep
 from bambou import BambouConfig
 
@@ -10,7 +11,6 @@ from .core.channels import GAChannel
 from .core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
 __version__ = '1.0'
-
 
 
 class Garuda(object):
@@ -60,6 +60,48 @@ class Garuda(object):
                                         permission_plugins=self._permission_plugins)
 
 
+    def _init_debug_mode(self):
+        """
+        """
+        try:
+            import ipdb, objgraph, resource, guppy, signal
+            print '# DBG MODE: Debug Mode active'
+            print '# DBG MODE: Initial memory usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
+            print '# DBG MODE: Collecting initial heap snaphot...'
+            hp = guppy.hpy()
+            heap_initial = hp.heap()
+
+            def handle_signal(signal_number, frame_stack):
+                self._launch_debug_mode()
+
+            signal.signal(signal.SIGHUP, handle_signal)
+
+            print '# DBG MODE: Initial heap snaphot collected'
+            print '# DBG MODE: Do a `kill -HUP %s` to enter the debug mode at anytime' % os.getpid()
+            print '# DBG MODE: Hitting CTRL+C stop Garuda then enter the debugg mode.'
+        except:
+            print '# DBG MODE: Cannot use Debugging Mode. Modules needed: `ipdb`, `resource`, `objgraph` and `guppy`'
+            self._debug = False
+        finally:
+            print ''
+
+    def _launch_debug_mode(self):
+        """
+        """
+        import ipdb, objgraph, resource, guppy
+        print ''
+        print '# DBG MODE: Entering Debugging Mode...'
+        print '# DBG MODE: Final memory usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
+        print '# DBG MODE: Collecting final heap snaphot...'
+        hp = guppy.hpy()
+        heap_current = hp.heap()
+        print '# DBG MODE: Current heap snaphot collected'
+        print '# DBG MODE: You can see the heap snaphots in variables `heap_initial` and `heap_current`'
+        print '# DBG MODE: Starting ipdb (CTRL+D to exit)'
+        print ''
+        ipdb.set_trace()
+
+
     def print_banner(self):
         """
         """
@@ -74,7 +116,7 @@ class Garuda(object):
              .,:---,      "9"R            Garuda %s
          ,N"`    ,jyjjRN,   `n ?          ==========
        #^   y&T        `"hQ   y 'y
-     (L  ;R@l                 ^a \w       github.com/nuagenetworks/garuda
+     (L  ;R@l                 ^a \w       PID: %d
     (   #^4                    Q  @
     Q  # ,W                    W  ]V      %d channel%s           %s
    |# @L Q                    W   Q|      %s sdk%s               %s
@@ -86,7 +128,7 @@ class Garuda(object):
            "E,  `"B@MD&DR@B`
                '"N***xD"`
 
-               """ % (__version__,
+               """ % (__version__, os.getpid(),
                        len(self._channels), "s" if len(self._channels) > 1 else "", ": %s" % all_channels if len(all_channels) else "",
                        len(self._sdks_info), "s" if len(self._sdks_info) > 1 else "", ": %s" % all_sdks if len(all_sdks) else "",
                        len(self._storage_plugins), "s" if len(self._storage_plugins) > 1 else "", ": %s" % all_storages if len(all_storages) else "",
@@ -98,20 +140,7 @@ class Garuda(object):
         """
         """
         if self._debug:
-            try:
-                import ipdb, objgraph, resource, guppy
-                print '# MEM DBG MODE: Memory Debugging Mode active'
-                print '# MEM DBG MODE: Initial Memory Usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
-                print '# MEM DBG MODE: Collecting initial heap snaphot...'
-                hp = guppy.hpy()
-                heap_initial = hp.heap()
-                print '# MEM DBG MODE: Initial heap snaphot collected'
-                print '# MEM DBG MODE: Hit CTRL-C to enter the debugging mode at anytime'
-            except:
-                print '# MEM DBG MODE: Cannot use Memory Debugging Mode. Modules needed: `ipdb`, `resource`, `objgraph` and `guppy`'
-                self._debug = False
-            finally:
-                print ''
+            self._init_debug_mode()
 
         self.core.start()
 
@@ -122,24 +151,12 @@ class Garuda(object):
                 except KeyboardInterrupt:
                     break
 
-        if self._debug:
-            import ipdb, objgraph, resource, guppy
-            print ''
-            print '# MEM DBG MODE: Entering Memory Debugging Mode...'
-            print '# MEM DBG MODE: Final Memory Usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
-            print '# MEM DBG MODE: Collecting final heap snaphot...'
-            hp = guppy.hpy()
-            heap_final = hp.heap()
-            print '# MEM DBG MODE: Final heap snaphot collected'
-            print '# MEM DBG MODE: You can see the heap snaphots in variables `heap_initial` and `heap_final`'
-            print '# MEM DBG MODE: Starting ipdb. Type `c` to terminate Garuda. (NOT CTRL-C)'
-            print ''
-            ipdb.set_trace()
-
-        self.core.stop()
+        self.stop()
 
     def stop(self):
         """
         """
         self.core.stop()
 
+        if self._debug:
+            self._launch_debug_mode()
