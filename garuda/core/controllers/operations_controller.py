@@ -247,7 +247,7 @@ class GAOperationsController(object):
             err = self.storage_controller.update(resource=self.context.object)
 
         elif self.context.request.action == GARequest.ACTION_DELETE:
-            err = self.storage_controller.delete(resource=self.context.object)
+            err = self.storage_controller.delete(resource=self.context.object, cascade=True)
 
         elif self.context.request.action == GARequest.ACTION_ASSIGN:
             err = self.storage_controller.assign(resource_name=self.context.request.resources[-1].name, resources=self.context.objects, parent=self.context.parent_object)

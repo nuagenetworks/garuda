@@ -74,7 +74,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
                 data = self.db[resource_name].find({'parentID': parent.id})
             else:
-                association_key = '_%s' % resource_name
+                association_key = '_rel_%s' % resource_name
                 association_data = self.db[parent.rest_name].find_one({'_id': parent.id}, {association_key: 1})
 
                 if not association_key in association_data: return []
@@ -105,6 +105,14 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
+        if parent:
+            data = self.db[parent.rest_name].find_one({'_id': parent.id})
+            children_key = '_%s' % resource.rest_name
+            children = data[children_key] if children_key in data else []
+            children.append(resource.id)
+
+            self.db[parent.rest_name].update({'_id': {'$eq': parent.id}}, {'$set': {children_key: children}})
+
     def update(self, resource):
         """
         """
@@ -120,16 +128,49 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].update({'_id': {'$eq': resource.id}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
-    def delete(self, resource):
+    def delete(self, resource, cascade=True):
         """
         """
-        self.db[resource.rest_name].remove({'_id': resource.id})
+        if resource.parent_id and resource.parent_type:
+            children_key = '_%s' % resource.rest_name
+            data = self.db[resource.parent_type].find_one({'_id': resource.parent_id}, {children_key: 1})
+            if data:
+                data[children_key].remove(resource.id)
+                self.db[resource.parent_type].update({'_id': {'$eq': resource.parent_id}}, {'$set': data})
+
+        self.delete_multiple(resources=[resource], cascade=cascade)
+
+    def delete_multiple(self, resources, cascade=True):
+        """
+        """
+
+        for resource in resources:
+
+            if cascade:
+
+                data = self.db[resource.rest_name].find_one({'_id': resource.id}) # this could be optimized by only getting the children keys
+
+                for children_rest_name in resource.children_rest_names:
+
+                    children_key = '_%s' % children_rest_name
+
+                    if not children_key in data:
+                        continue
+
+                    klass = NURESTModelController.get_first_model(children_rest_name)
+                    child_resources = [klass(id=identifier) for identifier in data[children_key]]
+
+                    # recursively delete children
+                    self.delete_multiple(child_resources)
+
+        self.db[resource.rest_name].remove({'_id': {'$in': [resource.id for resource in resources]}})
+
 
 
     def assign(self, resource_name, resources, parent):
         """
         """
-        self.db[parent.rest_name].update({'_id': {'$eq': parent.id}}, {'$set': {'_%s' % resource_name: [r.id for r in resources]}})
+        self.db[parent.rest_name].update({'_id': {'$eq': parent.id}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
 
     def _validate(self, resource):
         """

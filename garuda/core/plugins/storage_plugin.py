@@ -32,7 +32,7 @@ class GAStoragePlugin(GAPlugin):
         """
         raise NotImplementedError("%s should implement save method" % self)
 
-    def delete(self, resource):
+    def delete(self, resource, cascade=True):
         """
         """
         raise NotImplementedError("%s should implement delete method" % self)
