@@ -64,7 +64,9 @@ class GAPushController(object):
         for session_uuid in session_uuids:
             jobs.append(gevent.spawn(self._send_events, session_uuid=session_uuid, events=events))
 
-        gevent.joinall(jobs)
+        # TODO Antoine: not sure why we should wait for anything here
+        # and joinall seems to be causing a memory leak
+        # gevent.joinall(jobs)
 
     def _send_events(self, session_uuid, events):
         """
