@@ -7,9 +7,9 @@ import json
 class UserBehavior(TaskSet):
     """
     """
-    AUTH    = 'cm9vdDo4ZTI2ODU3YS04NDNhLTQ0ZmUtOWQ4Ny1kOWZmM2ZmYzQyMzI='
-    LIST_ID = '19651d37-8334-481f-986c-4f1428bbf40f'
-    TASK_ID = '628d097c-63c3-4239-9185-b09132797963'
+    AUTH    = 'cm9vdDo5Zjk3NmQ1MC02YTA3LTQyM2ItODAxYy1jZDJjZTQyMmYwNjE='
+    LIST_ID = 'b7c1df62-0bf3-437a-9bf6-a8822a1b1fee'
+    TASK_ID = '118f0eb4-6434-4594-b9f7-f3799ba6905c'
 
     def on_start(self):
         pass
@@ -51,5 +51,5 @@ class WebsiteUser(HttpLocust):
     """
     """
     task_set = UserBehavior
-    min_wait=1000
-    max_wait=1500
+    min_wait=10
+    max_wait=15
