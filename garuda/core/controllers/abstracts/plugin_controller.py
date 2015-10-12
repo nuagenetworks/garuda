@@ -37,9 +37,8 @@ class GAPluginController(object):
             logger.warn("'%s' cannot register '%s': already registered." % (self.__class__.__name__, plugin.manifest().identifier))
             return
 
-        plugin.core_controller = self.core_controller
-
         plugin.will_register()
+        plugin.core_controller = self.core_controller
         self._plugins.append(plugin)
         plugin.did_register()
 
@@ -55,8 +54,8 @@ class GAPluginController(object):
 
         plugin.will_unregister()
         self._plugins.remove(plugin)
-        plugin.did_unregister()
         plugin.core_controller = None
+        plugin.did_unregister()
 
         logger.debug("'%s': successfuly unregistered '%s'" % (self.__class__.__name__, plugin.manifest().identifier))
 

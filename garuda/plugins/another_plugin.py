@@ -28,12 +28,12 @@ class AnotherPlugin(GABusinessLogicPlugin):
 
         return context
 
-    def should_perform_readall(self, context, object):
+    def check_perform_readall(self, context, object):
         """
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
-        print 'AnotherPlugin\t\tshould_perform_read\t\t(Host=%s)' % context.request.parameters['Host']
+        print 'AnotherPlugin\t\tcheck_perform_read\t\t(Host=%s)' % context.request.parameters['Host']
         # context.report_error(type=GAError.TYPE_INVALID, property='what', title='NOWAY', description='TUUTUTUTUUT')
         return context
 
