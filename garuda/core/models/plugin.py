@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from abc import ABCMeta, abstractmethod
+
 class GAPlugin(object):
     """
     """
+
+    __metaclass__ = ABCMeta
 
     def __init__(self):
         """
@@ -30,6 +34,7 @@ class GAPlugin(object):
         pass
 
     @classmethod
+    @abstractmethod
     def manifest(cls):
         """
         """
