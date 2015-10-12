@@ -12,7 +12,7 @@ def tdl_db_init(db, root_rest_name):
     """
     from bson import ObjectId
     if not db[root_rest_name].count():
-        db[root_rest_name].insert({'ID': '1', 'userName': 'root', 'password': 'password'})
+        db[root_rest_name].insert({'_id': ObjectId('1234567890ab') , 'userName': 'root', 'password': 'password'})
 
 def vsd_db_init(db, root_rest_name):
     """
@@ -36,7 +36,7 @@ def auth_function(request, session, root_api, storage_controller):
     """
     """
     # add a filter here
-    auth = storage_controller.get(root_api, '1')
+    auth = storage_controller.get(root_api, '1234567890ab')
 
     if request.parameters["username"] == auth.user_name and request.parameters["password"] == auth.password:
         auth.api_key = session.uuid

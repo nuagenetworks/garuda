@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from uuid import uuid4
 from bambou import NURESTModelController
 import pymongo
+from bson import ObjectId
 
 from garuda.core.models import GAError, GAPluginManifest
 from garuda.core.plugins import GAStoragePlugin
@@ -36,8 +36,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
 
         for model in NURESTModelController.get_all_models():
-            self.db[model[0].rest_name].create_index([('ID', pymongo.DESCENDING)], unique=True)
-            self.db[model[0].rest_name].create_index('parentID')
+            self.db[model[0].rest_name].create_index([('_id', pymongo.DESCENDING)], unique=True)
 
         if self.db_initialization_function:
             self.db_initialization_function(db=self.db, root_rest_name=root_rest_name)
@@ -56,13 +55,13 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def get(self, resource_name, identifier, filter=None):
         """
         """
-        data = self.db[resource_name].find_one({'ID': identifier})
+        data = self.db[resource_name].find_one({'_id': ObjectId(identifier)})
 
         if not data:
             return None
 
         obj = self.instantiate(resource_name)
-        obj.from_dict(data)
+        obj.from_dict(self._convert_from_dbid(data))
 
         return obj
 
@@ -77,17 +76,19 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data = self.db[resource_name].find({'parentID': parent.id})
             else:
                 association_key = '_rel_%s' % resource_name
-                association_data = self.db[parent.rest_name].find_one({'ID': parent.id}, {association_key: 1})
+                association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
 
                 if not association_key in association_data: return []
 
-                data = self.db[resource_name].find({'ID': {'$in': association_data[association_key]}})
+                identifiers = association_data[association_key]
+
+                data = self.db[resource_name].find({'_id': {'$in': [ObjectId(identifier) for identifier in identifiers]}})
         else:
             data = self.db[resource_name].find()
 
         for d in data:
             obj = self.instantiate(resource_name)
-            obj.from_dict(d)
+            obj.from_dict(self._convert_from_dbid(d))
             ret.append(obj)
 
         return ret
@@ -100,20 +101,21 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         resource.owner = "me"
         resource.parent_type = parent.rest_name if parent else None
         resource.parent_id = parent.id  if parent else None
-        resource.id = str(uuid4())
+        resource.id = str(ObjectId())
 
         validation = self._validate(resource)
         if validation: return validation
 
-        self.db[resource.rest_name].insert_one(resource.to_dict())
+        self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
+        print resource.id
         if parent:
-            data = self.db[parent.rest_name].find_one({'ID': parent.id})
+            data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)})
             children_key = '_%s' % resource.rest_name
             children = data[children_key] if children_key in data else []
             children.append(resource.id)
 
-            self.db[parent.rest_name].update({'ID': {'$eq': parent.id}}, {'$set': {children_key: children}})
+            self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {children_key: children}})
 
     def update(self, resource):
         """
@@ -128,17 +130,17 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         validation = self._check_equals(resource)
         if validation: return validation
 
-        self.db[resource.rest_name].update({'ID': {'$eq': resource.id}}, {'$set': resource.to_dict()})
+        self.db[resource.rest_name].update({'_id': {'$eq': ObjectId(resource.id)}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
     def delete(self, resource, cascade=True):
         """
         """
         if resource.parent_id and resource.parent_type:
             children_key = '_%s' % resource.rest_name
-            data = self.db[resource.parent_type].find_one({'ID': resource.parent_id}, {children_key: 1})
+            data = self.db[resource.parent_type].find_one({'_id': ObjectId(resource.parent_id)}, {children_key: 1})
             if data:
                 data[children_key].remove(resource.id)
-                self.db[resource.parent_type].update({'ID': {'$eq': resource.parent_id}}, {'$set': data})
+                self.db[resource.parent_type].update({'_id': {'$eq': ObjectId(resource.parent_id)}}, {'$set': data})
 
         self.delete_multiple(resources=[resource], cascade=cascade)
 
@@ -150,7 +152,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
             if cascade:
 
-                data = self.db[resource.rest_name].find_one({'ID': resource.id}) # this could be optimized by only getting the children keys
+                data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)}) # this could be optimized by only getting the children keys
 
                 for children_rest_name in resource.children_rest_names:
 
@@ -165,14 +167,14 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                     # recursively delete children
                     self.delete_multiple(child_resources)
 
-        self.db[resource.rest_name].remove({'ID': {'$in': [resource.id for resource in resources]}})
+        self.db[resource.rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
 
 
 
     def assign(self, resource_name, resources, parent):
         """
         """
-        self.db[parent.rest_name].update({'ID': {'$eq': parent.id}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
+        self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
 
     def _validate(self, resource):
         """
@@ -192,3 +194,21 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if not stored_obj.rest_equals(resource): return None
 
         return GAError(type=GAError.TYPE_CONFLICT, title="No changes to modify the entity", description="There are no attribute changes to modify the entity.")
+
+    def _convert_to_dbid(self, data):
+        """
+        """
+        if data and data['ID']:
+            data['_id'] = ObjectId(data['ID'])
+            del data['ID']
+
+        return data
+
+    def _convert_from_dbid(self, data):
+        """
+        """
+        if data:
+            data['ID'] = str(data['_id'])
+            del data['_id']
+
+        return data
