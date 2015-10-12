@@ -13,6 +13,7 @@ class GAContext(object):
         self.parent_object = None
         self.request = request
         self.session = session
+        self.total_count = 0
         self.user_info = {}
         self._errors = []
         self._events = []

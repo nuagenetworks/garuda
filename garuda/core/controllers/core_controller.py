@@ -163,7 +163,7 @@ class GACoreController(object):
         """
         """
 
-        session_uuid = request.parameters['password'] if 'password' in request.parameters else None
+        session_uuid = request.token
         session = self.sessions_controller.get_session(session_uuid=session_uuid)
         context = GAContext(session=session, request=request)
 

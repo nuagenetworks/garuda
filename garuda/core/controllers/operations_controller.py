@@ -20,7 +20,10 @@ class GAOperationsController(object):
         action = self.context.request.action
 
         if action is GARequest.ACTION_READALL:
-            self._perform_readall_operation()
+            self._perform_readall_operation(count_only=False)
+
+        elif action is GARequest.ACTION_COUNT:
+            self._perform_readall_operation(count_only=True)
 
         elif action is GARequest.ACTION_READ:
             self._perform_read_operation()
@@ -88,7 +91,7 @@ class GAOperationsController(object):
         self.logic_controller.perform_delegate(delegate='preprocess_read', context=self.context)
         self.logic_controller.perform_delegate(delegate='end_read_operation', context=self.context)
 
-    def _prepare_context_for_readall_operation(self):
+    def _prepare_context_for_readall_operation(self, count_only):
         """
         """
         resources = self.context.request.resources
@@ -105,14 +108,26 @@ class GAOperationsController(object):
                 return
 
         self.context.parent_object = parent
-        self.context.objects = self.storage_controller.get_all(self.context.parent_object, resource.name)
 
-        if self.context.objects is None: self._report_resource_not_found(resource=resource)
+        if count_only:
+            self.context.total_count = self.storage_controller.count(   parent=self.context.parent_object,
+                                                                        resource_name=resource.name,
+                                                                        filter=self.context.request.filter)
+        else:
+            self.context.objects, self.context.total_count = self.storage_controller.get_all(   parent=self.context.parent_object,
+                                                                                                resource_name=resource.name,
+                                                                                                page=self.context.request.page,
+                                                                                                page_size=self.context.request.page_size,
+                                                                                                filter=self.context.request.filter,
+                                                                                                order_by=self.context.request.order_by)
 
-    def _perform_readall_operation(self):
+        if self.context.objects is None:
+            self._report_resource_not_found(resource=resource)
+
+    def _perform_readall_operation(self, count_only):
         """
         """
-        self._prepare_context_for_readall_operation()
+        self._prepare_context_for_readall_operation(count_only)
 
         if self.context.has_errors():
             return

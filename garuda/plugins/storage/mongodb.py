@@ -52,6 +52,11 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         klass = NURESTModelController.get_first_model(resource_name)
         return klass()
 
+    def count(self, parent, resource_name, filter=None):
+        """
+        """
+        return self.get_all(parent=parent, resource_name=resource_name, filter=filter, count=True)
+
     def get(self, resource_name, identifier, filter=None):
         """
         """
@@ -65,11 +70,19 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return obj
 
-    def get_all(self, parent, resource_name, filter=None):
+
+    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, count=False):
         """
         """
         ret = []
         data = []
+        skip = 0
+        total_count = 0
+
+        if not page or not page_size: page = page_size = 0
+        elif page > 0: skip = (page - 1) * page_size
+
+        if filter: filter = self._parse_filter(filter)
 
         if parent:
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
@@ -80,18 +93,27 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 if not association_key in association_data: return []
 
-                identifiers = association_data[association_key]
+                identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
 
-                data = self.db[resource_name].find({'_id': {'$in': [ObjectId(identifier) for identifier in identifiers]}})
+                if not count:
+                    data = self.db[resource_name].find({'_id': {'$in': identifiers}}).skip(skip).limit(page_size)
+
+                total_count = self.db[resource_name].find({'_id': {'$in': identifiers}}).count()
         else:
-            data = self.db[resource_name].find()
+            if not count:
+                data = self.db[resource_name].find(filter).skip(skip).limit(page_size)
 
-        for d in data:
-            obj = self.instantiate(resource_name)
-            obj.from_dict(self._convert_from_dbid(d))
-            ret.append(obj)
+            total_count = self.db[resource_name].find().count()
 
-        return ret
+        if not count:
+            for d in data:
+                obj = self.instantiate(resource_name)
+                obj.from_dict(self._convert_from_dbid(d))
+                ret.append(obj)
+
+            return ret, total_count
+        else:
+            return total_count
 
     def create(self, resource, parent=None):
         """
@@ -108,7 +130,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
-        print resource.id
         if parent:
             data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)})
             children_key = '_%s' % resource.rest_name
@@ -212,3 +233,33 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             del data['_id']
 
         return data
+
+    def _parse_filter(self, filter):
+        """
+        """
+        # @TODO: this is a very stupid predicate parsing implementation
+
+        components = filter.split(' ')
+        attribute = components[0]
+        operator = components[1].lower()
+        value = components[2]
+
+        if operator == 'contains': operator = '$text'
+        elif operator == 'equals': operator = '$eq'
+        elif operator == 'in': operator = '$in'
+        elif operator == 'not in': operator = '$nin'
+        elif operator == '==': operator = '$eq'
+        elif operator == '!=': operator = '$neq'
+        elif operator == '>': operator = '$gt'
+        elif operator == '>=': operator = '$gte'
+        elif operator == '<': operator = '$lt'
+        elif operator == '<=': operator = '$lte'
+
+        if attribute == 'ID':
+            attribute = '_id'
+            value = ObjectId(value)
+
+        return {attribute: {operator: value}}
+
+
+
