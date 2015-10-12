@@ -5,13 +5,12 @@ import logging
 from base64 import urlsafe_b64decode
 from copy import deepcopy
 from Queue import Empty
-from urlparse import urlparse
 from uuid import uuid4
 
 from flask import Flask, request, make_response
 
 from garuda.core.lib import SDKLibrary
-from garuda.core.models import GARequest, GAResponse, GAError, GAErrorsList, GAPushNotification, GAPluginManifest
+from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseFailure, GAResponseSuccess
 from garuda.core.channels import GAChannel
 
 from .constants import RESTConstants
@@ -108,74 +107,140 @@ class GARESTChannel(GAChannel):
 
         return dict()
 
-    def _extract_parameters(self, parameters):
+    def _extract_auth(self, headers):
+        """
+        """
+        username = None
+        token = None
+
+        if 'Authorization' in headers:
+            encoded_auth = headers['Authorization'][6:]  # XREST stuff
+            decoded_auth = urlsafe_b64decode(str(encoded_auth))
+            auth = decoded_auth.split(':')
+            username = auth[0]
+            token = auth[1]
+
+        return username, token
+
+    def _extract_parameters(self, headers):
         """
         """
         params = {}
 
-        for p in parameters:
+        for p in headers:
             params[p[0]] = p[1]
-
-        if 'Authorization' in parameters:
-            encoded_auth = parameters['Authorization'][6:]  # XREST stuff
-            decoded_auth = urlsafe_b64decode(str(encoded_auth))
-            auth = decoded_auth.split(':')
-            params['username'] = auth[0]
-            params['password'] = auth[1]
 
         return params
 
-    def _convert_content(self, content):
+    def _convert_errors(self, action, response):
         """
         """
+        properties = {}
+        error_type = response.content[0].type if len(response.content) > 0 else None
 
-        if type(content) is GAErrorsList:
-            return {"errors": content.to_dict()}
+        for error in response.content:
+            if error.property_name not in properties:
+                properties[error.property_name] = {
+                    "property": error.property_name,
+                    "type": error.type,
+                    "errors": []}
 
-        elif type(content) is list:
-            return [obj.to_dict() for obj in content]
+            properties[error.property_name]["errors"].append(error.to_dict())
 
-        elif hasattr(content, 'to_dict'):
-            return [content.to_dict()]
+        if error_type == GAError.TYPE_INVALID:
+            code = 400
 
-        return str(content)
+        elif error_type == GAError.TYPE_UNAUTHORIZED:
+            code = 401
+
+        elif error_type == GAError.TYPE_AUTHENTICATIONFAILURE:
+            code = 403
+
+        elif error_type == GAError.TYPE_NOTFOUND:
+            code = 404
+
+        elif error_type == GAError.TYPE_NOTALLOWED:
+            code = 405
+
+        elif error_type == GAError.TYPE_CONFLICT:
+            code = 409
+
+        else:
+            code = 520
+
+        return (code, {"errors": properties.values()})
+
+    def _convert_content(self, action, response):
+        """
+        """
+        if type(response.content) is list:
+            content = [obj.to_dict() for obj in response.content]
+
+        elif hasattr(response.content, 'to_dict'):
+            content = [response.content.to_dict()]
+
+        else:
+            content = str(response.content)
+
+        if action is GARequest.ACTION_CREATE:
+            code = 201
+
+        elif content is None or (type(content) is list and len(content) == 0):
+            code = 204
+
+        else:
+            code = 200
+
+        return (code, content)
+
+    def _extract_filter(self, headers):
+        """
+        """
+        if 'X-Filter' in headers:
+            return headers['X-Filter']
+
+        if 'X-Nuage-Filter' in headers:
+            return headers['X-Nuage-Filter']
+
+        return None
+
+    def _extract_paging(self, headers):
+        """
+        """
+        page = None
+        page_size = None
+
+        if 'X-Page' in headers:
+            page = headers['X-Page']
+
+        elif 'X-Nuage-Page' in headers:
+            page = headers['X-Nuage-Page']
+
+        if 'X-PageSize' in headers:
+            page_size = headers['X-PageSize']
+
+        elif 'X-Nuage-PageSize' in headers:
+            page_size = headers['X-PageSize']
+
+        return page, page_size
+
+    def _extract_ordering(self, headers):
+        """
+        """
+        if 'X-OrderBy' in headers:
+            return headers['X-OrderBy']
+
+        if 'X-Nuage-OrderBy' in headers:
+            return headers['X-Nuage-OrderBy']
 
     def make_http_response(self, action, response):
         """
         """
-        code = 520
-        status = response.status
-        content = self._convert_content(response.content)
+        if isinstance(response, GAResponseSuccess):
+            code, content = self._convert_content(action, response)
 
-        # Success
-        if status == GAResponse.STATUS_SUCCESS:
-            if action is GARequest.ACTION_CREATE:
-                code = 201
-
-            elif content is None or (type(content) is list and len(content) == 0):
-                code = 204
-
-            else:
-                code = 200
-
-        # Errors
-        elif status == GAError.TYPE_INVALID:
-            code = 400
-
-        elif status == GAError.TYPE_UNAUTHORIZED:
-            code = 401
-
-        elif status == GAError.TYPE_AUTHENTICATIONFAILURE:
-            code = 403
-
-        elif status == GAError.TYPE_NOTFOUND:
-            code = 404
-
-        elif status == GAError.TYPE_NOTALLOWED:
-            code = 405
-
-        elif status == GAError.TYPE_CONFLICT:
-            code = 409
+        else:
+            code, content = self._convert_errors(action, response)
 
         logger.debug(json.dumps(content, indent=4))
 
@@ -205,7 +270,7 @@ class GARESTChannel(GAChannel):
             return GARequest.ACTION_CREATE
 
         elif method == RESTConstants.HTTP_PUT:
-            if len(resources) == 2: # this is a PUT /A/id/B, which means this is an membership relationship
+            if len(resources) == 2:  # this is a PUT /A/id/B, which means this is an membership relationship
                 return GARequest.ACTION_ASSIGN
             else:
                 return GARequest.ACTION_UPDATE
@@ -213,7 +278,10 @@ class GARESTChannel(GAChannel):
         elif method == RESTConstants.HTTP_DELETE:
             return GARequest.ACTION_DELETE
 
-        elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS, RESTConstants.HTTP_HEAD]:
+        elif method == RESTConstants.HTTP_HEAD:
+            return GARequest.ACTION_COUNT
+
+        elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS]:
             if resources[-1].value is None:
                 return GARequest.ACTION_READALL
 
@@ -227,7 +295,12 @@ class GARESTChannel(GAChannel):
         """
 
         content = self._extract_content(request)
+        (username, token) = self._extract_auth(request.headers)
         parameters = self._extract_parameters(request.headers)
+        filter = self._extract_filter(request.headers)
+        (page, page_size) = self._extract_paging(request.headers)
+        order_by = self._extract_ordering(request.headers)
+
         method = request.method.upper()
 
         logger.info('> %s %s from %s' % (request.method, request.path, parameters['Host']))
@@ -238,7 +311,18 @@ class GARESTChannel(GAChannel):
 
         action = self.determine_action(method, resources)
 
-        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
+        ga_request = GARequest( action=action,
+                                content=content,
+                                parameters=parameters,
+                                resources=resources,
+                                username=username,
+                                token=token,
+                                filter=filter,
+                                page=page,
+                                page_size=page_size,
+                                order_by=order_by,
+                                channel=self)
+
         ga_response = self.core_controller.execute(request=ga_request)
 
         logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
@@ -266,13 +350,13 @@ class GARESTChannel(GAChannel):
 
         ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
 
-        queue = self.core_controller.get_queue(request=ga_request)
+        queue_response = self.core_controller.get_queue(request=ga_request)
 
-        if queue is None:
-            return self.make_http_response(action='FUCK', response=GAResponse(status='UNAUTHORIZED', content='Queue is None!'))
+        if isinstance(queue_response, GAResponseFailure):
+            return self.make_http_response(action=GARequest.ACTION_READ, response=queue_response)
 
         try:
-            events = queue.get(timeout=self._push_timeout)
+            events = queue_response.get(timeout=self._push_timeout)
 
             if events[0].action == self.core_controller.GARUDA_TERMINATE_EVENT:
                 ga_notification = GAPushNotification()
@@ -280,7 +364,7 @@ class GARESTChannel(GAChannel):
                 ga_notification = GAPushNotification(events=events)
 
             logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
-            queue.task_done()
+            queue_response.task_done()
         except Empty:
             ga_notification = GAPushNotification()
 

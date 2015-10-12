@@ -38,7 +38,7 @@ def auth_function(request, session, root_api, storage_controller):
     # add a filter here
     auth = storage_controller.get(root_api, '1234567890ab')
 
-    if request.parameters["username"] == auth.user_name and request.parameters["password"] == auth.password:
+    if request.username == auth.user_name and request.token == auth.password:
         auth.api_key = session.uuid
         auth.password = None
         return auth
