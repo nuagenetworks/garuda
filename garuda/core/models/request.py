@@ -13,6 +13,7 @@ class GARequest(object):
     ACTION_READ = 'READ'
     ACTION_READALL = 'READ_ALL'
     ACTION_ASSIGN = 'ASSIGN'
+    ACTION_COUNT = 'COUNT'
     ACTION_LISTENEVENTS = 'LISTEN'
 
     def __init__(self, action, channel=None, content={}, resources=[], username=None, token=None, cookies=None, filter=None, order_by=None, page=None, page_size=None, parameters={}):

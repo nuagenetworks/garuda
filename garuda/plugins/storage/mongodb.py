@@ -52,6 +52,11 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         klass = NURESTModelController.get_first_model(resource_name)
         return klass()
 
+    def count(self, parent, resource_name, filter=None):
+        """
+        """
+        return self.get_all(parent=parent, resource_name=resource_name, filter=filter, count=True)
+
     def get(self, resource_name, identifier, filter=None):
         """
         """
@@ -65,7 +70,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return obj
 
-    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
+
+    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, count=False):
         """
         """
         ret = []
@@ -89,18 +95,25 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
 
-                data = self.db[resource_name].find({'_id': {'$in': identifiers}}).skip(skip).limit(page_size)
+                if not count:
+                    data = self.db[resource_name].find({'_id': {'$in': identifiers}}).skip(skip).limit(page_size)
+
                 total_count = self.db[resource_name].find({'_id': {'$in': identifiers}}).count()
         else:
-            data = self.db[resource_name].find(filter).skip(skip).limit(page_size)
+            if not count:
+                data = self.db[resource_name].find(filter).skip(skip).limit(page_size)
+
             total_count = self.db[resource_name].find().count()
 
-        for d in data:
-            obj = self.instantiate(resource_name)
-            obj.from_dict(self._convert_from_dbid(d))
-            ret.append(obj)
+        if not count:
+            for d in data:
+                obj = self.instantiate(resource_name)
+                obj.from_dict(self._convert_from_dbid(d))
+                ret.append(obj)
 
-        return ret, total_count
+            return ret, total_count
+        else:
+            return total_count
 
     def create(self, resource, parent=None):
         """

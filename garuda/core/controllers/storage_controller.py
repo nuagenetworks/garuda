@@ -87,6 +87,12 @@ class GAStorageController(GAPluginController):
         plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
         return plugin.assign(resource_name=resource_name, resources=resources, parent=parent) if plugin else None
 
+    def count(self, parent, resource_name, filter=None):
+        """
+        """
+        plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
+        return plugin.count(parent=parent, resource_name=resource_name, filter=filter) if plugin else None
+
     # Utils
 
     def _managing_plugin(self, resource_name, identifier=None):

@@ -261,7 +261,10 @@ class GARESTChannel(GAChannel):
         elif method == RESTConstants.HTTP_DELETE:
             return GARequest.ACTION_DELETE
 
-        elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS, RESTConstants.HTTP_HEAD]:
+        elif method == RESTConstants.HTTP_HEAD:
+            return GARequest.ACTION_COUNT
+
+        elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS]:
             if resources[-1].value is None:
                 return GARequest.ACTION_READALL
 
