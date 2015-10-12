@@ -8,10 +8,10 @@ import uuid
 class UserBehavior(TaskSet):
     """
     """
-    AUTH    = 'XREST cm9vdDpkMjZhYTk4NC03YzA5LTQyNmEtOTFiNS0wM2ZjNjU5ZGEwZTc='
-    LIST_ID = '3a150c5b-9529-4f5e-94da-f00fcf7e2feb'
-    TASK_ID = '01389dea-6edc-4655-b3c2-f9c72be738f7'
-    USER_ID = '79ef2f91-528b-4937-a989-cf81ca2e07c5'
+    AUTH    = 'XREST cm9vdDozMmZiNmQwNC0wZjM0LTQzNjItYmI3YS05YjA4NGUyOTkwMGY='
+    LIST_ID = '561b1cc37ddf1f4a092a83f5'
+    TASK_ID = '561b1cc37ddf1f4a092a83f6'
+    USER_ID = '561b1cc37ddf1f4a092a83f9'
 
     def on_start(self):
         pass
@@ -65,7 +65,7 @@ class UserBehavior(TaskSet):
     def update(self):
         """
         """
-        self.client.update("/lists/%s" % self.LIST_ID, data=json.dumps({'title': str(uuid.uuid4()), 'description': 'test'}), headers={'Authorization': '%s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
+        self.client.put("/lists/%s" % self.LIST_ID, data=json.dumps({'title': str(uuid.uuid4()), 'description': 'test'}), headers={'Authorization': '%s' % self.AUTH, 'X-Nuage-Organization':'csp'}, verify=False)
 
 
 class WebsiteUser(HttpLocust):
