@@ -6,6 +6,7 @@ class RESTConstants(object):
 
     """
     HTTP_GET = 'GET'
+    HTTP_PATCH = 'PATCH'
     HTTP_POST = 'POST'
     HTTP_PUT = 'PUT'
     HTTP_DELETE = 'DELETE'
