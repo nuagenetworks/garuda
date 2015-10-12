@@ -65,11 +65,22 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return obj
 
-    def get_all(self, parent, resource_name, filter=None):
+    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
         """
         """
         ret = []
         data = []
+        skip = 0
+
+        if not page or not page_size:
+            page = 0
+            page_size = 0
+
+        elif page > 0:
+            skip = (page - 1) * page_size
+
+        if filter:
+            query_filter = self._parse_filter(filter)
 
         if parent:
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
@@ -82,9 +93,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 identifiers = association_data[association_key]
 
-                data = self.db[resource_name].find({'_id': {'$in': [ObjectId(identifier) for identifier in identifiers]}})
+                data = self.db[resource_name].find({'_id': {'$in': [ObjectId(identifier) for identifier in identifiers]}}).skip(skip).limit(page_size)
         else:
-            data = self.db[resource_name].find()
+            data = self.db[resource_name].find().skip(skip).limit(page_size)
 
         for d in data:
             obj = self.instantiate(resource_name)
@@ -108,7 +119,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
-        print resource.id
         if parent:
             data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)})
             children_key = '_%s' % resource.rest_name
@@ -212,3 +222,10 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             del data['_id']
 
         return data
+
+    def _parse_filter(self, filter):
+        or_components = filter.split('OR')
+        pass
+
+
+

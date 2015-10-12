@@ -105,7 +105,12 @@ class GAOperationsController(object):
                 return
 
         self.context.parent_object = parent
-        self.context.objects = self.storage_controller.get_all(self.context.parent_object, resource.name)
+        self.context.objects = self.storage_controller.get_all( parent=self.context.parent_object,
+                                                                resource_name=resource.name,
+                                                                page=self.context.request.page,
+                                                                page_size=self.context.request.page_size,
+                                                                filter=self.context.request.filter,
+                                                                order_by=self.context.request.order_by)
 
         if self.context.objects is None: self._report_resource_not_found(resource=resource)
 

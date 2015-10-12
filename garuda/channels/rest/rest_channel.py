@@ -108,27 +108,75 @@ class GARESTChannel(GAChannel):
 
         return dict()
 
-    def _extract_parameters(self, parameters):
+    def _extract_auth(self, headers):
+        """
+        """
+        username = None
+        token = None
+
+        if 'Authorization' in headers:
+            encoded_auth = headers['Authorization'][6:]  # XREST stuff
+            decoded_auth = urlsafe_b64decode(str(encoded_auth))
+            auth = decoded_auth.split(':')
+            username = auth[0]
+            token = auth[1]
+
+        return username, token
+
+    def _extract_parameters(self, headers):
         """
         """
         params = {}
 
-        for p in parameters:
+        for p in headers:
             params[p[0]] = p[1]
 
-        if 'Authorization' in parameters:
-            encoded_auth = parameters['Authorization'][6:]  # XREST stuff
-            decoded_auth = urlsafe_b64decode(str(encoded_auth))
-            auth = decoded_auth.split(':')
-            params['username'] = auth[0]
-            params['password'] = auth[1]
 
         return params
+
+    def _extract_filter(self, headers):
+        """
+        """
+        if 'X-Filter' in headers:
+            return headers['X-Filter']
+
+        if 'X-Nuage-Filter' in headers:
+            return headers['X-Nuage-Filter']
+
+        return None
+
+    def _extract_paging(self, headers):
+        """
+        """
+        page = None
+        page_size = None
+
+        if 'X-Page' in headers:
+            page = headers['X-Page']
+
+        elif 'X-Nuage-Page' in headers:
+            page = headers['X-Nuage-Page']
+
+        if 'X-PageSize' in headers:
+            page_size = headers['X-PageSize']
+
+        elif 'X-Nuage-PageSize' in headers:
+            page_size = headers['X-PageSize']
+
+        return page, page_size
+
+    def _extract_ordering(self, headers):
+        """
+        """
+        if 'X-OrderBy' in headers:
+            return headers['X-OrderBy']
+
+        if 'X-Nuage-OrderBy' in headers:
+            return headers['X-Nuage-OrderBy']
 
     def _convert_content(self, content):
         """
         """
-
         if type(content) is GAErrorsList:
             return {"errors": content.to_dict()}
 
@@ -227,7 +275,12 @@ class GARESTChannel(GAChannel):
         """
 
         content = self._extract_content(request)
+        (username, token) = self._extract_auth(request.headers)
         parameters = self._extract_parameters(request.headers)
+        filter = self._extract_filter(request.headers)
+        (page, page_size) = self._extract_paging(request.headers)
+        order_by = self._extract_ordering(request.headers)
+
         method = request.method.upper()
 
         logger.info('> %s %s from %s' % (request.method, request.path, parameters['Host']))
@@ -238,7 +291,18 @@ class GARESTChannel(GAChannel):
 
         action = self.determine_action(method, resources)
 
-        ga_request = GARequest(action=action, content=content, parameters=parameters, resources=resources, channel=self)
+        ga_request = GARequest( action=action,
+                                content=content,
+                                parameters=parameters,
+                                resources=resources,
+                                username=username,
+                                token=token,
+                                filter=filter,
+                                page=page,
+                                page_size=page_size,
+                                order_by=order_by,
+                                channel=self)
+
         ga_response = self.core_controller.execute(request=ga_request)
 
         logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
