@@ -1,52 +1,42 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
-
 from garuda.core.models import GAPlugin
 
 class GAChannel(GAPlugin):
     """
     """
-    __metaclass__ = ABCMeta
 
-    @abstractmethod
     def channel_type(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement channel_type method')
 
-    @abstractmethod
     def start(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement start method')
 
-    @abstractmethod
     def stop(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement stop method')
 
-    @abstractmethod
     def is_running(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement is running method')
 
-    @abstractmethod
     def receive(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement receive method')
 
-    @abstractmethod
     def send(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement send method')
 
-    @abstractmethod
     def push(self):
         """
         """
-        pass
+        raise NotImplemented('Channel must implement push method')

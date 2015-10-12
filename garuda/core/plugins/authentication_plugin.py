@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABCMeta, abstractmethod
-
 from garuda.core.models import GAPlugin
+
 
 class GAAuthenticationPlugin(GAPlugin):
     """
     """
-
-    __metaclass__ = ABCMeta
 
     def should_manage(self, request):
         """
@@ -20,8 +17,7 @@ class GAAuthenticationPlugin(GAPlugin):
         ""
         return
 
-    @abstractmethod
     def authenticate(self, request):
         """
         """
-        pass
+        raise NotImplementedError("%s should implement authenticate method" % self)
