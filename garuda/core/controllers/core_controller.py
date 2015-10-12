@@ -148,16 +148,12 @@ class GACoreController(object):
         operations_controller = GAOperationsController(context=context, logic_controller=self.logic_controller, storage_controller=self.storage_controller)
         operations_controller.run()
 
-        if context.has_errors():
-            return GAResponseFailure(content=context.errors)
-
-        if request.action is GARequest.ACTION_READALL:
-            return GAResponseSuccess(content=context.objects)
+        response = context.make_response()
 
         if len(context.events) > 0:
             self.push_controller.add_events(events=context.events)
 
-        return GAResponseSuccess(content=context.object)
+        return response
 
     def get_queue(self, request):
         """

@@ -208,7 +208,7 @@ class GARESTChannel(GAChannel):
         """
         """
         page = None
-        page_size = None
+        page_size = 500
 
         if 'X-Page' in headers:
             page = headers['X-Page']
@@ -244,11 +244,20 @@ class GARESTChannel(GAChannel):
 
         logger.debug(json.dumps(content, indent=4))
 
-        response = make_response(json.dumps(content))
-        response.status_code = code
-        response.mimetype = 'application/json'
+        flask_response = make_response(json.dumps(content))
+        flask_response.status_code = code
+        flask_response.mimetype = 'application/json'
 
-        return response
+        if response.total_count is not None:
+            flask_response.headers['X-Nuage-Count'] = response.total_count
+
+        if response.page is not None:
+            flask_response.headers['X-Nuage-Page'] = response.page
+
+        if response.page_size is not None:
+            flask_response.headers['X-Nuage-PageSize'] = response.page_size
+
+        return flask_response
 
     def make_notification_response(self, notification):
         """
