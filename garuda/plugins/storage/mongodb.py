@@ -52,14 +52,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         klass = NURESTModelController.get_first_model(resource_name)
         return klass()
 
-    def count(self, parent, resource_name, filter=None):
-        """
-        """
-        return self.get_all(parent=parent, resource_name=resource_name, filter=filter, count=True)
-
     def get(self, resource_name, identifier, filter=None):
         """
         """
+        if not ObjectId.is_valid(identifier):
+            return None
+
         data = self.db[resource_name].find_one({'_id': ObjectId(identifier)})
 
         if not data:
@@ -71,18 +69,40 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         return obj
 
 
-    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, count=False):
+    def count(self, parent, resource_name, filter=None):
         """
         """
-        ret = []
+        data, count = self._get_children_data(parent=parent, resource_name=resource_name, filter=filter, grand_total=False)
+        return count
+
+    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
+        """
+        """
+        objects = []
         data = []
+
+        data, count = self._get_children_data(parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by, grand_total=True)
+
+        for d in data:
+            obj = self.instantiate(resource_name)
+            obj.from_dict(self._convert_from_dbid(d))
+            objects.append(obj)
+
+        return (objects, count)
+
+    def _get_children_data(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, grand_total=True):
+        """
+        """
         skip = 0
         total_count = 0
+        query_filter = None
+        data = None
 
         if not page or not page_size: page = page_size = 0
         elif page > 0: skip = (page - 1) * page_size
 
-        if filter: filter = self._parse_filter(filter)
+        if filter:
+            query_filter = self._parse_filter(filter)
 
         if parent:
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
@@ -95,25 +115,21 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
 
-                if not count:
-                    data = self.db[resource_name].find({'_id': {'$in': identifiers}}).skip(skip).limit(page_size)
-
-                total_count = self.db[resource_name].find({'_id': {'$in': identifiers}}).count()
+                data = self.db[resource_name].find({'_id': {'$in': identifiers}})
         else:
-            if not count:
-                data = self.db[resource_name].find(filter).skip(skip).limit(page_size)
+            data = self.db[resource_name].find(query_filter).skip(skip).limit(page_size)
 
-            total_count = self.db[resource_name].find().count()
+        if not data:
+            return ([], 0)
 
-        if not count:
-            for d in data:
-                obj = self.instantiate(resource_name)
-                obj.from_dict(self._convert_from_dbid(d))
-                ret.append(obj)
-
-            return ret, total_count
+        if grand_total:
+            total_count = data.count()
+            data = data.skip(skip).limit(page_size)
         else:
-            return total_count
+            data = data.skip(skip).limit(page_size)
+            total_count = data.count()
+
+        return (data, total_count)
 
     def create(self, resource, parent=None):
         """
