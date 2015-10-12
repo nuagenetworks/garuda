@@ -13,13 +13,15 @@ class GAContext(object):
     def __init__(self, session, request):
         """
         """
-        self._errors_list = GAErrorsList()
         self.session = session
         self.request = request
         self.parent_object = None
+        self.total_count = 0
         self.object = None
         self.objects = []
         self.user_info = {}
+
+        self._errors_list = GAErrorsList()
         self._events = []
 
     @property

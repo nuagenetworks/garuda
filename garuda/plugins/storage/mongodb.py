@@ -71,6 +71,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         ret = []
         data = []
         skip = 0
+        total_count = 0
 
         if not page or not page_size:
             page = 0
@@ -91,18 +92,20 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 if not association_key in association_data: return []
 
-                identifiers = association_data[association_key]
+                identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
 
-                data = self.db[resource_name].find({'_id': {'$in': [ObjectId(identifier) for identifier in identifiers]}}).skip(skip).limit(page_size)
+                data = self.db[resource_name].find({'_id': {'$in': identifiers}}).skip(skip).limit(page_size)
+                total_count = self.db[resource_name].find({'_id': {'$in': identifiers}}).count()
         else:
             data = self.db[resource_name].find().skip(skip).limit(page_size)
+            total_count = self.db[resource_name].find().count()
 
         for d in data:
             obj = self.instantiate(resource_name)
             obj.from_dict(self._convert_from_dbid(d))
             ret.append(obj)
 
-        return ret
+        return ret, total_count
 
     def create(self, resource, parent=None):
         """
