@@ -24,7 +24,7 @@ class GAResponse(object):
 class GAResponseSuccess(GAResponse):
     """
     """
-    def __init__(self, content, parameters={}):
+    def __init__(self, content):
         """
         """
         super(GAResponseSuccess, self).__init__(content=content)
@@ -33,7 +33,7 @@ class GAResponseSuccess(GAResponse):
 class GAResponseFailure(GAResponse):
     """
     """
-    def __init__(self, content, parameters={}):
+    def __init__(self, content):
         """
         """
         super(GAResponseFailure, self).__init__(content=content)
