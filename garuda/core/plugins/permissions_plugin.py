@@ -1,28 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from garuda.core.models import GAPlugin
+from abc import ABCMeta, abstractmethod
 
+from garuda.core.models import GAPlugin
 
 class GAPermissionsPlugin(GAPlugin):
     """
     """
+
+    __metaclass__ = ABCMeta
 
     def should_manage(self, resource_name, identifier):
         """
         """
         return True
 
+    @abstractmethod
     def create_permission(self, resource, target, action, implicit=False):
         """
         """
-        raise NotImplementedError("%s should implement create_permission method" % self)
+        pass
 
+    @abstractmethod
     def remove_permission(self, resource, target, action):
         """
         """
-        raise NotImplementedError("%s should implement remove_permission method" % self)
+        pass
 
+    @abstractmethod
     def has_permission(self, resource, target, action):
         """
         """
-        raise NotImplementedError("%s should implement has_permission method" % self)
+        pass

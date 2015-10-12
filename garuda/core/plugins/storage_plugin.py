@@ -1,38 +1,46 @@
 # -*- coding: utf-8 -*-
 
-from garuda.core.models import GAPlugin
+from abc import ABCMeta, abstractmethod
 
+from garuda.core.models import GAPlugin
 
 class GAStoragePlugin(GAPlugin):
     """
     """
+
+    __metaclass__ = ABCMeta
 
     def should_manage(self, resource_name, identifier):
         """
         """
         return True
 
+    @abstractmethod
     def instantiate(self, resource_name):
         """
         """
-        raise NotImplementedError("%s should implement instantiate method" % self)
+        pass
 
+    @abstractmethod
     def get(self, resource_name, identifier):
         """
         """
-        raise NotImplementedError("%s should implement get method" % self)
+        pass
 
+    @abstractmethod
     def get_all(self, parent, resource_name):
         """
         """
-        raise NotImplementedError("%s should implement get_all method" % self)
+        pass
 
+    @abstractmethod
     def save(self, resource, parent=None):
         """
         """
-        raise NotImplementedError("%s should implement save method" % self)
+        pass
 
+    @abstractmethod
     def delete(self, resource, cascade=True):
         """
         """
-        raise NotImplementedError("%s should implement delete method" % self)
+        pass
