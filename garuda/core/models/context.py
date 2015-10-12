@@ -1,32 +1,29 @@
 # -*- coding: utf-8 -*-
 
-from copy import deepcopy
-
-from .errors import GAErrorsList
-
 
 class GAContext(object):
     """
 
     """
-
-    def __init__(self, session, request):
+    def __init__(self, session=None, request=None):
         """
         """
-        self._errors_list = GAErrorsList()
-        self.session = session
-        self.request = request
-        self.parent_object = None
         self.object = None
         self.objects = []
+        self.parent_object = None
+        self.request = request
+        self.session = session
         self.user_info = {}
+        self._errors = []
         self._events = []
+
+    # Properties
 
     @property
     def errors(self):
         """
         """
-        return self._errors_list
+        return self._errors
 
     @property
     def events(self):
@@ -34,10 +31,7 @@ class GAContext(object):
         """
         return self._events
 
-    def add_event(self, event):
-        """
-        """
-        self._events.append(event)
+    # Utilities
 
     def copy(self):
         """
@@ -54,27 +48,36 @@ class GAContext(object):
         """
         for context in contexts:
             if context.has_errors():
-                self._errors_list.merge(context._errors_list)
+                self.report_errors(context.errors)
 
             # if context.object:
-            self.user_info.update(content.user_info)
+            self.user_info.update(context.user_info)
+
+    # Event management
+
+    def add_event(self, event):
+        """
+        """
+        self._events.append(event)
+
+    # Errors management
 
     def has_errors(self):
         """
         """
-        return self._errors_list.has_errors()
+        return len(self._errors) > 0
 
     def report_errors(self, errors):
         """
         """
-        self._errors_list.add_errors(errors)
+        self._errors += errors
 
     def report_error(self, error):
         """
         """
-        self._errors_list.add_error(error)
+        self._errors.append(error)
 
     def clear_errors(self):
         """
         """
-        self._errors.clear()
+        self._errors = []

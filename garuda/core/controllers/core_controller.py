@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-import ssl
 import logging
 import redis
 from uuid import uuid4
@@ -15,9 +14,10 @@ from .channels_controller import GAChannelsController
 from .logic_controller import GALogicController
 
 from garuda.core.lib import SDKLibrary
-from garuda.core.models import GAContext, GAResponse, GARequest, GAError
+from garuda.core.models import GAContext, GAResponseFailure, GAResponseSuccess, GARequest, GAError
 
 logger = logging.getLogger('garuda.core')
+
 
 class GACoreController(object):
     """
@@ -35,7 +35,6 @@ class GACoreController(object):
 
         for sdk_info in sdks_info:
             self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
-
 
         self._channels_controller = GAChannelsController(plugins=channels, core_controller=self)
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
@@ -131,7 +130,7 @@ class GACoreController(object):
             session = self.sessions_controller.create_session(request=request, garuda_uuid=self.uuid)
 
             if session:
-                return GAResponse(status=GAResponse.STATUS_SUCCESS, content=[session.root_object])
+                return GAResponseSuccess(content=[session.root_object])
 
         context = GAContext(session=session, request=request)
 
@@ -142,7 +141,7 @@ class GACoreController(object):
 
             context.report_error(error)
 
-            return GAResponse(status=context.errors.type, content=context.errors)
+            return GAResponseFailure(content=context.errors)
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
@@ -150,15 +149,15 @@ class GACoreController(object):
         operations_controller.run()
 
         if context.has_errors():
-            return GAResponse(status=context.errors.type, content=context.errors)
+            return GAResponseFailure(content=context.errors)
 
         if request.action is GARequest.ACTION_READALL:
-            return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.objects)
+            return GAResponseSuccess(content=context.objects)
 
         if len(context.events) > 0:
             self.push_controller.add_events(events=context.events)
 
-        return GAResponse(status=GAResponse.STATUS_SUCCESS, content=context.object)
+        return GAResponseSuccess(content=context.object)
 
     def get_queue(self, request):
         """
@@ -166,12 +165,15 @@ class GACoreController(object):
 
         session_uuid = request.parameters['password'] if 'password' in request.parameters else None
         session = self.sessions_controller.get_session(session_uuid=session_uuid)
-        # context = GAContext(session=session, request=request)
+        context = GAContext(session=session, request=request)
 
         if session is None:
-            # TODO: Create a GAResponse
-            # context.report_error(type=GAError.TYPE_UNAUTHORIZED, property='', title='Unauthorized access', description='Could not grant access. Please log in.')
-            return None
+            error = GAError(type=GAError.TYPE_UNAUTHORIZED,
+                            title='Unauthorized access',
+                            description='Could not grant access. Please login.')
+
+            context.report_error(error)
+            return GAResponseFailure(content=context.errors)
 
         logger.debug('Set listening %s session UUID=%s for push notification' % (request.action, session_uuid))
 

@@ -7,18 +7,33 @@ class GAResponse(object):
     """
 
     """
-    STATUS_SUCCESS = 'SUCCESS'
-
-    def __init__(self, status, content, parameters={}):
+    def __init__(self, content, status=None):
         """
         """
         self._uuid = str(uuid4())
         self.status = status
         self.content = content
-        self.parameters = parameters
 
     @property
     def uuid(self):
         """
         """
         return self._uuid
+
+
+class GAResponseSuccess(GAResponse):
+    """
+    """
+    def __init__(self, content, parameters={}):
+        """
+        """
+        super(GAResponseSuccess, self).__init__(content=content)
+
+
+class GAResponseFailure(GAResponse):
+    """
+    """
+    def __init__(self, content, parameters={}):
+        """
+        """
+        super(GAResponseFailure, self).__init__(content=content)
