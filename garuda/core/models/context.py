@@ -57,7 +57,7 @@ class GAContext(object):
                 self._errors_list.merge(context._errors_list)
 
             # if context.object:
-            self.user_info.update(content.user_info)
+            self.user_info.update(context.user_info)
 
     def has_errors(self):
         """
