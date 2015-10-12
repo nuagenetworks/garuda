@@ -242,6 +242,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         elif operator == '<': operator = '$lt'
         elif operator == '<=': operator = '$lte'
 
+        if attribute == 'ID':
+            attribute = '_id'
+            value = ObjectId(value)
 
         return {attribute: {operator: value}}
 
