@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import gevent
 import logging
 
 logger = logging.getLogger('garuda.controller.logic')
 
 from garuda.core.controllers.abstracts import GAPluginController
+from garuda.core.lib import ThreadManager
 
 class GALogicController(GAPluginController):
     """
@@ -18,6 +18,7 @@ class GALogicController(GAPluginController):
         super(GALogicController, self).__init__(plugins=plugins, core_controller=core_controller)
 
         self._managing_plugin_registry = []
+        self._thread_manager = ThreadManager()
 
     def _managing_plugins(self, resource_name, action):
         """
@@ -48,9 +49,9 @@ class GALogicController(GAPluginController):
 
         for plugin in plugins:
             method = getattr(plugin, delegate, None)
-            jobs.append(gevent.spawn(method, context=context.copy()))
+            jobs.append(self._thread_manager.start(method, context=context.copy()))
 
-        # gevent.wait(objects=jobs, timeout=timeout)
+        self._thread_manager.wait_until_exit()
 
         contexts = [job.value for job in jobs]
 
