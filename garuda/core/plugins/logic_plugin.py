@@ -28,7 +28,7 @@ class GALogicPlugin(GAPlugin):
         """
         return context
 
-    def should_perform_read(self, context, object):
+    def check_perform_read(self, context, object):
         """
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
@@ -56,7 +56,7 @@ class GALogicPlugin(GAPlugin):
         """
         return context
 
-    def should_perform_readall(self, context, object):
+    def check_perform_readall(self, context, object):
         """
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
@@ -84,7 +84,7 @@ class GALogicPlugin(GAPlugin):
         """
         return context
 
-    def should_perform_write(self, context):
+    def check_perform_write(self, context):
         """
         Asks if a plugin agrees on performing the Write Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If after executing all Plugins delegates, one disagreement reason has been returned, the Write Operation stops.

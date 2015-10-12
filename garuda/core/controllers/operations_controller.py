@@ -83,7 +83,7 @@ class GAOperationsController(object):
             return
 
         self.logic_controller.perform_delegate(delegate='begin_read_operation', context=self.context)
-        self.logic_controller.perform_delegate(delegate='should_perform_read', context=self.context)
+        self.logic_controller.perform_delegate(delegate='check_perform_read', context=self.context)
 
         if self.context.has_errors():
             return
@@ -133,7 +133,7 @@ class GAOperationsController(object):
             return
 
         self.logic_controller.perform_delegate(delegate='begin_readall_operation', context=self.context)
-        self.logic_controller.perform_delegate(delegate='should_perform_readall', context=self.context)
+        self.logic_controller.perform_delegate(delegate='check_perform_readall', context=self.context)
 
         if self.context.has_errors():
             return
@@ -233,7 +233,7 @@ class GAOperationsController(object):
             return
 
         self.logic_controller.perform_delegate(delegate='begin_write_operation', context=self.context)
-        self.logic_controller.perform_delegate(delegate='should_perform_write', context=self.context)
+        self.logic_controller.perform_delegate(delegate='check_perform_write', context=self.context)
 
         if self.context.has_errors():
             return

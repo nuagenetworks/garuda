@@ -253,6 +253,8 @@ class GARESTChannel(GAChannel):
 
         if response.page is not None:
             flask_response.headers['X-Nuage-Page'] = response.page
+        else:
+            flask_response.headers['X-Nuage-Page'] = -1
 
         if response.page_size is not None:
             flask_response.headers['X-Nuage-PageSize'] = response.page_size
