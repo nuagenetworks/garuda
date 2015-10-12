@@ -73,15 +73,10 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         skip = 0
         total_count = 0
 
-        if not page or not page_size:
-            page = 0
-            page_size = 0
+        if not page or not page_size: page = page_size = 0
+        elif page > 0: skip = (page - 1) * page_size
 
-        elif page > 0:
-            skip = (page - 1) * page_size
-
-        if filter:
-            query_filter = self._parse_filter(filter)
+        if filter: filter = self._parse_filter(filter)
 
         if parent:
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
@@ -97,7 +92,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data = self.db[resource_name].find({'_id': {'$in': identifiers}}).skip(skip).limit(page_size)
                 total_count = self.db[resource_name].find({'_id': {'$in': identifiers}}).count()
         else:
-            data = self.db[resource_name].find().skip(skip).limit(page_size)
+            data = self.db[resource_name].find(filter).skip(skip).limit(page_size)
             total_count = self.db[resource_name].find().count()
 
         for d in data:
@@ -227,8 +222,28 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         return data
 
     def _parse_filter(self, filter):
-        or_components = filter.split('OR')
-        pass
+        """
+        """
+        # @TODO: this is a very stupid predicate parsing implementation
+
+        components = filter.split(' ')
+        attribute = components[0]
+        operator = components[1].lower()
+        value = components[2]
+
+        if operator == 'contains': operator = '$text'
+        elif operator == 'equals': operator = '$eq'
+        elif operator == 'in': operator = '$in'
+        elif operator == 'not in': operator = '$nin'
+        elif operator == '==': operator = '$eq'
+        elif operator == '!=': operator = '$neq'
+        elif operator == '>': operator = '$gt'
+        elif operator == '>=': operator = '$gte'
+        elif operator == '<': operator = '$lt'
+        elif operator == '<=': operator = '$lte'
+
+
+        return {attribute: {operator: value}}
 
 
 

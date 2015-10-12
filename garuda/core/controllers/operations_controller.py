@@ -112,7 +112,8 @@ class GAOperationsController(object):
                                                                                             filter=self.context.request.filter,
                                                                                             order_by=self.context.request.order_by)
 
-        if self.context.objects is None: self._report_resource_not_found(resource=resource)
+        if self.context.objects is None:
+            self._report_resource_not_found(resource=resource)
 
     def _perform_readall_operation(self):
         """
