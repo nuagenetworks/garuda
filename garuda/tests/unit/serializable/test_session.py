@@ -33,7 +33,8 @@ class TestSerializeSession(UnitTestCase):
         expected_result = {
             'is_listening_push_notifications': False,
             'garuda_uuid': 'xxx-yyy-zzzz',
-            'uuid': session.uuid,
+            'root_object': None,
+            'uuid': session.uuid
         }
 
         self.assertEqual(session.to_dict(), expected_result)
@@ -47,6 +48,7 @@ class TestSerializeSession(UnitTestCase):
         expected_result = {
             'is_listening_push_notifications': False,
             'garuda_uuid': 'xxx-yyy-zzzz',
+            'root_object': None,
             'uuid': session.uuid,
         }
 

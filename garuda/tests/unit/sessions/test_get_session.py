@@ -2,7 +2,7 @@
 
 from mock import patch
 
-from garuda.core.controllers import GAAuthenticationController
+from garuda.plugins.default_authentication_plugin import DefaultAuthenticationPlugin
 from garuda.tests.unit.sessions import GASessionsControllerTestCase
 
 
@@ -15,7 +15,10 @@ class TestGetSession(GASessionsControllerTestCase):
         """
         user = self.get_default_user()
 
-        with patch.object(GAAuthenticationController, 'authenticate', return_value=user):
+        plugin = DefaultAuthenticationPlugin()
+        self.session_controller.register_plugin(plugin)
+
+        with patch.object(plugin, 'authenticate', return_value=user):
             self.session = self.create_session()
 
     def tearDown(self):

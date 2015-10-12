@@ -115,6 +115,10 @@ class GASessionsController(GAPluginController):
         session = GASession(garuda_uuid=garuda_uuid)
         plugin = self._plugin_for_request(request)
 
+        if plugin is None:
+            logger.warn('No plugin found to create session')
+            return None
+
         root_object = plugin.authenticate(request=request, session=session)
 
         if not root_object:

@@ -1,9 +1,11 @@
 # -*- coding:utf-8 -*-
 
+import redis
 from uuid import uuid4
 
-from garuda.plugins.default_permissions_plugin import DefaultPermissionsControllerPlugin
+from garuda.plugins.default_permissions_controller_plugin import DefaultPermissionsControllerPlugin
 from garuda.tests import UnitTestCase
+
 
 class CustomObject(object):
     """
@@ -28,7 +30,8 @@ class PermissionPluginTestCase(UnitTestCase):
         """
         super(PermissionPluginTestCase, self).__init__(name)
 
-        self.plugin = DefaultPermissionsControllerPlugin()
+        redis_connection = redis.StrictRedis(host='127.0.0.1', port='6379', db=0)
+        self.plugin = DefaultPermissionsControllerPlugin(redis_connection)
         self.user = CustomObject()
 
         self.objectA = CustomObject()
