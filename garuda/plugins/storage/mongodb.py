@@ -198,7 +198,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 association_key = '_rel_%s' % resource_name
                 association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
 
-                if not association_key in association_data: return []
+                if not association_key in association_data:
+                    return ([], 0)
 
                 identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
 
