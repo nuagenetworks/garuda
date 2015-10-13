@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['GARESTChannel']
+__all__ = ['GAFalconChannel', 'GAFlaskChannel']
 
-from .rest_channel import GARESTChannel
+from .falcon_channel import GAFalconChannel
+from .flask_channel import GAFlaskChannel

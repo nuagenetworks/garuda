@@ -16,16 +16,16 @@ from garuda.core.channels import GAChannel
 from .constants import RESTConstants
 from .parser import PathParser
 
-logger = logging.getLogger('garuda.comm.rest')
+logger = logging.getLogger('garuda.comm.falcon')
 
-class GARESTChannel(GAChannel):
+class GAFalconChannel(GAChannel):
     """
 
     """
     def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
         """
         """
-        super(GARESTChannel, self).__init__()
+        super(GAFalconChannel, self).__init__()
 
         self._is_running = False
         self._host = host
@@ -45,9 +45,7 @@ class GARESTChannel(GAChannel):
     def manifest(cls):
         """
         """
-        return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.rest")
-
-
+        return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.falcon")
 
     def start(self):
         """
@@ -61,14 +59,14 @@ class GARESTChannel(GAChannel):
 
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
-        self._server = GAGunicorn(self._api, self._host, self._port)
-        self._server.run()
-        # self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), GAWSGIRequestHandler)
-        #
-        # try:
-        #     self._server.serve_forever()
-        # except:
-        #     pass
+        # self._server = GAGunicorn(self._api, self._host, self._port)
+        # self._server.run()
+        self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), GAWSGIRequestHandler)
+
+        try:
+            self._server.serve_forever()
+        except:
+            pass
 
 
     def stop(self):
@@ -152,7 +150,7 @@ class GARESTChannel(GAChannel):
         event_queue = self.core_controller.get_events_queue(request=ga_request)
 
         if isinstance(event_queue, GAResponseFailure):
-            self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=queue_response)
+            self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=event_queue)
             return
 
         events = []
