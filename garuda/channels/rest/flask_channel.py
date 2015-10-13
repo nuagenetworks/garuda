@@ -363,7 +363,7 @@ class GAFlaskChannel(GAChannel):
                                 channel=self)
 
 
-        queue_response = self.core_controller.get_queue(request=ga_request)
+        queue_response = self.core_controller.get_events_queue(request=ga_request)
 
         if isinstance(queue_response, GAResponseFailure):
             return self.make_http_response(action=GARequest.ACTION_READ, response=queue_response)
