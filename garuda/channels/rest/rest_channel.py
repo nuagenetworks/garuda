@@ -56,7 +56,7 @@ class GARESTChannel(GAChannel):
 
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
-        self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), WSGIRequestHandler)
+        self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), GAWSGIRequestHandler)
 
         try:
             self._server.serve_forever()
@@ -355,4 +355,12 @@ class GAThreadPoolWSGIServer(WSGIServer):
         """
         """
         self.pool.apply_async(self.process_request_thread, args=(request, client_address))
+
+
+class GAWSGIRequestHandler(WSGIRequestHandler):
+    """
+    """
+    def log_message(self, format, *args):
+            return
+
 
