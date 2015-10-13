@@ -182,8 +182,11 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         query_filter = None
         data = None
 
-        if not page or not page_size: page = page_size = 0
-        elif page > 0: skip = (page - 1) * page_size
+        page = int(page) if page else 0
+        page_size = int(page_size) if page_size else 0
+
+        if page > 0:
+            skip = (page - 1) * page_size
 
         if filter:
             query_filter = self._parse_filter(filter)

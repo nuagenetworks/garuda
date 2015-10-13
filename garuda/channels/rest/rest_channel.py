@@ -210,17 +210,11 @@ class GARESTChannel(GAChannel):
         page = None
         page_size = 500
 
-        if 'X-Page' in headers:
-            page = headers['X-Page']
-
-        elif 'X-Nuage-Page' in headers:
+        if 'X-Nuage-Page' in headers:
             page = headers['X-Nuage-Page']
 
-        if 'X-PageSize' in headers:
-            page_size = headers['X-PageSize']
-
-        elif 'X-Nuage-PageSize' in headers:
-            page_size = headers['X-PageSize']
+        if 'X-Nuage-PageSize' in headers:
+            page_size = headers['X-Nuage-PageSize']
 
         return page, page_size
 
