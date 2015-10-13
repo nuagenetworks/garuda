@@ -190,7 +190,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         page_size = int(page_size) if page_size else 0
 
         if page > 0:
-            skip = (page - 1) * page_size
+            skip = page * page_size
 
         if filter:
             query_filter = self._parse_filter(filter)
