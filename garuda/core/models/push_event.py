@@ -77,17 +77,23 @@ class GAPushEventDrainer(object):
     def __iter__(self):
         """
         """
+        yielded = 0
         while True:
             try:
                 events = self.queue.get(timeout=self.timeout)
 
                 for event in events:
+                    yielded += 1
                     yield event
+
+                if yielded >= 100:
+                    break
 
                 if self.queue.empty():
                     time.sleep(self.accumulation_time)
                     if self.queue.empty():
                         break
+
             except Empty:
                 break
 
