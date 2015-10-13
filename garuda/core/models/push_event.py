@@ -2,8 +2,9 @@
 
 from datetime import datetime
 
-from .abstracts import GASerializable
 from garuda.core.lib import SDKLibrary
+from .abstracts import GASerializable
+from .request import GARequest
 
 class GAPushEvent(GASerializable):
     """
@@ -19,7 +20,7 @@ class GAPushEvent(GASerializable):
         """
         super(GAPushEvent, self).__init__()
 
-        self.action = action
+        self._action = action
         self.entities = [entity]
         self.entity_type = entity.rest_name if entity else None
         self.event_received_time = datetime.now()
@@ -39,6 +40,18 @@ class GAPushEvent(GASerializable):
     @entity.setter
     def entity(self, value):
         self.entities = [value]
+
+    @property
+    def action(self):
+        """
+        """
+        return GARequest.ACTION_UPDATE if self._action is GARequest.ACTION_ASSIGN else self._action
+
+    @action.setter
+    def action(self, value):
+        """
+        """
+        self._action = value
 
     @classmethod
     def from_dict(cls, data):
