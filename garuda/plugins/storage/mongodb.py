@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from bambou import NURESTModelController
 import pymongo
+import time
 from bson import ObjectId
 
 from garuda.core.models import GAError, GAPluginManifest
@@ -92,9 +93,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def create(self, resource, parent=None):
         """
         """
-        resource.last_updated_date = "now"
-        resource.last_updated_by = "me"
-        resource.owner = "313131313131313131313131" # @TODO: we must give this information as a parameter
+        resource.last_updated_date = str(time.time()) #this sucks... I think this is a bambou error
+        resource.last_updated_by = "111111111111111111111111"
+        resource.owner = "111111111111111111111111" # @TODO: we must give this information as a parameter
         resource.parent_type = parent.rest_name if parent else None
         resource.parent_id = parent.id  if parent else None
         resource.id = str(ObjectId())

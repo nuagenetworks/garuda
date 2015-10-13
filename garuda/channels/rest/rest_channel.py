@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 from base64 import urlsafe_b64decode
 from copy import deepcopy
 from Queue import Empty
@@ -368,19 +369,40 @@ class GARESTChannel(GAChannel):
         if isinstance(queue_response, GAResponseFailure):
             return self.make_http_response(action=GARequest.ACTION_READ, response=queue_response)
 
-        try:
-            events = queue_response.get(timeout=self._push_timeout)
+        events = []
+        drainer = QueueDrainer(queue_response, self._push_timeout)
 
-            if events[0].action == self.core_controller.GARUDA_TERMINATE_EVENT:
-                ga_notification = GAPushNotification()
-            else:
-                ga_notification = GAPushNotification(events=events)
+        for event in drainer:
+            events = events + event
 
-            logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
-            queue_response.task_done()
-        except Empty:
+        if events[0].action == self.core_controller.GARUDA_TERMINATE_EVENT:
             ga_notification = GAPushNotification()
+        else:
+            ga_notification = GAPushNotification(events=events)
+
+        logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
+        queue_response.task_done()
 
         logger.info('< %s %s events to %s' % (request.method, request.path, parameters['Host']))
 
         return self.make_notification_response(notification=ga_notification)
+
+
+class QueueDrainer(object):
+
+  def __init__(self, queue, timeout):
+      """
+      """
+      self.queue = queue
+      self.timeout = timeout
+
+  def __iter__(self):
+      """
+      """
+      while True:
+          yield self.queue.get(timeout=self.timeout)
+
+          if self.queue.empty():
+              time.sleep(0.1)
+              if self.queue.empty():
+                  break
