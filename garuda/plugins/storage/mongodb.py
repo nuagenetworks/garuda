@@ -162,7 +162,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                     # recursively delete children
                     self.delete_multiple(child_resources)
 
-        self.db[resource.rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
+            self.db[resource.rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
 
 
 
