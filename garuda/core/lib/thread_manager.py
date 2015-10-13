@@ -18,20 +18,22 @@ class StoppableThread(threading.Thread):
         """
         self._Thread__stop()  # This is a fucking hack, but it works ! (08/27/2015)
 
-    def run(self):
-        """
-        """
-        # Hack to get the return value of a thread and store it in self.__value
-        try:
-            if self._Thread__target:
-                self.__value = self._Thread__target(*self._Thread__args, **self._Thread__kwargs)
-        except Exception as e:
-            print e
-        finally:
-            try:
-                del self._Thread__target, self.__args, self._Thread__kwargs
-            except Exception as e:
-                print e
+    # def run(self):
+    #     """
+    #     """
+    #     # Hack to get the return value of a thread and store it in self.__value
+    #     try:
+    #         if self._Thread__target:
+    #             self.__value = self._Thread__target(*self._Thread__args, **self._Thread__kwargs)
+    #     except Exception as e:
+    #         print "1"
+    #         print e
+    #     finally:
+    #         try:
+    #             del self._Thread__target, self.__args, self._Thread__kwargs
+    #         except Exception as e:
+    #             print "2"
+    #             print e
 
     @property
     def value(self):
