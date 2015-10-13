@@ -94,7 +94,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         resource.last_updated_date = "now"
         resource.last_updated_by = "me"
-        resource.owner = "me"
+        resource.owner = "313131313131313131313131" # @TODO: we must give this information as a parameter
         resource.parent_type = parent.rest_name if parent else None
         resource.parent_id = parent.id  if parent else None
         resource.id = str(ObjectId())

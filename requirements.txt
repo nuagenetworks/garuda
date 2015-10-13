@@ -1,4 +1,3 @@
-gevent
 Flask
 redis
 logging

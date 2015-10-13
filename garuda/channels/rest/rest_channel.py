@@ -143,9 +143,9 @@ class GARESTChannel(GAChannel):
                 properties[error.property_name] = {
                     "property": error.property_name,
                     "type": error.type,
-                    "errors": []}
+                    "descriptions": []}
 
-            properties[error.property_name]["errors"].append(error.to_dict())
+            properties[error.property_name]["descriptions"].append(error.to_dict())
 
         if error_type == GAError.TYPE_INVALID:
             code = 400
@@ -300,10 +300,10 @@ class GARESTChannel(GAChannel):
         """
 
         content = self._extract_content(request)
-        (username, token) = self._extract_auth(request.headers)
+        username, token = self._extract_auth(request.headers)
         parameters = self._extract_parameters(request.headers)
         filter = self._extract_filter(request.headers)
-        (page, page_size) = self._extract_paging(request.headers)
+        page, page_size = self._extract_paging(request.headers)
         order_by = self._extract_ordering(request.headers)
 
         method = request.method.upper()
@@ -331,6 +331,7 @@ class GARESTChannel(GAChannel):
         ga_response = self.core_controller.execute(request=ga_request)
 
         logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
+        logger.debug(json.dumps(content, indent=4))
 
         return self.make_http_response(action=action, response=ga_response)
 
@@ -349,11 +350,18 @@ class GARESTChannel(GAChannel):
         """
         content = self._extract_content(request)
         parameters = self._extract_parameters(request.headers)
+        username, token = self._extract_auth(request.headers)
 
         logger.info('= %s %s from %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(parameters, indent=4))
 
-        ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS, content=content, parameters=parameters, channel=self)
+        ga_request = GARequest( action=GARequest.ACTION_LISTENEVENTS,
+                                content=content,
+                                parameters=parameters,
+                                username=username,
+                                token=token,
+                                channel=self)
+
 
         queue_response = self.core_controller.get_queue(request=ga_request)
 

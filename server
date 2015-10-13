@@ -19,10 +19,10 @@ def vsd_db_init(db, root_rest_name):
     """
     from bson import ObjectId
     if not db[root_rest_name].count():
-        db[root_rest_name].insert({'_id': ObjectId('111111111111'), 'userName': 'csproot', 'password': 'csproot', 'enterpriseID': '444444444444'})
+        db[root_rest_name].insert({'_id': ObjectId('111111111111'), 'userName': 'csproot', 'password': 'csproot', 'enterpriseID': '444444444444', 'role': 'CSPROOT'})
 
     if not db['user'].count():
-        db['user'].insert({'_id': ObjectId('222222222222')})
+        db['user'].insert({'_id': ObjectId('222222222222'), 'userName': 'csproot', 'firstName': 'john', 'lastName': 'doe'})
 
     if not db['group'].count():
         db['group'].insert({'_id': ObjectId('333333333333'), 'name': 'Root Users', 'parentID': '222222222222', 'parentType': 'enterprise'})
@@ -36,7 +36,6 @@ def vsd_db_init(db, root_rest_name):
 def tdl_auth_function(request, session, root_api, storage_controller):
     """
     """
-    # add a filter here
     auth = storage_controller.get(root_api, '111111111111')
 
     if request.username == auth.user_name and request.token == auth.password:
@@ -49,7 +48,6 @@ def tdl_auth_function(request, session, root_api, storage_controller):
 def vsd_auth_function(request, session, root_api, storage_controller):
     """
     """
-    # add a filter here
     auth = storage_controller.get(root_api, '111111111111')
 
     # if request.username == auth.userName and request.token == auth.password:

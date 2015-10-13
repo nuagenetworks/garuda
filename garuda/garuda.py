@@ -17,7 +17,7 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.DEBUG, log_handler=None, runloop=True, banner=True, debug=False):
         """
         """
         BambouConfig.set_should_raise_bambou_http_error(False)

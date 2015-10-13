@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import gevent
 import json
 import redis
 import logging
-
-logger = logging.getLogger('garuda.controller.push')
-
 from Queue import Queue
 
 from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext
-
+from garuda.core.lib import ThreadManager
 from .operations_controller import GAOperationsController
+
+logger = logging.getLogger('garuda.controller.push')
 
 
 class GAPushController(object):
@@ -25,6 +23,7 @@ class GAPushController(object):
         self._redis = redis_conn
         self._queues = dict()
         self._thread = None
+        self._thread_manager = ThreadManager()
 
     def start(self):
         """
@@ -62,7 +61,9 @@ class GAPushController(object):
 
         jobs = []
         for session_uuid in session_uuids:
-            jobs.append(gevent.spawn(self._send_events, session_uuid=session_uuid, events=events))
+            jobs.append(self._thread_manager.start(self._send_events, session_uuid=session_uuid, events=events))
+
+        #self._thread_manager.wait_until_exit()
 
     def _send_events(self, session_uuid, events):
         """
@@ -86,7 +87,7 @@ class GAPushController(object):
             context = GAContext(request=request, session=session)
             context.object = entity
 
-            operation_manager = GAOperationsController(context=context, storage_controller=self.core_controller.storage_controller)
+            operation_manager = GAOperationsController(context=context,logic_controller=self.core_controller.logic_controller,  storage_controller=self.core_controller.storage_controller)
             operation_manager.run()
 
             if not context.has_errors():
