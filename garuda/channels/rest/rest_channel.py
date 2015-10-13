@@ -185,7 +185,7 @@ class GARESTChannel(GAChannel):
         if action is GARequest.ACTION_CREATE:
             code = 201
 
-        elif content is None or (type(content) is list and len(content) == 0):
+        elif content is None:
             code = 204
 
         else:
