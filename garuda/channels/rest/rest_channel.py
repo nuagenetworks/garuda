@@ -7,6 +7,7 @@ from base64 import urlsafe_b64decode
 import falcon
 from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
 import multiprocessing.pool
+import gunicorn.app.base
 
 from garuda.core.lib import SDKLibrary
 from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseFailure, GAResponseSuccess
@@ -35,6 +36,11 @@ class GARESTChannel(GAChannel):
         self._api.add_sink(self._handle_requests)
 
 
+    def internal_thread_management(self):
+        """
+        """
+        return True
+
     @classmethod
     def manifest(cls):
         """
@@ -55,12 +61,14 @@ class GARESTChannel(GAChannel):
 
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
-        self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), GAWSGIRequestHandler)
-
-        try:
-            self._server.serve_forever()
-        except:
-            pass
+        self._server = GAGunicorn(self._api, self._host, self._port)
+        self._server.run()
+        # self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), GAWSGIRequestHandler)
+        #
+        # try:
+        #     self._server.serve_forever()
+        # except:
+        #     pass
 
 
     def stop(self):
@@ -361,5 +369,29 @@ class GAWSGIRequestHandler(WSGIRequestHandler):
     """
     def log_message(self, format, *args):
         return
+
+
+class GAGunicorn(gunicorn.app.base.BaseApplication):
+
+    def __init__(self, app, host, port, workers=None):
+        """
+        """
+        self.app = app
+        self.host = host
+        self.port = port
+        self.workers = (multiprocessing.cpu_count() * 2) + 1 if not workers else workers
+        super(GAGunicorn, self).__init__()
+
+
+    def load_config(self):
+        """
+        """
+        self.cfg.set('bind', '%s:%s' % (self.host, self.port))
+        self.cfg.set('workers', self.workers)
+
+    def load(self):
+        """
+        """
+        return self.app
 
 
