@@ -361,6 +361,6 @@ class GAWSGIRequestHandler(WSGIRequestHandler):
     """
     """
     def log_message(self, format, *args):
-            return
+        return
 
 
