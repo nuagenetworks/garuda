@@ -197,7 +197,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         if parent:
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
-                print {'$or': [{'parentID': parent.id}, query_filter]}
                 data = self.db[resource_name].find({'$and': [{'parentID': parent.id}, query_filter]})
             else:
                 association_key = '_rel_%s' % resource_name
