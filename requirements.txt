@@ -1,6 +1,4 @@
 falcon
-gunicorn
-eventlet
 redis
 logging
 pymongo

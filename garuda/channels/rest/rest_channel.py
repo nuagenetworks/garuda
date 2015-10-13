@@ -14,7 +14,6 @@ from garuda.core.channels import GAChannel
 
 from .constants import RESTConstants
 from .parser import PathParser
-import utils
 
 logger = logging.getLogger('garuda.comm.rest')
 
