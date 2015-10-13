@@ -338,7 +338,7 @@ class GAFlaskChannel(GAChannel):
     def favicon(self):
         """
         """
-        logger.debug('Asking for favicon...')
+        logger.debug('Asking for favicon is ignored')
         response = make_response()
         response.status_code = 200
         response.mimetype = 'application/json'
