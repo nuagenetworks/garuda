@@ -3,9 +3,11 @@
 import json
 import redis
 import logging
+import time
 from Queue import Queue
 
-from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext
+
+from garuda.core.models import GAPushEvent, GAPushEventDrainer, GAResource, GARequest, GAContext
 from garuda.core.lib import ThreadManager
 from .operations_controller import GAOperationsController
 
@@ -31,55 +33,50 @@ class GAPushController(object):
         logger.debug('Starting listening Redis pubsub')
 
         p = self._redis.pubsub()
-        p.subscribe(**{'event:new': self.receive_event})
+        p.subscribe(**{'event:new': self._on_redis_event})
 
-        self._thread = p.run_in_thread(sleep_time=0.1)
+        self._thread = p.run_in_thread(sleep_time=.3)
 
     def stop(self):
         """
         """
-        self._send_events_to_garuda(garuda_uuid=self.core_controller.uuid, events=[GAPushEvent(action=self.core_controller.GARUDA_TERMINATE_EVENT)])
-
         if self._thread:
             self._thread.stop()
 
-    def receive_event(self, content):
+    def _on_redis_event(self, content):
         """
         """
         data = json.loads(content['data'])
-        logger.debug('Receives message:\n%s' % json.dumps(data, indent=4))
+        logger.debug('Receives redis push:\n%s' % json.dumps(data, indent=4))
 
         garuda_uuid = data['garuda_uuid']
         events = [GAPushEvent.from_dict(event) for event in data['events']]
 
-        self._send_events_to_garuda(garuda_uuid=garuda_uuid, events=events)
+        self._enqueue_events(garuda_uuid=garuda_uuid, events=events)
 
-    def _send_events_to_garuda(self, garuda_uuid, events):
+    def _enqueue_events(self, garuda_uuid, events):
         """
         """
         session_uuids = self.core_controller.sessions_controller.get_all_sessions(garuda_uuid=garuda_uuid, listening=True)
-
         jobs = []
+
         for session_uuid in session_uuids:
-            jobs.append(self._thread_manager.start(self._send_events, session_uuid=session_uuid, events=events))
 
-        #self._thread_manager.wait_until_exit()
+            if session_uuid not in self._queues:
+                continue
 
-    def _send_events(self, session_uuid, events):
+            jobs.append(self._thread_manager.start(self._perform_enqueue_events, session_uuid=session_uuid, events=events))
+
+        # self._thread_manager.wait_until_exit()
+
+    def _perform_enqueue_events(self, session_uuid, events):
         """
         """
-        if session_uuid not in self._queues:
-            return
-
         events_to_send = []
         queue = self._queues[session_uuid]
         session = self.core_controller.sessions_controller.get_session(session_uuid=session_uuid)
 
         for event in events:
-
-            if event.action == self.core_controller.GARUDA_TERMINATE_EVENT:
-                events_to_send.append(event)
-                continue
 
             entity = event.entity
             resources = [GAResource(name=entity.rest_name, value=entity.id)]
@@ -87,17 +84,17 @@ class GAPushController(object):
             context = GAContext(request=request, session=session)
             context.object = entity
 
-            operation_manager = GAOperationsController(context=context,logic_controller=self.core_controller.logic_controller,  storage_controller=self.core_controller.storage_controller)
+            operation_manager = GAOperationsController(context=context,logic_controller=self.core_controller.logic_controller, storage_controller=self.core_controller.storage_controller)
             operation_manager.run()
 
             if not context.has_errors():
                 event.entity = context.object
                 events_to_send.append(event)
 
-        logger.debug('Sending events to REST Communication Channel %s' % events_to_send)
+        logger.debug('Enqueueing events for session %s' % session_uuid)
         queue.put(events_to_send)
 
-    def add_events(self, events):
+    def push_events(self, events):
         """
         """
         data = dict()
@@ -114,4 +111,4 @@ class GAPushController(object):
             logger.debug('Creating queue for %s' % session_uuid)
             self._queues[session_uuid] = Queue()
 
-        return self._queues[session_uuid]
+        return GAPushEventDrainer(self._queues[session_uuid])

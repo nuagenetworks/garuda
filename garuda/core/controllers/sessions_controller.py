@@ -16,7 +16,7 @@ REDIS_LISTENING_KEY = 'sessions:listen-for-push'
 REDIS_SESSION_KEY = 'sessions:'
 REDIS_GARUDA_KEY = 'garuda:'
 
-REDIS_SESSION_TTL = 3600
+REDIS_SESSION_TTL = 600
 
 
 class GASessionsController(GAPluginController):
@@ -44,13 +44,14 @@ class GASessionsController(GAPluginController):
         """
         """
         logger.debug('Saving session uuid=%s for garuda_uuid=%s' % (session.uuid, session.garuda_uuid))
-        self._redis.expire(session.uuid, REDIS_SESSION_TTL)
 
         if session.is_listening_push_notifications:
             logger.debug('Session is listening for push notification')
             self._redis.sadd(REDIS_LISTENING_KEY, REDIS_SESSION_KEY + session.uuid)
 
         self._redis.sadd(REDIS_GARUDA_KEY + session.garuda_uuid, REDIS_SESSION_KEY + session.uuid)
+
+        self._redis.expire(REDIS_SESSION_KEY + session.uuid, REDIS_SESSION_TTL)
 
         return self._redis.hmset(REDIS_SESSION_KEY + session.uuid, session.to_hash())
 

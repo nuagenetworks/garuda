@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import os
 import json
 import logging
-import time
 from base64 import urlsafe_b64decode
-from copy import deepcopy
-from Queue import Empty
-from uuid import uuid4
-
-from flask import Flask, request, make_response
+import falcon
+from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
+import multiprocessing.pool
 
 from garuda.core.lib import SDKLibrary
 from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseFailure, GAResponseSuccess
@@ -16,14 +14,27 @@ from garuda.core.channels import GAChannel
 
 from .constants import RESTConstants
 from .parser import PathParser
+import utils
 
 logger = logging.getLogger('garuda.comm.rest')
-
 
 class GARESTChannel(GAChannel):
     """
 
     """
+    def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
+        """
+        """
+        super(GARESTChannel, self).__init__()
+
+        self._is_running = False
+        self._host = host
+        self._port = port
+        self._push_timeout = push_timeout
+
+        self._api = falcon.API()
+        self._api.add_sink(self._handle_requests)
+
 
     @classmethod
     def manifest(cls):
@@ -31,64 +42,27 @@ class GARESTChannel(GAChannel):
         """
         return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.rest")
 
-    def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
-        """
-        """
-        # mute flask logging for now
-        log = logging.getLogger('werkzeug')
-        log.setLevel(logging.ERROR)
 
-        self._uuid = str(uuid4())
-        self._is_running = False
-        self._controller = None
-        self._host = host
-        self._port = port
-        self._push_timeout = push_timeout
-
-        self._flask = Flask(self.__class__.__name__)
-        self._flask.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
-
-        # Events
-        self._flask.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
-        self._flask.add_url_rule('/<path:path>events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
-
-        # Other requests
-        self._flask.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
-
-    @property
-    def uuid(self):
-        """
-        """
-        return self._uuid
-
-    @property
-    def is_running(self):
-        """
-        """
-        return self._is_running
-
-    @property
-    def controller(self):
-        """
-        """
-        return self._controller
-
-    @controller.setter
-    def controller(self, value):
-        """
-        """
-        self._controller = value
 
     def start(self):
         """
         """
-        if self.is_running:
+        if self._is_running:
             return
 
         self._is_running = True
 
         logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
-        self._flask.run(host=self._host, port=self._port, threaded=True, debug=True, use_reloader=False)
+
+        self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
+
+        self._server = GAThreadPoolWSGIServer(self._api, 10, (self._host, self._port), WSGIRequestHandler)
+
+        try:
+            self._server.serve_forever()
+        except:
+            pass
+
 
     def stop(self):
         """
@@ -97,16 +71,117 @@ class GARESTChannel(GAChannel):
             return
 
         self._is_running = False
+        self._server.shutdown()
+
+
+    def _handle_requests(self, http_request, http_response):
+        """
+        """
+        parser = PathParser()
+        parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
+
+        if parser.resources[0].name == 'event':
+            self._handle_events_request(http_request, http_response)
+        else:
+            self._handle_model_request(http_request, http_response)
+
+
+    def _handle_model_request(self, http_request, http_response):
+        """
+        """
+        content         = self._extract_content(http_request)
+        username, token = self._extract_auth(http_request.headers)
+        filter          = self._extract_filter(http_request.headers)
+        page, page_size = self._extract_paging(http_request.headers)
+        order_by        = self._extract_ordering(http_request.headers)
+
+        method          = http_request.method.upper()
+        parameters      = http_request.params
+
+        logger.info('> %s %s from %s' % (http_request.method, http_request.path, http_request.host))
+        logger.debug(json.dumps(content, indent=4))
+
+        parser = PathParser()
+        resources = parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
+
+        action = self._determine_action(method, resources)
+
+        ga_request = GARequest( action=action,
+                                content=content,
+                                parameters=parameters,
+                                resources=resources,
+                                username=username,
+                                token=token,
+                                filter=filter,
+                                page=page,
+                                page_size=page_size,
+                                order_by=order_by,
+                                channel=self)
+
+        ga_response = self.core_controller.execute(request=ga_request)
+
+        logger.info('< %s %s to %s' % (http_request.method, http_request.path, http_request.host))
+        logger.debug(json.dumps(content, indent=4))
+
+        self._update_http_response(http_response=http_response, action=action, ga_response=ga_response)
+
+
+    def _handle_events_request(self, http_request, http_response):
+        """
+        """
+        content = self._extract_content(http_request)
+        parameters = http_request.params
+        username, token = self._extract_auth(http_request.headers)
+
+        logger.info('= %s %s from %s' % (http_request.method, http_request.path, http_request.host))
+
+        ga_request = GARequest( action=GARequest.ACTION_LISTENEVENTS,
+                                content=content,
+                                parameters=parameters,
+                                username=username,
+                                token=token,
+                                channel=self)
+
+        event_queue = self.core_controller.get_events_queue(request=ga_request)
+
+        if isinstance(event_queue, GAResponseFailure):
+            self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=queue_response)
+            return
+
+        events = []
+
+        for event in event_queue:
+            events.append(event)
+
+        ga_notification = GAPushNotification(events=events)
+
+        logger.info('< %s %s events to %s' % (http_request.method, http_request.path, http_request.host))
+
+        self._update_events_response(http_response=http_response, ga_notification=ga_notification)
+
+    def _determine_action(self, method, resources):
+        """
+        """
+        if method == RESTConstants.HTTP_POST: return GARequest.ACTION_CREATE
+        elif method == RESTConstants.HTTP_PUT: return GARequest.ACTION_ASSIGN if len(resources) == 2 else GARequest.ACTION_UPDATE
+        elif method == RESTConstants.HTTP_DELETE: return GARequest.ACTION_DELETE
+        elif method == RESTConstants.HTTP_HEAD: return GARequest.ACTION_COUNT
+        elif method == RESTConstants.HTTP_GET: return GARequest.ACTION_READALL if not resources[-1].value else GARequest.ACTION_READ
+
+        raise Exception("Unknown method %s" % method)
 
     def _extract_content(self, request):
         """
 
         """
-        content = request.get_json(force=True, silent=True)
-        if content:
-            return deepcopy(content)
 
-        return dict()
+        if not request.content_length:
+            return {}
+
+        return json.loads(request.stream.read())
+
+        # we should raise a malformed query here
+
 
     def _extract_auth(self, headers):
         """
@@ -114,8 +189,8 @@ class GARESTChannel(GAChannel):
         username = None
         token = None
 
-        if 'Authorization' in headers:
-            encoded_auth = headers['Authorization'][6:]  # XREST stuff
+        if 'AUTHORIZATION' in headers:
+            encoded_auth = headers['AUTHORIZATION'][6:]  # XREST stuff
             decoded_auth = urlsafe_b64decode(str(encoded_auth))
             auth = decoded_auth.split(':')
             username = auth[0]
@@ -123,15 +198,33 @@ class GARESTChannel(GAChannel):
 
         return username, token
 
-    def _extract_parameters(self, headers):
+    def _extract_filter(self, headers):
         """
         """
-        params = {}
+        if 'X-NUAGE-FILTER' in headers:
+            return headers['X-NUAGE-FILTER']
 
-        for p in headers:
-            params[p[0]] = p[1]
+        return None
 
-        return params
+    def _extract_paging(self, headers):
+        """
+        """
+        page = None
+        page_size = 500
+
+        if 'X-NUAGE-PAGE' in headers:
+            page = headers['X-NUAGE-PAGE']
+
+        if 'X-NUAGE-PAGESIZE' in headers:
+            page_size = headers['X-NUAGE-PAGESIZE']
+
+        return page, page_size
+
+    def _extract_ordering(self, headers):
+        """
+        """
+        if 'X-NUAGE-ORDERBY' in headers:
+            return headers['X-NUAGE-ORDERBY']
 
     def _convert_errors(self, action, response):
         """
@@ -149,25 +242,25 @@ class GARESTChannel(GAChannel):
             properties[error.property_name]["descriptions"].append(error.to_dict())
 
         if error_type == GAError.TYPE_INVALID:
-            code = 400
+            code = falcon.HTTP_400
 
         elif error_type == GAError.TYPE_UNAUTHORIZED:
-            code = 401
+            code = falcon.HTTP_401
 
         elif error_type == GAError.TYPE_AUTHENTICATIONFAILURE:
-            code = 403
+            code = falcon.HTTP_403
 
         elif error_type == GAError.TYPE_NOTFOUND:
-            code = 404
+            code = falcon.HTTP_404
 
         elif error_type == GAError.TYPE_NOTALLOWED:
-            code = 405
+            code = falcon.HTTP_405
 
         elif error_type == GAError.TYPE_CONFLICT:
-            code = 409
+            code = falcon.HTTP_409
 
         else:
-            code = 520
+            code = falcon.HTTP_520
 
         return (code, {"errors": properties.values()})
 
@@ -184,225 +277,82 @@ class GARESTChannel(GAChannel):
             content = str(response.content)
 
         if action is GARequest.ACTION_CREATE:
-            code = 201
+            code = falcon.HTTP_201
 
         elif content is None:
-            code = 204
+            code = falcon.HTTP_204
 
         else:
-            code = 200
+            code = falcon.HTTP_200
 
         return (code, content)
 
-    def _extract_filter(self, headers):
+
+    def _update_http_response(self, http_response, action, ga_response):
         """
         """
-        if 'X-Filter' in headers:
-            return headers['X-Filter']
-
-        if 'X-Nuage-Filter' in headers:
-            return headers['X-Nuage-Filter']
-
-        return None
-
-    def _extract_paging(self, headers):
-        """
-        """
-        page = None
-        page_size = 500
-
-        if 'X-Nuage-Page' in headers:
-            page = headers['X-Nuage-Page']
-
-        if 'X-Nuage-PageSize' in headers:
-            page_size = headers['X-Nuage-PageSize']
-
-        return page, page_size
-
-    def _extract_ordering(self, headers):
-        """
-        """
-        if 'X-OrderBy' in headers:
-            return headers['X-OrderBy']
-
-        if 'X-Nuage-OrderBy' in headers:
-            return headers['X-Nuage-OrderBy']
-
-    def make_http_response(self, action, response):
-        """
-        """
-        if isinstance(response, GAResponseSuccess):
-            code, content = self._convert_content(action, response)
+        if isinstance(ga_response, GAResponseSuccess):
+            code, content = self._convert_content(action, ga_response)
 
         else:
-            code, content = self._convert_errors(action, response)
+            code, content = self._convert_errors(action, ga_response)
 
         logger.debug(json.dumps(content, indent=4))
 
-        flask_response = make_response(json.dumps(content))
-        flask_response.status_code = code
-        flask_response.mimetype = 'application/json'
+        http_response.body = json.dumps(content)
+        http_response.status = code
+        http_response.content_type = 'application/json'
 
-        if response.total_count is not None:
-            flask_response.headers['X-Nuage-Count'] = response.total_count
+        if ga_response.total_count is not None:
+            http_response.set_header('X-Nuage-Count', str(ga_response.total_count))
 
-        if response.page is not None:
-            flask_response.headers['X-Nuage-Page'] = response.page
+        if ga_response.page is not None:
+            http_response.set_header('X-Nuage-Page', str(ga_response.page))
         else:
-            flask_response.headers['X-Nuage-Page'] = -1
+            http_response.set_header('X-Nuage-Page', str(-1))
 
-        if response.page_size is not None:
-            flask_response.headers['X-Nuage-PageSize'] = response.page_size
+        if ga_response.page_size is not None:
+            http_response.set_header('X-Nuage-PageSize', str(ga_response.page_size))
 
-        return flask_response
 
-    def make_notification_response(self, notification):
+    def _update_events_response(self, http_response, ga_notification):
         """
         """
-        content = notification.to_dict()
+        content = ga_notification.to_dict()
 
         logger.debug(json.dumps(content, indent=4))
 
-        response = make_response(json.dumps(content))
-        response.status_code = 200
-        response.mimetype = 'application/json'
+        http_response.body = json.dumps(content)
+        http_response.status = falcon.HTTP_200
+        http_response.content_type = 'application/json'
 
-        return response
 
-    def determine_action(self, method, resources):
+
+
+
+class GAThreadPoolWSGIServer(WSGIServer):
+
+    def __init__(self, app, thread_count=10, *args, **kwargs):
         """
         """
-        if method == RESTConstants.HTTP_POST:
-            return GARequest.ACTION_CREATE
+        WSGIServer.__init__(self, *args, **kwargs)
+        self.thread_count = thread_count
+        self.set_app(app)
+        self.pool = multiprocessing.pool.ThreadPool(self.thread_count)
 
-        elif method == RESTConstants.HTTP_PUT:
-            if len(resources) == 2:  # this is a PUT /A/id/B, which means this is an membership relationship
-                return GARequest.ACTION_ASSIGN
-            else:
-                return GARequest.ACTION_UPDATE
 
-        elif method == RESTConstants.HTTP_DELETE:
-            return GARequest.ACTION_DELETE
-
-        elif method == RESTConstants.HTTP_HEAD:
-            return GARequest.ACTION_COUNT
-
-        elif method in [RESTConstants.HTTP_GET, RESTConstants.HTTP_OPTIONS]:
-            if resources[-1].value is None:
-                return GARequest.ACTION_READALL
-
-            else:
-                return GARequest.ACTION_READ
-
-        raise Exception("Unknown action. This should never happen")
-
-    def index(self, path):
+    def process_request_thread(self, request, client_address):
         """
         """
+        try:
+            self.finish_request(request, client_address)
+            self.shutdown_request(request)
+        except:
+            self.handle_error(request, client_address)
+            self.shutdown_request(request)
 
-        content = self._extract_content(request)
-        username, token = self._extract_auth(request.headers)
-        parameters = self._extract_parameters(request.headers)
-        filter = self._extract_filter(request.headers)
-        page, page_size = self._extract_paging(request.headers)
-        order_by = self._extract_ordering(request.headers)
-
-        method = request.method.upper()
-
-        logger.info('> %s %s from %s' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(parameters, indent=4))
-
-        parser = PathParser()
-        resources = parser.parse(path=path, url_prefix="%s/" % SDKLibrary().get_sdk('default').SDKInfo.api_prefix())
-
-        action = self.determine_action(method, resources)
-
-        ga_request = GARequest( action=action,
-                                content=content,
-                                parameters=parameters,
-                                resources=resources,
-                                username=username,
-                                token=token,
-                                filter=filter,
-                                page=page,
-                                page_size=page_size,
-                                order_by=order_by,
-                                channel=self)
-
-        ga_response = self.core_controller.execute(request=ga_request)
-
-        logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(content, indent=4))
-
-        return self.make_http_response(action=action, response=ga_response)
-
-    def favicon(self):
+    def process_request(self, request, client_address):
         """
         """
-        logger.debug('Asking for favicon...')
-        response = make_response()
-        response.status_code = 200
-        response.mimetype = 'application/json'
+        self.pool.apply_async(self.process_request_thread, args=(request, client_address))
 
-        return response
-
-    def listen_events(self, path):
-        """
-        """
-        content = self._extract_content(request)
-        parameters = self._extract_parameters(request.headers)
-        username, token = self._extract_auth(request.headers)
-
-        logger.info('= %s %s from %s' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(parameters, indent=4))
-
-        ga_request = GARequest( action=GARequest.ACTION_LISTENEVENTS,
-                                content=content,
-                                parameters=parameters,
-                                username=username,
-                                token=token,
-                                channel=self)
-
-
-        queue_response = self.core_controller.get_queue(request=ga_request)
-
-        if isinstance(queue_response, GAResponseFailure):
-            return self.make_http_response(action=GARequest.ACTION_READ, response=queue_response)
-
-        events = []
-        drainer = QueueDrainer(queue_response, self._push_timeout)
-
-        for event in drainer:
-            events = events + event
-
-        if events[0].action == self.core_controller.GARUDA_TERMINATE_EVENT:
-            ga_notification = GAPushNotification()
-        else:
-            ga_notification = GAPushNotification(events=events)
-
-        logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
-        queue_response.task_done()
-
-        logger.info('< %s %s events to %s' % (request.method, request.path, parameters['Host']))
-
-        return self.make_notification_response(notification=ga_notification)
-
-
-class QueueDrainer(object):
-
-  def __init__(self, queue, timeout):
-      """
-      """
-      self.queue = queue
-      self.timeout = timeout
-
-  def __iter__(self):
-      """
-      """
-      while True:
-          yield self.queue.get(timeout=self.timeout)
-
-          if self.queue.empty():
-              time.sleep(0.1)
-              if self.queue.empty():
-                  break

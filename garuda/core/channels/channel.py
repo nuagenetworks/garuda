@@ -11,6 +11,11 @@ class GAChannel(GAPlugin):
         """
         raise NotImplemented('Channel must implement channel_type method')
 
+    def internal_thread_management(self):
+        """
+        """
+        return False
+
     def start(self):
         """
         """

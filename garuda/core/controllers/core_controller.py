@@ -24,8 +24,6 @@ class GACoreController(object):
 
     """
 
-    GARUDA_TERMINATE_EVENT = 'GARUDA_TERMINATE_EVENT'
-
     def __init__(self, sdks_info, redis_info, channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
@@ -122,6 +120,7 @@ class GACoreController(object):
         """
         """
         session_uuid = self.sessions_controller.get_session_identifier(request=request)
+        session = None
 
         if session_uuid:
             session = self.sessions_controller.get_session(session_uuid=session_uuid)
@@ -151,11 +150,11 @@ class GACoreController(object):
         response = context.make_response()
 
         if len(context.events) > 0:
-            self.push_controller.add_events(events=context.events)
+            self.push_controller.push_events(events=context.events)
 
         return response
 
-    def get_queue(self, request):
+    def get_events_queue(self, request):
         """
         """
 
@@ -176,6 +175,4 @@ class GACoreController(object):
         session.is_listening_push_notifications = True
         self.sessions_controller.save(session)
 
-        queue = self.push_controller.get_queue_for_session(session.uuid)
-
-        return queue
+        return self.push_controller.get_queue_for_session(session.uuid)

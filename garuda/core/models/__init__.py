@@ -5,6 +5,7 @@ __all__ = ['GAContext',
            'GAPlugin',
            'GAPluginManifest',
            'GAPushEvent',
+           'GAPushEventDrainer',
            'GAPushNotification',
            'GARequest',
            'GAResource',
@@ -19,7 +20,7 @@ from .context import GAContext
 from .errors import GAError
 from .plugin import GAPlugin
 from .plugin_manifest import GAPluginManifest
-from .push_event import GAPushEvent
+from .push_event import GAPushEvent, GAPushEventDrainer
 from .push_notification import GAPushNotification
 from .request import GARequest
 from .response import GAResponseFailure, GAResponseSuccess

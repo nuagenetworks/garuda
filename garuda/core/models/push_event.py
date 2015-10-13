@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from Queue import Empty
+import time
 
 from garuda.core.lib import SDKLibrary
 from .abstracts import GASerializable
@@ -61,3 +63,31 @@ class GAPushEvent(GASerializable):
         instance.entities = [SDKLibrary().get_instance(data['entityType'], **data['entities'][0])]
 
         return instance
+
+
+class GAPushEventDrainer(object):
+
+    def __init__(self, queue, timeout=60, accumulation_time=0.3):
+        """
+        """
+        self.queue = queue
+        self.timeout = timeout
+        self.accumulation_time = accumulation_time
+
+    def __iter__(self):
+        """
+        """
+        while True:
+            try:
+                events = self.queue.get(timeout=self.timeout)
+
+                for event in events:
+                    yield event
+
+                if self.queue.empty():
+                    time.sleep(self.accumulation_time)
+                    if self.queue.empty():
+                        break
+            except Empty:
+                break
+

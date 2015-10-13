@@ -150,6 +150,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)}) # this could be optimized by only getting the children keys
 
+                if not data:
+                    return
+
                 for children_rest_name in resource.children_rest_names:
 
                     children_key = '_%s' % children_rest_name

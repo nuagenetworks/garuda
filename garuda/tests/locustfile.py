@@ -3,15 +3,16 @@
 from locust import HttpLocust, TaskSet, task
 from tdldk.v1_0 import *
 import json
+import os
 import uuid
 
 class UserBehavior(TaskSet):
     """
     """
-    AUTH    = 'XREST cm9vdDozMmZiNmQwNC0wZjM0LTQzNjItYmI3YS05YjA4NGUyOTkwMGY='
-    LIST_ID = '561b1cc37ddf1f4a092a83f5'
-    TASK_ID = '561b1cc37ddf1f4a092a83f6'
-    USER_ID = '561b1cc37ddf1f4a092a83f9'
+    AUTH    = os.environ['LOCUST_AUTH']
+    LIST_ID = os.environ['LOCUST_LIST_ID']
+    TASK_ID = os.environ['LOCUST_TASK_ID']
+    USER_ID = os.environ['LOCUST_USER_ID']
 
     def on_start(self):
         pass

@@ -30,7 +30,10 @@ class GAChannelsController(GAPluginController):
         """
         """
         for channel in self._plugins:
-            self._thread_manager.start(channel.start)
+            if channel.internal_thread_management():
+                channel.start()
+            else:
+                self._thread_manager.start(channel.start)
 
     def stop(self):
         """

@@ -25,8 +25,13 @@ class StoppableThread(threading.Thread):
         try:
             if self._Thread__target:
                 self.__value = self._Thread__target(*self._Thread__args, **self._Thread__kwargs)
+        except Exception as e:
+            print e
         finally:
-            del self._Thread__target, self.__args, self._Thread__kwargs
+            try:
+                del self._Thread__target, self.__args, self._Thread__kwargs
+            except Exception as e:
+                print e
 
     @property
     def value(self):
