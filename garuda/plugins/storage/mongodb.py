@@ -183,7 +183,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         skip = 0
         total_count = 0
-        query_filter = None
+        query_filter = {}
         data = None
 
         page = int(page) if page else 0
@@ -197,7 +197,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         if parent:
             if parent.fetcher_for_rest_name(resource_name).relationship == "child":
-                data = self.db[resource_name].find({'parentID': parent.id})
+                print {'$or': [{'parentID': parent.id}, query_filter]}
+                data = self.db[resource_name].find({'$and': [{'parentID': parent.id}, query_filter]})
             else:
                 association_key = '_rel_%s' % resource_name
                 association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
@@ -207,7 +208,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
 
-                data = self.db[resource_name].find({'_id': {'$in': identifiers}})
+                data = self.db[resource_name].find({'$and': [{'_id': {'$in': identifiers}}, query_filter]})
         else:
             data = self.db[resource_name].find(query_filter).skip(skip).limit(page_size)
 
@@ -265,27 +266,29 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         # @TODO: this is a very stupid predicate parsing implementation
 
-        components = filter.split(' ')
-        attribute = components[0]
-        operator = components[1].lower()
-        value = components[2]
+        try:
+            components = filter.split(' ')
+            attribute = components[0]
+            operator = components[1].lower()
+            value = components[2]
 
-        if operator == 'contains': operator = '$text'
-        elif operator == 'equals': operator = '$eq'
-        elif operator == 'in': operator = '$in'
-        elif operator == 'not in': operator = '$nin'
-        elif operator == '==': operator = '$eq'
-        elif operator == '!=': operator = '$neq'
-        elif operator == '>': operator = '$gt'
-        elif operator == '>=': operator = '$gte'
-        elif operator == '<': operator = '$lt'
-        elif operator == '<=': operator = '$lte'
+            if operator == 'contains': operator = '$text'
+            elif operator == 'equals': operator = '$eq'
+            elif operator == 'in': operator = '$in'
+            elif operator == 'not in': operator = '$nin'
+            elif operator == '==': operator = '$eq'
+            elif operator == '!=': operator = '$neq'
+            elif operator == '>': operator = '$gt'
+            elif operator == '>=': operator = '$gte'
+            elif operator == '<': operator = '$lt'
+            elif operator == '<=': operator = '$lte'
 
-        if attribute == 'ID':
-            attribute = '_id'
-            value = ObjectId(value)
+            if attribute == 'ID':
+                attribute = '_id'
+                value = ObjectId(value)
 
-        return {attribute: {operator: value}}
-
+            return {attribute: {operator: value}}
+        except:
+            return {}
 
 
