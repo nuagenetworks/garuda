@@ -56,7 +56,7 @@ class GARESTChannel(GAChannel):
 
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
-        self._server = GAThreadPoolWSGIServer(self._api, 10, (self._host, self._port), WSGIRequestHandler)
+        self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), WSGIRequestHandler)
 
         try:
             self._server.serve_forever()
