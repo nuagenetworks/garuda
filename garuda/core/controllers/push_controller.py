@@ -33,7 +33,7 @@ class GAPushController(object):
         p = self._redis.pubsub()
         p.subscribe(**{'event:new': self.receive_event})
 
-        self._thread = p.run_in_thread(sleep_time=1.0)
+        self._thread = p.run_in_thread(sleep_time=0.1)
 
     def stop(self):
         """
