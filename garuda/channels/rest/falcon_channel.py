@@ -52,16 +52,6 @@ class GAFalconChannel(GAChannel):
         """
         self.core_controller.stop()
 
-    def did_fork(self):
-        """
-        """
-        pass # this will be managed by the workers
-
-    def will_exit(self):
-        """
-        """
-        pass # this will be managed by the workers
-
     @classmethod
     def manifest(cls):
         """
@@ -77,13 +67,10 @@ class GAFalconChannel(GAChannel):
 
         logger.info("Starting gunicorn with %s workers" % self._number_of_workers)
 
-        # def handle_signal(signal_number, frame_stack):
-        #     self.core_controller.stop()
-        #     sys.exit(0)
-        #
-        # signal.signal(signal.SIGTERM, handle_signal)
-
-        self._server.run()
+        try:
+            self._server.run()
+        except:
+            pass
 
     def _handle_requests(self, http_request, http_response):
         """

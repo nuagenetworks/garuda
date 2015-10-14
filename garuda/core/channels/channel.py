@@ -60,12 +60,17 @@ class GAChannel(object):
     def did_fork(self):
         """
         """
-        self.core_controller.start()
+        pass
 
     def will_exit(self):
         """
         """
-        self.core_controller.stop()
+        pass
+
+    def did_exit(self):
+        """
+        """
+        pass
 
     def start_runloop(self):
         """

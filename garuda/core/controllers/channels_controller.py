@@ -50,6 +50,7 @@ class GAChannelsController(object):
             channel.did_fork()
             channel.run()
             logger.info("Channels subprocess %s exited gracefuly." % os.getpid())
+            channel.did_exit()
             sys.exit(0)
         else:
             logger.info("All channels successfully forked")

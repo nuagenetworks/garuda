@@ -70,6 +70,7 @@ class GASessionsController(GAPluginController):
         """
         self._pubsub.punsubscribe('__keyevent@0:expired')
         ThreadManager.stop_thread(self._pubsub_thread)
+        self.flush_local_sessions()
 
     def get_all_local_sessions(self, listening=None):
         """
@@ -124,12 +125,12 @@ class GASessionsController(GAPluginController):
     def flush_local_sessions(self):
         """
         """
-        logger.debug('Flushing garuda session %s' % self.local_sessions_redis_key)
-
         session_keys = self._get_all_local_session_keys()
 
         if len(session_keys) == 0:
             return
+
+        logger.debug('Flushing garuda session %s' % self.local_sessions_redis_key)
 
         self._redis.delete(*session_keys)
         self._redis.srem(self.local_sessions_redis_key, *session_keys)

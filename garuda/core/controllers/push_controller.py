@@ -48,9 +48,6 @@ class GAPushController(object):
         ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub = None
 
-        for queue in self._event_queues:
-            queue.flush()
-
     def get_next_event(self, session):
         """
         """
@@ -105,6 +102,6 @@ class GAPushController(object):
         """
         """
         if not session_uuid in self._event_queues:
-            self._event_queues[session_uuid] = GAPushEventQueue(queue=Queue(), timeout=7, accumulation_time=0.3)
+            self._event_queues[session_uuid] = GAPushEventQueue(queue=Queue(), timeout=60, accumulation_time=0.3)
 
         return self._event_queues[session_uuid]

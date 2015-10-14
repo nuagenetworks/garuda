@@ -51,6 +51,16 @@ class GAFlaskChannel(GAChannel):
         self._flask.add_url_rule('/<path:path>/events', 'events', self._handle_event_request, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
         self._flask.add_url_rule('/<path:path>', 'models', self._handle_model_request, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
 
+    def did_fork(self):
+        """
+        """
+        self.core_controller.start()
+
+    def did_exit(self):
+        """
+        """
+        self.core_controller.stop()
+
     def run(self):
         """
         """

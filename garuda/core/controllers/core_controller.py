@@ -27,7 +27,7 @@ class GACoreController(object):
         """
         self._uuid = str(uuid4())
         self._redis = redis.StrictRedis(host=redis_info['host'], port=redis_info['port'], db=redis_info['db'])
-
+        self._running = False
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self, redis_conn=self._redis)
@@ -74,6 +74,9 @@ class GACoreController(object):
     def start(self):
         """
         """
+        if self._running: return
+        self._running = True
+
         logger.debug('Starting core controller %s with pid %s' % (self.uuid, os.getpid()))
         self.push_controller.subscribe()
         self.sessions_controller.subscribe()
@@ -82,19 +85,17 @@ class GACoreController(object):
     def stop(self, signal=None, frame=None):
         """
         """
-        logger.info('Stopping core controller %s' % self.uuid)
+        if not self._running: return
+        self._running = False
+
+        logger.debug('Stopping core controller %s with pid %s' % (self.uuid, os.getpid()))
 
         self.sessions_controller.unsubscribe()
         self.push_controller.unsubscribe()
-        self.sessions_controller.flush_local_sessions()
 
         self.storage_controller.unregister_all_plugins()
         self.permissions_controller.unregister_all_plugins()
         self.sessions_controller.unregister_all_plugins()
-
-        self.redis_conn.close()
-
-
 
     def execute_model_request(self, request):
         """
