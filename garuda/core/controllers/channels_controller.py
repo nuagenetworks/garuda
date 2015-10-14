@@ -46,7 +46,7 @@ class GAChannelsController(object):
                                     authentication_plugins=self._authentication_plugins, storage_plugins=self._storage_plugins,
                                     permission_plugins=self._permission_plugins)
 
-            channel.set_core_controller(core)
+            channel.core_controller = core
             channel.did_fork()
             channel.run()
             logger.info("Channels subprocess %s exited gracefuly." % os.getpid())

@@ -12,7 +12,6 @@ from garuda.core.lib import ThreadManager
 logging.getLogger
 logger = logging.getLogger('garuda.controller.sessions')
 
-REDIS_SESSION_KEY = 'sessions:'
 REDIS_SESSION_TTL = 600
 
 
@@ -25,7 +24,7 @@ class GASessionsController(GAPluginController):
         """
         super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller)
         self._redis = redis_conn
-        self.garuda_uuid = self.core_controller.uuid
+        self._garuda_uuid = self.core_controller.uuid
         self._pubsub = self._redis.pubsub()
         self._pubsub_thread = None
         self._local_sessions_redis_key = None
@@ -47,7 +46,7 @@ class GASessionsController(GAPluginController):
         """
         """
         if not self._local_sessions_redis_key:
-            self._local_sessions_redis_key = 'gnode:%s-%s:sessions' % (self.garuda_uuid, os.getpid())
+            self._local_sessions_redis_key = 'gnode:%s-%s:sessions' % (self._garuda_uuid, os.getpid())
 
         return self._local_sessions_redis_key
 
@@ -56,7 +55,7 @@ class GASessionsController(GAPluginController):
         """
         """
         if not self._local_listening_sessions_redis_key:
-            self._local_listening_sessions_redis_key =  'gnode:%s-%s:sessions:listening' % (self.garuda_uuid, os.getpid())
+            self._local_listening_sessions_redis_key =  'gnode:%s-%s:sessions:listening' % (self._garuda_uuid, os.getpid())
 
         return self._local_listening_sessions_redis_key
 
@@ -69,8 +68,8 @@ class GASessionsController(GAPluginController):
     def unsubscribe(self):
         """
         """
-        ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub.punsubscribe('__keyevent@0:expired')
+        ThreadManager.stop_thread(self._pubsub_thread)
 
     def get_all_local_sessions(self, listening=None):
         """
@@ -81,13 +80,13 @@ class GASessionsController(GAPluginController):
     def get_session(self, session_uuid):
         """
         """
-        return self._get_session_from_key(REDIS_SESSION_KEY + session_uuid)
+        return self._get_session_from_key('sessions:' + session_uuid)
 
     def create_session(self, request):
         """
         """
-        logger.debug('Creating session for garuda_uuid=%s' % self.garuda_uuid)
-        session = GASession(garuda_uuid=self.local_sessions_redis_key)
+        logger.debug('Creating session for garuda_uuid=%s' % self._garuda_uuid)
+        session = GASession(garuda_uuid=self._garuda_uuid)
         plugin = self._plugin_for_request(request)
 
         if plugin is None:
@@ -112,15 +111,13 @@ class GASessionsController(GAPluginController):
     def set_session_listening_status(self, session, status):
         """
         """
-        logger.debug('Set session %s listening status: %s' % (session.uuid, status))
+        logger.debug('Set session key %s listening status: %s' % (session.redis_key, status))
         session.is_listening_push_notifications = status
 
-        session_key = '%s%s' % (REDIS_SESSION_KEY, session.uuid)
-
         if status:
-            self._redis.sadd(self.local_listening_sessions_redis_key, session_key)
+            self._redis.sadd(self.local_listening_sessions_redis_key, session.redis_key)
         else:
-            self._redis.srem(self.local_listening_sessions_redis_key, session_key)
+            self._redis.srem(self.local_listening_sessions_redis_key, session.redis_key)
 
         self._save_session(session)
 
@@ -143,16 +140,16 @@ class GASessionsController(GAPluginController):
     def _save_session(self, session):
         """
         """
-        session_key = '%s%s' % (REDIS_SESSION_KEY, session.uuid)
 
-        logger.debug('Saving session %s (key %s) for garuda %s (key %s)' % (session.uuid, session_key, self.garuda_uuid, self.local_sessions_redis_key))
+        logger.debug('Saving session key  %s for in garuda set %s)' % (session.redis_key, self.local_sessions_redis_key))
+
+        self._redis.hmset(session.redis_key, session.to_hash())
+        self._redis.sadd(self.local_sessions_redis_key, session.redis_key)
+        self._redis.expire(session.redis_key, REDIS_SESSION_TTL)
 
         if session.is_listening_push_notifications:
-            self._redis.sadd(self.local_listening_sessions_redis_key, session_key)
+            self._redis.sadd(self.local_listening_sessions_redis_key, session.redis_key)
 
-        self._redis.hmset(session_key, session.to_hash())
-        self._redis.sadd(self.local_sessions_redis_key, session_key)
-        self._redis.expire(session_key, REDIS_SESSION_TTL)
 
     def _listen_to_redis_event(self):
         """

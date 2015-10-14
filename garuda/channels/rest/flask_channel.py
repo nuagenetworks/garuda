@@ -35,6 +35,8 @@ class GAFlaskChannel(GAChannel):
     def __init__(self, host='0.0.0.0', port=3000, push_timeout=60):
         """
         """
+        super(GAFlaskChannel, self).__init__()
+
         # mute flask logging for now
         log = logging.getLogger('werkzeug')
         log.setLevel(logging.ERROR)
@@ -49,16 +51,6 @@ class GAFlaskChannel(GAChannel):
         self._flask.add_url_rule('/<path:path>/events', 'events', self._handle_event_request, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
         self._flask.add_url_rule('/<path:path>', 'models', self._handle_model_request, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
 
-    def set_core_controller(self, core_controller):
-        """
-        """
-        self.core_controller = core_controller
-
-    def did_fork(self):
-        """
-        """
-        self.core_controller.start()
-
     def run(self):
         """
         """
@@ -66,16 +58,11 @@ class GAFlaskChannel(GAChannel):
 
         logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
 
-        def handle_signal(signal_number, frame_stack):
-            self.core_controller.stop()
-            sys.exit(0)
-
-        signal.signal(signal.SIGTERM, handle_signal)
 
         self._flask.run(host=self._host, port=self._port, threaded=True, debug=True, use_reloader=False)
 
-        while True:
-            time.sleep(30000)
+        self.start_runloop()
+
 
     def _handle_model_request(self, path):
         """

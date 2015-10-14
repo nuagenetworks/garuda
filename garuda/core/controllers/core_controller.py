@@ -84,14 +84,17 @@ class GACoreController(object):
         """
         logger.info('Stopping core controller %s' % self.uuid)
 
+        self.sessions_controller.unsubscribe()
+        self.push_controller.unsubscribe()
+        self.sessions_controller.flush_local_sessions()
+
         self.storage_controller.unregister_all_plugins()
         self.permissions_controller.unregister_all_plugins()
         self.sessions_controller.unregister_all_plugins()
 
-        self.sessions_controller.flush_local_sessions()
+        self.redis_conn.close()
 
-        self.sessions_controller.unsubscribe()
-        self.push_controller.unsubscribe()
+
 
     def execute_model_request(self, request):
         """

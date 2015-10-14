@@ -42,11 +42,6 @@ class GAFalconChannel(GAChannel):
                                     worker_init=self._worker_init,
                                     worker_exit=self._worker_exit)
 
-    def set_core_controller(self, core_controller):
-        """
-        """
-        self.core_controller = core_controller
-
     def _worker_init(self, worker):
         """
         """
@@ -56,6 +51,16 @@ class GAFalconChannel(GAChannel):
         """
         """
         self.core_controller.stop()
+
+    def did_fork(self):
+        """
+        """
+        pass # this will be managed by the workers
+
+    def will_exit(self):
+        """
+        """
+        pass # this will be managed by the workers
 
     @classmethod
     def manifest(cls):
@@ -350,7 +355,7 @@ class GAGUnicorn(BaseApplication):
         self.cfg.set('workers', self._number_of_workers)
         self.cfg.set('worker_class', 'eventlet')
         self.cfg.set('timeout', self._timeout)
-        self.cfg.set('max_requests', 1)
+        self.cfg.set('max_requests', 1000)
         self.cfg.set('proc_name', 'garuda-worker')
         self.cfg.set('reload', False)
         self.cfg.set('loglevel', 'warning')

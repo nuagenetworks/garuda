@@ -33,6 +33,12 @@ class GASession(GASerializable):
         return self._uuid
 
     @property
+    def redis_key(self):
+        """
+        """
+        return 'sessions:%s' % self.uuid
+
+    @property
     def garuda_uuid(self):
         """
         """

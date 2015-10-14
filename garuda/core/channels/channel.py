@@ -1,10 +1,37 @@
 # -*- coding: utf-8 -*-
+import time
+import signal
+import sys
 
 from garuda.core.models import GAPlugin
 
-class GAChannel(GAPlugin):
+class GAChannel(object):
     """
     """
+
+    def __init__(self):
+        """
+        """
+        self._core_controller = None
+
+    @classmethod
+    def manifest(cls):
+        """
+        """
+        raise NotImplemented("manifest method must be implemented")
+
+    @property
+    def core_controller(self):
+        """
+        """
+        return self._core_controller
+
+    @core_controller.setter
+    def core_controller(self, core_controller):
+        """
+        """
+        self._core_controller = core_controller
+
     def channel_type(self):
         """
         """
@@ -33,9 +60,21 @@ class GAChannel(GAPlugin):
     def did_fork(self):
         """
         """
-        pass
+        self.core_controller.start()
 
-    def set_core_controller(self, core_controller):
+    def will_exit(self):
         """
         """
-        raise NotImplemented('Channel must implement set_core_controller method')
+        self.core_controller.stop()
+
+    def start_runloop(self):
+        """
+        """
+        def handle_signal(signal_number, frame_stack):
+            self.will_exit()
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, handle_signal)
+
+        while True:
+            time.sleep(30000)

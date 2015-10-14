@@ -31,13 +31,6 @@ class ThreadManager(object):
         self._size = size
         self._pool = None
 
-
-    def callback(self, result):
-        """
-        """
-        print "callback in %s" % self
-        print result
-
     @classmethod
     def start_thread(self, method, *args, **kwargs):
         """
@@ -67,9 +60,6 @@ class ThreadManager(object):
             self._pool.close()
             self._pool.join()
             return results
-
-        if callback is None:
-            callback = self.callback
 
         return self._pool.map_async(partial_method, elements, callback=callback)
 

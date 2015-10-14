@@ -44,9 +44,12 @@ class GAPushController(object):
     def unsubscribe(self):
         """
         """
-        ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub.unsubscribe()
+        ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub = None
+
+        for queue in self._event_queues:
+            queue.flush()
 
     def get_next_event(self, session):
         """
@@ -59,14 +62,16 @@ class GAPushController(object):
         """
         for content in self._pubsub.listen():
 
-            # TODO: manage the subscrition is not a event thing
-            try:
-                data = json.loads(content['data'])
-            except:
+            if content['type'] == 'subscribe':
                 continue
 
+            if content['type'] == 'unsubscribe':
+                break
+
+            data = json.loads(content['data'])
+
             events = [GAPushEvent.from_dict(event) for event in data['events']]
-            #logger.debug('Receives redis push:\n%s' % json.dumps(data, indent=4))
+            #print('Receives redis push:\n%s' % json.dumps(data, indent=4))
 
             for session in self.core_controller.sessions_controller.get_all_local_sessions(listening=True):
 
