@@ -2,6 +2,8 @@
 
 import json
 import logging
+import time
+import signal
 from base64 import urlsafe_b64decode
 from copy import deepcopy
 from Queue import Empty
@@ -38,64 +40,119 @@ class GAFlaskChannel(GAChannel):
         log.setLevel(logging.ERROR)
 
         self._uuid = str(uuid4())
-        self._is_running = False
         self._controller = None
         self._host = host
         self._port = port
         self._push_timeout = push_timeout
 
         self._flask = Flask(self.__class__.__name__)
-        self._flask.add_url_rule('/favicon.ico', 'favicon', self.favicon, methods=[RESTConstants.HTTP_GET])
+        self._flask.add_url_rule('/<path:path>/events', 'events', self._handle_event_request, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
+        self._flask.add_url_rule('/<path:path>', 'models', self._handle_model_request, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
 
-        # Events
-        self._flask.add_url_rule('/events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False, defaults={'path': ''})
-        self._flask.add_url_rule('/<path:path>events', 'listen_events', self.listen_events, methods=[RESTConstants.HTTP_GET], strict_slashes=False)
+    def set_core_controller(self, core_controller):
+        """
+        """
+        self.core_controller = core_controller
 
-        # Other requests
-        self._flask.add_url_rule('/<path:path>', 'vsd', self.index, methods=[RESTConstants.HTTP_GET, RESTConstants.HTTP_POST, RESTConstants.HTTP_PUT, RESTConstants.HTTP_DELETE, RESTConstants.HTTP_HEAD, RESTConstants.HTTP_OPTIONS], strict_slashes=False)
+    def did_fork(self):
+        """
+        """
+        self.core_controller.start()
 
-    @property
-    def uuid(self):
+    def will_exit(self):
         """
         """
-        return self._uuid
+        self.core_controller.stop()
 
-    @property
-    def is_running(self):
+    def run(self):
         """
         """
-        return self._is_running
-
-    @property
-    def controller(self):
-        """
-        """
-        return self._controller
-
-    @controller.setter
-    def controller(self, value):
-        """
-        """
-        self._controller = value
-
-    def start(self):
-        """
-        """
-        if self.is_running:
-            return
-
-        self._is_running = True
+        self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
         logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
+
+        # signal.signal(signal.SIGHUP, handle_signal)
+
         self._flask.run(host=self._host, port=self._port, threaded=True, debug=True, use_reloader=False)
 
-    def stop(self):
+        while True:
+            time.sleep(30000)
+
+    def _handle_model_request(self, path):
         """
         """
-        if not self.is_running:
+        content = self._extract_content(request)
+        username, token = self._extract_auth(request.headers)
+        parameters = self._extract_parameters(request.headers)
+        filter = self._extract_filter(request.headers)
+        page, page_size = self._extract_paging(request.headers)
+        order_by = self._extract_ordering(request.headers)
+
+        method = request.method.upper()
+
+        logger.info('> %s %s from %s' % (request.method, request.path, parameters['Host']))
+        logger.debug(json.dumps(parameters, indent=4))
+
+        parser = PathParser()
+        resources = parser.parse(path=path, url_prefix="%s/" % SDKLibrary().get_sdk('default').SDKInfo.api_prefix())
+
+        action = self.determine_action(method, resources)
+
+        ga_request = GARequest( action=action,
+                                content=content,
+                                parameters=parameters,
+                                resources=resources,
+                                username=username,
+                                token=token,
+                                filter=filter,
+                                page=page,
+                                page_size=page_size,
+                                order_by=order_by,
+                                channel=self)
+
+        ga_response = self.core_controller.execute_model_request(request=ga_request)
+
+        logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
+        # logger.debug(json.dumps(content, indent=4))
+
+        return self.make_http_response(action=action, response=ga_response)
+
+    def _handle_event_request(self, path):
+        """
+        """
+        content = self._extract_content(request)
+        parameters = self._extract_parameters(request.headers)
+        username, token = self._extract_auth(request.headers)
+
+        logger.info('= %s %s from %s' % (request.method, request.path, parameters['Host']))
+        # logger.debug(json.dumps(parameters, indent=4))
+
+        ga_request = GARequest( action=GARequest.ACTION_LISTENEVENTS,
+                                content=content,
+                                parameters=parameters,
+                                username=username,
+                                token=token,
+                                channel=self)
+
+        session, ga_response_failure = self.core_controller.execute_events_request(request=ga_request)
+
+        if ga_response_failure:
+            self.make_http_response(action=GARequest.ACTION_READ, response=ga_response_failure)
             return
 
-        self._is_running = False
+        events = []
+
+        self.core_controller.sessions_controller.set_session_listening_status(session=session, status=True)
+
+        for event in self.core_controller.push_controller.get_next_event(session=session):
+            events.append(event)
+
+        ga_notification = GAPushNotification(events=events)
+        logger.info('< %s %s events to %s' % (request.method, request.path, parameters['Host']))
+
+        self.core_controller.sessions_controller.set_session_listening_status(session=session, status=False)
+
+        return self.make_notification_response(notification=ga_notification)
 
     def _extract_content(self, request):
         """
@@ -294,89 +351,3 @@ class GAFlaskChannel(GAChannel):
                 return GARequest.ACTION_READ
 
         raise Exception("Unknown action. This should never happen")
-
-    def index(self, path):
-        """
-        """
-
-        content = self._extract_content(request)
-        username, token = self._extract_auth(request.headers)
-        parameters = self._extract_parameters(request.headers)
-        filter = self._extract_filter(request.headers)
-        page, page_size = self._extract_paging(request.headers)
-        order_by = self._extract_ordering(request.headers)
-
-        method = request.method.upper()
-
-        logger.info('> %s %s from %s' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(parameters, indent=4))
-
-        parser = PathParser()
-        resources = parser.parse(path=path, url_prefix="%s/" % SDKLibrary().get_sdk('default').SDKInfo.api_prefix())
-
-        action = self.determine_action(method, resources)
-
-        ga_request = GARequest( action=action,
-                                content=content,
-                                parameters=parameters,
-                                resources=resources,
-                                username=username,
-                                token=token,
-                                filter=filter,
-                                page=page,
-                                page_size=page_size,
-                                order_by=order_by,
-                                channel=self)
-
-        ga_response = self.core_controller.execute(request=ga_request)
-
-        logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(content, indent=4))
-
-        return self.make_http_response(action=action, response=ga_response)
-
-    def favicon(self):
-        """
-        """
-        logger.debug('Asking for favicon...')
-        response = make_response()
-        response.status_code = 200
-        response.mimetype = 'application/json'
-
-        return response
-
-    def listen_events(self, path):
-        """
-        """
-        content = self._extract_content(request)
-        parameters = self._extract_parameters(request.headers)
-        username, token = self._extract_auth(request.headers)
-
-        logger.info('= %s %s from %s' % (request.method, request.path, parameters['Host']))
-        logger.debug(json.dumps(parameters, indent=4))
-
-        ga_request = GARequest( action=GARequest.ACTION_LISTENEVENTS,
-                                content=content,
-                                parameters=parameters,
-                                username=username,
-                                token=token,
-                                channel=self)
-
-
-        queue_response = self.core_controller.get_queue(request=ga_request)
-
-        if isinstance(queue_response, GAResponseFailure):
-            return self.make_http_response(action=GARequest.ACTION_READ, response=queue_response)
-
-        try:
-            events = queue_response.get(timeout=self._push_timeout)
-            ga_notification = GAPushNotification(events=events)
-
-            logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
-            queue_response.task_done()
-        except Empty:
-            ga_notification = GAPushNotification()
-
-        logger.info('< %s %s events to %s' % (request.method, request.path, parameters['Host']))
-
-        return self.make_notification_response(notification=ga_notification)

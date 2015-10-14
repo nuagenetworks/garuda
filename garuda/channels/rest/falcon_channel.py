@@ -41,6 +41,11 @@ class GAFalconChannel(GAChannel):
                                     worker_init=self._worker_init,
                                     worker_exit=self._worker_exit)
 
+    def set_core_controller(self, core_controller):
+        """
+        """
+        self.core_controller = core_controller
+
     def _worker_init(self, worker):
         """
         """
@@ -57,10 +62,9 @@ class GAFalconChannel(GAChannel):
         """
         return GAPluginManifest(name='rest.falcon', version=1.0, identifier="garuda.communicationchannels.rest.falcon")
 
-    def run(self, core_controller):
+    def run(self):
         """
         """
-        self.core_controller = core_controller
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
         logger.info("Listening to inbound connection on %s:%d" % (self._host, self._port))
@@ -80,7 +84,7 @@ class GAFalconChannel(GAChannel):
         parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
 
         if parser.resources[0].name == 'event':
-            self._handle_events_request(http_request, http_response)
+            self._handle_event_request(http_request, http_response)
         else:
             self._handle_model_request(http_request, http_response)
 
@@ -123,7 +127,7 @@ class GAFalconChannel(GAChannel):
 
         self._update_http_response(http_response=http_response, action=action, ga_response=ga_response)
 
-    def _handle_events_request(self, http_request, http_response):
+    def _handle_event_request(self, http_request, http_response):
         """
         """
         content = self._extract_content(http_request)

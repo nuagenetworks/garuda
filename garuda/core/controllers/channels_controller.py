@@ -46,7 +46,9 @@ class GAChannelsController(object):
                                     authentication_plugins=self._authentication_plugins, storage_plugins=self._storage_plugins,
                                     permission_plugins=self._permission_plugins)
 
-            channel.run(core_controller=core)
+            channel.set_core_controller(core)
+            channel.did_fork()
+            channel.run()
             logger.info("Channels subprocess %s exited gracefuly." % os.getpid())
             sys.exit(0)
         else:
@@ -57,4 +59,5 @@ class GAChannelsController(object):
         """
         for pid in self._channel_pids:
             logger.info("Killing channels with pid %s" % pid)
+
             os.kill(pid, signal.SIGTERM)

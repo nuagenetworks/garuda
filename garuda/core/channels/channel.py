@@ -5,7 +5,6 @@ from garuda.core.models import GAPlugin
 class GAChannel(GAPlugin):
     """
     """
-
     def channel_type(self):
         """
         """
@@ -30,3 +29,18 @@ class GAChannel(GAPlugin):
         """
         """
         raise NotImplemented('Channel must implement push method')
+
+    def did_fork(self):
+        """
+        """
+        pass
+
+    def will_exit(self):
+        """
+        """
+        pass
+
+    def set_core_controller(self, core_controller):
+        """
+        """
+        raise NotImplemented('Channel must implement set_core_controller method')
