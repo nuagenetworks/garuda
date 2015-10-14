@@ -1,44 +1,60 @@
 # -*- coding: utf-8 -*-
-
+import os, sys
+import signal
 import logging
-logger = logging.getLogger('garuda.controller.communicationchannels')
 
-from garuda.core.controllers.abstracts import GAPluginController
+from garuda.core.controllers import GACoreController
 from garuda.core.channels import GAChannel
 from garuda.core.lib import ThreadManager
 
-class GAChannelsController(GAPluginController):
+logger = logging.getLogger('garuda.controller.channels')
+
+class GAChannelsController(object):
     """
 
     """
-    def __init__(self, plugins, core_controller):
+    def __init__(self, channels, redis_info, logic_plugins, authentication_plugins, storage_plugins, permission_plugins):
         """
         """
-        super(GAChannelsController, self).__init__(plugins=plugins, core_controller=core_controller)
-        self._thread_manager = ThreadManager()
+        self._channels = channels
+        self._redis_info = redis_info
+        self._logic_plugins = logic_plugins
+        self._authentication_plugins = authentication_plugins
+        self._storage_plugins = storage_plugins
+        self._permission_plugins = permission_plugins
 
-    # Override
-
-    def register_plugin(self, plugin):
-        """
-        """
-        super(GAChannelsController, self).register_plugin(plugin=plugin, plugin_type=GAChannel)
+        self._channel_pids = []
 
     # Implementation
 
     def start(self):
         """
         """
-        for channel in self._plugins:
-            if channel.internal_thread_management():
-                channel.start()
+        logger.info("Forking communication channels...")
+
+        for channel in self._channels:
+
+            pid = os.fork()
+            if not pid:
+                break
             else:
-                self._thread_manager.start(channel.start)
+                self._channel_pids.append(pid)
+                logger.info('Channel %s forked with pid: %s' % (channel.manifest().identifier, pid))
+
+        if not pid:
+            core = GACoreController(redis_info=self._redis_info, logic_plugins=self._logic_plugins,
+                                    authentication_plugins=self._authentication_plugins, storage_plugins=self._storage_plugins,
+                                    permission_plugins=self._permission_plugins)
+
+            channel.run(core_controller=core)
+            logger.info("Channels subprocess %s exited gracefuly." % os.getpid())
+            sys.exit(0)
+        else:
+            logger.info("All channels successfully forked")
 
     def stop(self):
         """
         """
-        for channel in self._plugins:
-            channel.stop()
-
-        self._thread_manager.stop_all()
+        for pid in self._channel_pids:
+            logger.info("Killing channels with pid %s" % pid)
+            os.kill(pid, signal.SIGTERM)

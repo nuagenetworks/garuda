@@ -31,10 +31,25 @@ class GAFalconChannel(GAChannel):
         self._port = port
         self._push_timeout = push_timeout
         self._number_of_workers = (multiprocessing.cpu_count() * 2) + 1
-
         self._falcon = falcon.API()
         self._falcon.add_sink(self._handle_requests)
-        self._server = GAGUnicorn(app=self._falcon, host=self._host, port=self._port, number_of_workers=self._number_of_workers)
+        self._server = GAGUnicorn(  app=self._falcon,
+                                    host=self._host,
+                                    port=self._port,
+                                    number_of_workers=self._number_of_workers,
+                                    timeout=push_timeout + 20,
+                                    worker_init=self._worker_init,
+                                    worker_exit=self._worker_exit)
+
+    def _worker_init(self, worker):
+        """
+        """
+        self.core_controller.start()
+
+    def _worker_exit(self, worker):
+        """
+        """
+        self.core_controller.stop()
 
     @classmethod
     def manifest(cls):
@@ -42,25 +57,21 @@ class GAFalconChannel(GAChannel):
         """
         return GAPluginManifest(name='rest.falcon', version=1.0, identifier="garuda.communicationchannels.rest.falcon")
 
-    def internal_thread_management(self):
+    def run(self, core_controller):
         """
         """
-        return True
-
-    def start(self):
-        """
-        """
-        logger.info("Communication listening to %s:%d" % (self._host, self._port))
-
+        self.core_controller = core_controller
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
-        logger.info("Starting gunicorn with %s workers" % self._number_of_workers)
-        self._server.run()
+        logger.info("Listening to inbound connection on %s:%d" % (self._host, self._port))
 
-    def stop(self):
-        """
-        """
-        self._server.shutdown()
+        logger.info("Starting gunicorn with %s workers" % self._number_of_workers)
+
+
+        try:
+            self._server.run()
+        except:
+            pass
 
     def _handle_requests(self, http_request, http_response):
         """
@@ -85,8 +96,8 @@ class GAFalconChannel(GAChannel):
         method          = http_request.method.upper()
         parameters      = http_request.params
 
-        logger.info('> %s %s from %s' % (http_request.method, http_request.path, http_request.host))
-        logger.debug(json.dumps(content, indent=4))
+        logger.debug('> %s %s from %s' % (http_request.method, http_request.path, http_request.host))
+        # logger.debug(json.dumps(content, indent=4))
 
         parser = PathParser()
         resources = parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
@@ -107,8 +118,8 @@ class GAFalconChannel(GAChannel):
 
         ga_response = self.core_controller.execute_model_request(request=ga_request)
 
-        logger.info('< %s %s to %s' % (http_request.method, http_request.path, http_request.host))
-        logger.debug(json.dumps(content, indent=4))
+        logger.debug('< %s %s to %s' % (http_request.method, http_request.path, http_request.host))
+        # logger.debug(json.dumps(content, indent=4))
 
         self._update_http_response(http_response=http_response, action=action, ga_response=ga_response)
 
@@ -128,7 +139,7 @@ class GAFalconChannel(GAChannel):
                                 token=token,
                                 channel=self)
 
-        session_uuid, ga_response_failure = self.core_controller.execute_events_request(request=ga_request)
+        session, ga_response_failure = self.core_controller.execute_events_request(request=ga_request)
 
         if ga_response_failure:
             self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=ga_response_failure)
@@ -136,12 +147,16 @@ class GAFalconChannel(GAChannel):
 
         events = []
 
-        for event in self.core_controller.push_controller.get_next_event(session_uuid=session_uuid):
+        self.core_controller.sessions_controller.set_session_listening_status(session=session, status=True)
+
+        for event in self.core_controller.push_controller.get_next_event(session=session):
             events.append(event)
 
         ga_notification = GAPushNotification(events=events)
         logger.info('< %s %s events to %s' % (http_request.method, http_request.path, http_request.host))
         self._update_events_response(http_response=http_response, ga_notification=ga_notification)
+
+        self.core_controller.sessions_controller.set_session_listening_status(session=session, status=False)
 
     def _determine_action(self, method, resources):
         """
@@ -278,7 +293,7 @@ class GAFalconChannel(GAChannel):
         else:
             code, content = self._convert_errors(action, ga_response)
 
-        logger.debug(json.dumps(content, indent=4))
+        # logger.debug(json.dumps(content, indent=4))
 
         http_response.body = json.dumps(content)
         http_response.status = code
@@ -300,7 +315,7 @@ class GAFalconChannel(GAChannel):
         """
         content = ga_notification.to_dict()
 
-        logger.debug(json.dumps(content, indent=4))
+        # logger.debug(json.dumps(content, indent=4))
 
         http_response.body = json.dumps(content)
         http_response.status = falcon.HTTP_200
@@ -309,12 +324,15 @@ class GAFalconChannel(GAChannel):
 
 class GAGUnicorn(BaseApplication):
 
-    def __init__(self, app, host, port, number_of_workers):
+    def __init__(self, app, host, port, number_of_workers, timeout, worker_init, worker_exit):
         """
         """
         self._app = app
         self._host = host
         self._port = port
+        self._timeout = timeout
+        self._worker_init = worker_init
+        self._worker_exit = worker_exit
         self._number_of_workers = number_of_workers
         super(GAGUnicorn, self).__init__()
 
@@ -322,8 +340,23 @@ class GAGUnicorn(BaseApplication):
         """
         """
         self.cfg.set('bind', '%s:%s' % (self._host, self._port))
-        self.cfg.set('workers', self._number_of_workers)
+        self.cfg.set('workers', 3)#self._number_of_workers)
         self.cfg.set('worker_class', 'eventlet')
+        self.cfg.set('timeout', self._timeout)
+        self.cfg.set('max_requests', 1000)
+        self.cfg.set('proc_name', 'garuda-worker')
+        self.cfg.set('reload', False)
+        self.cfg.set('loglevel', 'warning')
+
+        def post_worker_init(worker):
+            self._worker_init(worker)
+
+        def worker_exit(server, worker):
+            self._worker_exit(worker)
+
+        self.cfg.set('post_worker_init', post_worker_init)
+        self.cfg.set('worker_exit', worker_exit)
+
 
     def load(self):
         """

@@ -4,3 +4,4 @@ gunicorn
 logging
 pymongo
 bambou
+setproctitle

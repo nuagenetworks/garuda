@@ -11,25 +11,10 @@ class GAChannel(GAPlugin):
         """
         raise NotImplemented('Channel must implement channel_type method')
 
-    def internal_thread_management(self):
-        """
-        """
-        return False
-
-    def start(self):
+    def run(self):
         """
         """
         raise NotImplemented('Channel must implement start method')
-
-    def stop(self):
-        """
-        """
-        raise NotImplemented('Channel must implement stop method')
-
-    def is_running(self):
-        """
-        """
-        raise NotImplemented('Channel must implement is running method')
 
     def receive(self):
         """

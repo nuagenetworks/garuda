@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import importlib
 import logging
 import redis
+import os
 from uuid import uuid4
 
 from .storage_controller import GAStorageController
@@ -10,7 +10,6 @@ from .operations_controller import GAOperationsController
 from .push_controller import GAPushController
 from .sessions_controller import GASessionsController
 from .permissions_controller import GAPermissionsController
-from .channels_controller import GAChannelsController
 from .logic_controller import GALogicController
 
 from garuda.core.lib import SDKLibrary
@@ -23,18 +22,12 @@ class GACoreController(object):
     """
 
     """
-
-    def __init__(self, sdks_info, redis_info, channels=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
+    def __init__(self, redis_info, authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
-        self._sdk_library = SDKLibrary()
         self._redis = redis.StrictRedis(host=redis_info['host'], port=redis_info['port'], db=redis_info['db'])
 
-        for sdk_info in sdks_info:
-            self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
-
-        self._channels_controller = GAChannelsController(plugins=channels, core_controller=self)
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self, redis_conn=self._redis)
@@ -78,41 +71,27 @@ class GACoreController(object):
         """
         return self._sessions_controller
 
-    @property
-    def channels_controller(self):
-        """
-        """
-        return self._channels_controller
-
-    @property
-    def sdk_library(self):
-        """
-        """
-        return self._sdk_library
-
     def start(self):
         """
         """
-        logger.debug('Starting core controller')
+        logger.debug('Starting core controller %s with pid %s' % (self.uuid, os.getpid()))
+        self.push_controller.subscribe()
+        self.sessions_controller.subscribe()
 
-        self.channels_controller.start()
-
-        logger.info('Garuda is initialized and ready to rock! (Press CTRL+C to quit)')
 
     def stop(self, signal=None, frame=None):
         """
         """
-        logger.debug('Stopping core controller')
+        logger.info('Stopping core controller %s' % self.uuid)
 
         self.storage_controller.unregister_all_plugins()
         self.permissions_controller.unregister_all_plugins()
         self.sessions_controller.unregister_all_plugins()
-        self.channels_controller.unregister_all_plugins()
 
-        self.channels_controller.stop()
         self.sessions_controller.flush_local_sessions()
 
-        logger.info('Garuda has stopped.')
+        self.sessions_controller.unsubscribe()
+        self.push_controller.unsubscribe()
 
     def execute_model_request(self, request):
         """
@@ -120,11 +99,14 @@ class GACoreController(object):
         session_uuid = self.sessions_controller.get_session_identifier(request=request)
         session = None
 
+        logger.debug("finding session: %s" % session_uuid)
         if session_uuid:
             session = self.sessions_controller.get_session(session_uuid=session_uuid)
+            print "session found: %s" % session_uuid
 
         if not session:
             session = self.sessions_controller.create_session(request=request)
+            print "session not found authenticating: %s" % session_uuid
 
             if session:
                 return GAResponseSuccess(content=[session.root_object])
@@ -139,6 +121,9 @@ class GACoreController(object):
             context.report_error(error)
 
             return GAResponseFailure(content=context.errors)
+
+        # reset the session ttl
+        self.sessions_controller.reset_session_ttl(session)
 
         logger.debug('Execute action %s on session UUID=%s' % (request.action, session_uuid))
 
@@ -167,9 +152,7 @@ class GACoreController(object):
             context.report_error(error)
             return (GAResponseFailure(content=context.errors), None)
 
-        logger.debug('Set listening %s session UUID=%s for push notification' % (request.action, session_uuid))
+        # reset the session ttl
+        self.sessions_controller.reset_session_ttl(session)
 
-        session.is_listening_push_notifications = True
-        self.sessions_controller.save(session)
-
-        return (session.uuid, None)
+        return (session, None)

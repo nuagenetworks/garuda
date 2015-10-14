@@ -34,13 +34,23 @@ class GAPushController(object):
         data['events'] = [event.to_dict() for event in events]
         self._redis.publish('event:new', json.dumps(data))
 
-    def get_next_event(self, session_uuid):
+    def subscribe(self):
         """
         """
-        if not self._pubsub:
-            self._subscribe_to_pubsub()
+        self._subscribe_to_pubsub()
 
-        for event in self._queue_for_session_uuid(session_uuid):
+    def unsubscribe(self):
+        """
+        """
+        self._unsubscribe_from_pubsub()
+
+    def get_next_event(self, session):
+        """
+        """
+        # if not self._pubsub:
+        #     self._subscribe_to_pubsub()
+
+        for event in self._queue_for_session_uuid(session.uuid):
             yield event
 
     def _listen_to_redis_events(self):
@@ -55,7 +65,7 @@ class GAPushController(object):
                 continue
 
             events = [GAPushEvent.from_dict(event) for event in data['events']]
-            logger.debug('Receives redis push:\n%s' % json.dumps(data, indent=4))
+            #logger.debug('Receives redis push:\n%s' % json.dumps(data, indent=4))
 
             for session in self.core_controller.sessions_controller.get_all_local_sessions(listening=True):
 
@@ -79,7 +89,7 @@ class GAPushController(object):
 
                 if len(events_to_send):
 
-                    logger.debug("Adding events queue for session uuid: %s" + session.uuid)
+                    logger.info("Adding events queue for session uuid: %s" % session.uuid)
                     queue = self._queue_for_session_uuid(session.uuid)
                     queue.put(events_to_send)
 
@@ -89,7 +99,7 @@ class GAPushController(object):
         """
         """
         if not session_uuid in self._event_queues:
-            self._event_queues[session_uuid] = GAPushEventQueue(queue=Queue(), timeout=60, accumulation_time=0.3)
+            self._event_queues[session_uuid] = GAPushEventQueue(queue=Queue(), timeout=7, accumulation_time=0.3)
 
         return self._event_queues[session_uuid]
 
@@ -99,3 +109,9 @@ class GAPushController(object):
         self._pubsub = self._redis.pubsub()
         self._pubsub.subscribe('event:new')
         self._thread_manager.start(self._listen_to_redis_events)
+
+    def _unsubscribe_from_pubsub(self):
+        self._thread_manager.stop_all()
+        self._pubsub.unsubscribe()
+        self._pubsub = None
+        self.core_controller.sessions_controller.flush_local_session()

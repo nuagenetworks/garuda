@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import importlib
 from time import sleep
 from bambou import BambouConfig
+from setproctitle import setproctitle
 
 logger = logging.getLogger('garuda')
 
-from .core.controllers import GACoreController
+from .core.lib import SDKLibrary
+from .core.controllers import GACoreController, GAChannelsController
 from .core.channels import GAChannel
 from .core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
@@ -17,20 +20,26 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.DEBUG, log_handler=None, runloop=True, banner=True, debug=False):
         """
         """
+        setproctitle('garuda-server')
         BambouConfig.set_should_raise_bambou_http_error(False)
 
         self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
         self._runloop = runloop
-        self._sdks_info = sdks_info
+        self._sdks_info= sdks_info
+        self._sdk_library = SDKLibrary()
         self._channels = channels
         self._authentication_plugins = []
         self._storage_plugins = []
         self._logic_plugins = []
         self._permission_plugins = []
         self._debug = debug
+
+
+        for sdk_info in self._sdks_info:
+            self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
 
         for plugin in plugins:
 
@@ -50,13 +59,12 @@ class Garuda(object):
 
         logger.setLevel(log_level)
 
-        self.core = GACoreController(   sdks_info=self._sdks_info,
-                                        redis_info=self._redis_info,
-                                        channels=self._channels,
-                                        logic_plugins=self._logic_plugins,
-                                        authentication_plugins=self._authentication_plugins,
-                                        storage_plugins=self._storage_plugins,
-                                        permission_plugins=self._permission_plugins)
+        self._channels_controller = GAChannelsController(channels=self._channels,
+                                                         redis_info=self._redis_info,
+                                                         logic_plugins=self._logic_plugins,
+                                                         authentication_plugins=self._authentication_plugins,
+                                                         storage_plugins=self._storage_plugins,
+                                                         permission_plugins=self._permission_plugins)
 
 
     def _init_debug_mode(self):
@@ -141,7 +149,8 @@ class Garuda(object):
         if self._debug:
             self._init_debug_mode()
 
-        self.core.start()
+        self._channels_controller.start()
+        logger.info('Garuda is up and ready to rock! (press CTRL-C to exit)')
 
         if self._runloop:
             while True:
@@ -155,7 +164,9 @@ class Garuda(object):
     def stop(self):
         """
         """
-        self.core.stop()
+        self._channels_controller.stop()
+
+        logger.info('Garuda is stopped')
 
         if self._debug:
             self._launch_debug_mode()
