@@ -58,11 +58,10 @@ class GALogicController(GAPluginController):
             return
 
         result = self._thread_manager.start(self._perform_delegate,
-                                   elements=plugins,
-                                   delegate=delegate,
-                                   context=context)
+                                               elements=plugins,
+                                               delegate=delegate,
+                                               context=context)
 
-        print result
         logger.info("Merging contexts %s" % result)
         context.merge_contexts(result)
 

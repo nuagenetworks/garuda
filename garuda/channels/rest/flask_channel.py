@@ -4,9 +4,9 @@ import json
 import logging
 import time
 import signal
+import sys
 from base64 import urlsafe_b64decode
 from copy import deepcopy
-from Queue import Empty
 from uuid import uuid4
 
 from flask import Flask, request, make_response
@@ -32,7 +32,7 @@ class GAFlaskChannel(GAChannel):
         """
         return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.flask")
 
-    def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
+    def __init__(self, host='0.0.0.0', port=3000, push_timeout=60):
         """
         """
         # mute flask logging for now
@@ -59,11 +59,6 @@ class GAFlaskChannel(GAChannel):
         """
         self.core_controller.start()
 
-    def will_exit(self):
-        """
-        """
-        self.core_controller.stop()
-
     def run(self):
         """
         """
@@ -71,7 +66,11 @@ class GAFlaskChannel(GAChannel):
 
         logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
 
-        # signal.signal(signal.SIGHUP, handle_signal)
+        def handle_signal(signal_number, frame_stack):
+            self.core_controller.stop()
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, handle_signal)
 
         self._flask.run(host=self._host, port=self._port, threaded=True, debug=True, use_reloader=False)
 

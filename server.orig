@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from garuda import Garuda
+<<<<<<< HEAD
 from garuda.channels.rest import GAFalconChannel, GAFlaskChannel
+=======
+from garuda.channels.rest import GAFlaskChannel
+>>>>>>> origin/master
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 
@@ -64,8 +68,11 @@ def start():
 
     """
     """
-    channel1 = GAFalconChannel()
-    channel2 = GAFlaskChannel()
+<<<<<<< HEAD
+    # channel = GAFalconChannel()
+=======
+>>>>>>> origin/master
+    channel = GAFlaskChannel()
 
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
     authentication_plugin = GASimpleAuthenticationPlugin(auth_function=tdl_auth_function)
@@ -75,7 +82,7 @@ def start():
     # authentication_plugin = GASimpleAuthenticationPlugin(auth_function=vsd_auth_function)
     # sdk_infos = [{'identifier': 'default', 'module': 'vspk.v3_2'}]
 
-    garuda = Garuda(sdks_info=sdk_infos, channels=[channel1, channel2], plugins=[storage_plugin, authentication_plugin])
+    garuda = Garuda(sdks_info=sdk_infos, channels=[channel], plugins=[storage_plugin, authentication_plugin])
     garuda.start()
 
 

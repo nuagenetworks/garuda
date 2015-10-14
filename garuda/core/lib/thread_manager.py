@@ -4,6 +4,21 @@ import threading
 from functools import partial
 from multiprocessing.pool import ThreadPool
 
+class StoppableThread(threading.Thread):
+    """
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self.__value = None
+
+    def stop(self):
+        """
+        """
+        self._Thread__stop()
+
 
 class ThreadManager(object):
     """ Multi thread manager
@@ -16,24 +31,36 @@ class ThreadManager(object):
         self._size = size
         self._pool = None
 
+
     def callback(self, result):
         """
         """
         print "callback in %s" % self
         print result
 
-    def start(self, method, elements, async=False, callback=None, *args, **kwargs):
-        """ Start a method in a separate process
+    @classmethod
+    def start_thread(self, method, *args, **kwargs):
+        """
+        """
+        thread = StoppableThread(target=method, args=args, kwargs=kwargs)
+        thread.is_daemon = True
+        thread.name = method
+        thread.start()
+        return thread
 
-            Args:
-                method: the method to start in a separate process
-                args: Accept args/kwargs arguments
+    @classmethod
+    def stop_thread(self, thread):
+        """
+        """
+        thread.stop()
+        thread.join(timeout=1)
+
+    def start(self, method, elements, async=False, callback=None, *args, **kwargs):
+        """
         """
         self._pool = ThreadPool(self._size)
 
         partial_method = partial(method, *args, **kwargs)
-
-        print '%s > ASYNC = %s'  % (self, async)
 
         if async is False:
             results = self._pool.map(partial_method, elements)
@@ -47,6 +74,6 @@ class ThreadManager(object):
         return self._pool.map_async(partial_method, elements, callback=callback)
 
     def stop_all(self):
-        """ Stop all current processes
+        """
         """
         self._pool.terminate()

@@ -22,7 +22,7 @@ class GAPushController(object):
         self.core_controller = core_controller
         self._redis = redis_conn
         self._redis_event_thread = None
-        self._thread_manager = ThreadManager()
+        self._pubsub_thread = None
         self._event_queues = {}
         self._pubsub = None
 
@@ -37,19 +37,20 @@ class GAPushController(object):
     def subscribe(self):
         """
         """
-        self._subscribe_to_pubsub()
+        self._pubsub = self._redis.pubsub()
+        self._pubsub.subscribe('event:new')
+        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_events)
 
     def unsubscribe(self):
         """
         """
-        self._unsubscribe_from_pubsub()
+        ThreadManager.stop_thread(self._pubsub_thread)
+        self._pubsub.unsubscribe()
+        self._pubsub = None
 
     def get_next_event(self, session):
         """
         """
-        # if not self._pubsub:
-        #     self._subscribe_to_pubsub()
-
         for event in self._queue_for_session_uuid(session.uuid):
             yield event
 
@@ -102,16 +103,3 @@ class GAPushController(object):
             self._event_queues[session_uuid] = GAPushEventQueue(queue=Queue(), timeout=7, accumulation_time=0.3)
 
         return self._event_queues[session_uuid]
-
-    def _subscribe_to_pubsub(self):
-        """
-        """
-        self._pubsub = self._redis.pubsub()
-        self._pubsub.subscribe('event:new')
-        self._thread_manager.start(self._listen_to_redis_events)
-
-    def _unsubscribe_from_pubsub(self):
-        self._thread_manager.stop_all()
-        self._pubsub.unsubscribe()
-        self._pubsub = None
-        self.core_controller.sessions_controller.flush_local_session()

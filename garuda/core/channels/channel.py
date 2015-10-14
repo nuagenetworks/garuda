@@ -35,11 +35,6 @@ class GAChannel(GAPlugin):
         """
         pass
 
-    def will_exit(self):
-        """
-        """
-        pass
-
     def set_core_controller(self, core_controller):
         """
         """

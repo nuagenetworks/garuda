@@ -27,7 +27,7 @@ class GASessionsController(GAPluginController):
         self._redis = redis_conn
         self.garuda_uuid = self.core_controller.uuid
         self._pubsub = self._redis.pubsub()
-        self._thread_manager = ThreadManager()
+        self._pubsub_thread = None
         self._local_sessions_redis_key = None
         self._local_listening_sessions_redis_key = None
 
@@ -64,12 +64,12 @@ class GASessionsController(GAPluginController):
         """
         """
         self._pubsub.psubscribe('__keyevent@0__:expired')
-        self._thread_manager.start(self._listen_to_redis_event)
+        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_event)
 
     def unsubscribe(self):
         """
         """
-        self._thread_manager.stop_all()
+        ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub.punsubscribe('__keyevent@0:expired')
 
     def get_all_local_sessions(self, listening=None):
