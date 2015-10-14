@@ -28,14 +28,14 @@ class GALogicPlugin(GAPlugin):
         """
         return context
 
-    def check_perform_read(self, context, object):
+    def check_perform_read(self, context):
         """
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         return context
 
-    def preprocess_read(self, context, object):
+    def preprocess_read(self, context):
         """
         Give the plugin a chance to modify the object that is about to be sent back to the client.
         All modifications will be merged after all Plugins preprocessing.
@@ -56,14 +56,14 @@ class GALogicPlugin(GAPlugin):
         """
         return context
 
-    def check_perform_readall(self, context, object):
+    def check_perform_readall(self, context):
         """
         Asks a plugin if it agrees on performing the Read Operation. If it doesn’t it returns a disagreement reason object explaining why.
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         return context
 
-    def preprocess_readall(self, context, object):
+    def preprocess_readall(self, context):
         """
         Give the plugin a chance to modify the object that is about to be sent back to the client.
         All modifications will be merged after all Plugins preprocessing.

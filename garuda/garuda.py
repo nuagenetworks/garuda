@@ -43,7 +43,7 @@ class Garuda(object):
 
         for plugin in plugins:
 
-            if isinstance(plugin, GALogicPlugin): self._channels.append(plugin)
+            if isinstance(plugin, GAChannel): self._channels.append(plugin)
             elif isinstance(plugin, GAAuthenticationPlugin): self._authentication_plugins.append(plugin)
             elif isinstance(plugin, GAStoragePlugin): self._storage_plugins.append(plugin)
             elif isinstance(plugin, GAPermissionsPlugin): self._permission_plugins.append(plugin)
