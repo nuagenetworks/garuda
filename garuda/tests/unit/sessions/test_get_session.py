@@ -16,7 +16,7 @@ class TestGetSession(GASessionsControllerTestCase):
         user = self.get_default_user()
 
         plugin = DefaultAuthenticationPlugin()
-        self.session_controller.register_plugin(plugin)
+        self.sessions_controller.register_plugin(plugin)
 
         with patch.object(plugin, 'authenticate', return_value=user):
             self.session = self.create_session()

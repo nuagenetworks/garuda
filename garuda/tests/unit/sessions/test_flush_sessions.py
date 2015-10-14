@@ -31,7 +31,7 @@ class TestFlushSession(GASessionsControllerTestCase):
         user = self.get_default_user()
 
         plugin = DefaultAuthenticationPlugin()
-        self.session_controller.register_plugin(plugin)
+        self.sessions_controller.register_plugin(plugin)
 
         with patch.object(plugin, 'authenticate', return_value=user):
             session1 = self.create_session(request='Session1', garuda_uuid=garuda_uuid, is_listening_push_notifications=True)

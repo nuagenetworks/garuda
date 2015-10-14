@@ -26,15 +26,10 @@ class TestGetSession(GASessionsControllerTestCase):
 
         """
         garuda_uuid = self.get_valid_garuda_uuid()
-        user = self.get_default_user()
-        plugin = DefaultAuthenticationPlugin()
-        self.session_controller.register_plugin(plugin)
-
-        with patch.object(plugin, 'authenticate', return_value=user) as mock_method:
-            session = self.create_session(request='A request', garuda_uuid=garuda_uuid)
+        session = self.create_session(request='A request', garuda_uuid=garuda_uuid)
 
         self.assertEquals(len(session.uuid), 36)
-        self.assertEquals(session.garuda_uuid, garuda_uuid)
+        self.assertEquals(session.garuda_uuid, self.sessions_controller._garuda_uuid)
         self.assertEquals(session.is_listening_push_notifications, False)
 
     def test_create_session_without_authentication(self):
@@ -42,10 +37,8 @@ class TestGetSession(GASessionsControllerTestCase):
 
         """
         garuda_uuid = self.get_valid_garuda_uuid()
-        user = self.get_default_user()
-        user.api_key = None
 
-        with patch.object(DefaultAuthenticationPlugin, 'authenticate', return_value=user) as mock_method:
-            session = self.create_session(request='A request', garuda_uuid=garuda_uuid)
+        with patch.object(self.fake_auth_plugin, 'authenticate', return_value=None) as mock_method:
+            session = mock_method()
 
         self.assertEquals(session, None)

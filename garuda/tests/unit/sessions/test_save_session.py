@@ -14,12 +14,7 @@ class TestSaveSession(GASessionsControllerTestCase):
         """ Initialize context
 
         """
-        user = self.get_default_user()
-        plugin = DefaultAuthenticationPlugin()
-        self.session_controller.register_plugin(plugin)
-
-        with patch.object(plugin, 'authenticate', return_value=user):
-            self.session = self.create_session()
+        self.session = self.create_session()
 
     def tearDown(self):
         """ Cleanup context
@@ -31,8 +26,8 @@ class TestSaveSession(GASessionsControllerTestCase):
         """ Save session with is_listening_push_notifications should succeed
 
         """
-        self.session.is_listening_push_notifications = True
-        self.assertEquals(self.save_session(self.session), True)
+        self.sessions_controller.set_session_listening_status(self.session, True)
+        self.assertEquals(self.get_session(self.session.uuid).is_listening_push_notifications, True)
 
-        self.session = self.get_session(self.session.uuid)
-        self.assertEquals(self.session.is_listening_push_notifications, True)
+        self.sessions_controller.set_session_listening_status(self.session, False)
+        self.assertEquals(self.get_session(self.session.uuid).is_listening_push_notifications, False)
