@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from garuda import Garuda
-from garuda.channels.rest import GARESTChannel
+from garuda.channels.rest import GAFalconChannel
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 
@@ -64,7 +64,7 @@ def start():
 
     """
     """
-    channel = GARESTChannel()
+    channel = GAFalconChannel()
 
     storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
     authentication_plugin = GASimpleAuthenticationPlugin(auth_function=tdl_auth_function)
