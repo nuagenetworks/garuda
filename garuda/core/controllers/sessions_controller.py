@@ -132,7 +132,6 @@ class GASessionsController(GAPluginController):
 
         logger.debug('Flushing garuda session %s' % self.local_sessions_redis_key)
 
-        self._redis.delete(*session_keys)
         self._redis.srem(self.local_sessions_redis_key, *session_keys)
         self._redis.srem(self.local_listening_sessions_redis_key, *session_keys)
 
