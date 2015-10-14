@@ -1,5 +1,6 @@
 falcon
 redis
+gunicorn
 logging
 pymongo
 bambou

@@ -328,7 +328,7 @@ class GAFlaskChannel(GAChannel):
                                 order_by=order_by,
                                 channel=self)
 
-        ga_response = self.core_controller.execute(request=ga_request)
+        ga_response = self.core_controller.execute_model_request(request=ga_request)
 
         logger.info('< %s %s to %s' % (request.method, request.path, parameters['Host']))
         logger.debug(json.dumps(content, indent=4))
@@ -363,19 +363,17 @@ class GAFlaskChannel(GAChannel):
                                 channel=self)
 
 
-        queue_response = self.core_controller.get_events_queue(request=ga_request)
+        session_uuid, ga_response_failure = self.core_controller.execute_events_request(request=ga_request)
 
-        if isinstance(queue_response, GAResponseFailure):
+        if GAResponseFailure:
             return self.make_http_response(action=GARequest.ACTION_READ, response=queue_response)
 
-        try:
-            events = queue_response.get(timeout=self._push_timeout)
-            ga_notification = GAPushNotification(events=events)
+        events = []
 
-            logger.debug('Communication channel receive notification %s ' % ga_notification.to_dict())
-            queue_response.task_done()
-        except Empty:
-            ga_notification = GAPushNotification()
+        for event in self.core_controller.push_controller.get_next_event(session_uuid=session_uuid):
+            events.append(event)
+
+        ga_notification = GAPushNotification(events=events)
 
         logger.info('< %s %s events to %s' % (request.method, request.path, parameters['Host']))
 

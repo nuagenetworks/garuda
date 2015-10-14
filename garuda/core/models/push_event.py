@@ -65,19 +65,25 @@ class GAPushEvent(GASerializable):
         return instance
 
 
-class GAPushEventDrainer(object):
+class GAPushEventQueue(object):
 
-    def __init__(self, queue, timeout=60, accumulation_time=0.3):
+    def __init__(self, queue, timeout, accumulation_time):
         """
         """
         self.queue = queue
         self.timeout = timeout
         self.accumulation_time = accumulation_time
 
+    def put(self, data):
+        """
+        """
+        self.queue.put(data)
+
     def __iter__(self):
         """
         """
         yielded = 0
+
         while True:
             try:
                 events = self.queue.get(timeout=self.timeout)
@@ -93,7 +99,5 @@ class GAPushEventDrainer(object):
                     time.sleep(self.accumulation_time)
                     if self.queue.empty():
                         break
-
             except Empty:
                 break
-
