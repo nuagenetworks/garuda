@@ -18,14 +18,14 @@ from .parser import PathParser
 logger = logging.getLogger('garuda.comm.rest')
 
 
-class GARESTChannel(GAChannel):
+class GAFalconChannel(GAChannel):
     """
     """
 
     def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
         """
         """
-        super(GARESTChannel, self).__init__()
+        super(GAFalconChannel, self).__init__()
 
         self._host = host
         self._port = port
