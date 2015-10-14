@@ -3,6 +3,7 @@
 import os
 import json
 import logging
+import signal
 import falcon
 import multiprocessing
 from gunicorn.app.base import BaseApplication
@@ -71,11 +72,13 @@ class GAFalconChannel(GAChannel):
 
         logger.info("Starting gunicorn with %s workers" % self._number_of_workers)
 
+        # def handle_signal(signal_number, frame_stack):
+        #     self.core_controller.stop()
+        #     sys.exit(0)
+        #
+        # signal.signal(signal.SIGTERM, handle_signal)
 
-        try:
-            self._server.run()
-        except:
-            pass
+        self._server.run()
 
     def _handle_requests(self, http_request, http_response):
         """
@@ -347,7 +350,7 @@ class GAGUnicorn(BaseApplication):
         self.cfg.set('workers', self._number_of_workers)
         self.cfg.set('worker_class', 'eventlet')
         self.cfg.set('timeout', self._timeout)
-        self.cfg.set('max_requests', 1000)
+        self.cfg.set('max_requests', 1)
         self.cfg.set('proc_name', 'garuda-worker')
         self.cfg.set('reload', False)
         self.cfg.set('loglevel', 'warning')

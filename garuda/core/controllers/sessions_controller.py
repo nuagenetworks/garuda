@@ -13,7 +13,7 @@ logging.getLogger
 logger = logging.getLogger('garuda.controller.sessions')
 
 REDIS_SESSION_KEY = 'sessions:'
-REDIS_SESSION_TTL = 10
+REDIS_SESSION_TTL = 600
 
 
 class GASessionsController(GAPluginController):

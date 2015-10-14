@@ -102,11 +102,9 @@ class GACoreController(object):
         logger.debug("finding session: %s" % session_uuid)
         if session_uuid:
             session = self.sessions_controller.get_session(session_uuid=session_uuid)
-            print "session found: %s" % session_uuid
 
         if not session:
             session = self.sessions_controller.create_session(request=request)
-            print "session not found authenticating: %s" % session_uuid
 
             if session:
                 return GAResponseSuccess(content=[session.root_object])

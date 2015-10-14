@@ -75,7 +75,7 @@ def start():
     # authentication_plugin = GASimpleAuthenticationPlugin(auth_function=vsd_auth_function)
     # sdk_infos = [{'identifier': 'default', 'module': 'vspk.v3_2'}]
 
-    garuda = Garuda(sdks_info=sdk_infos, channels=[channel1, channel2], plugins=[storage_plugin, authentication_plugin])
+    garuda = Garuda(sdks_info=sdk_infos, channels=[channel1], plugins=[storage_plugin, authentication_plugin])
     garuda.start()
 
 
