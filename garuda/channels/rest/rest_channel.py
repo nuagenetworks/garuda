@@ -3,11 +3,10 @@
 import os
 import json
 import logging
-from base64 import urlsafe_b64decode
 import falcon
-from wsgiref.simple_server import WSGIServer, WSGIRequestHandler
-import multiprocessing.pool
-import gunicorn.app.base
+import multiprocessing
+from gunicorn.app.base import BaseApplication
+from base64 import urlsafe_b64decode
 
 from garuda.core.lib import SDKLibrary
 from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseFailure, GAResponseSuccess
@@ -18,68 +17,50 @@ from .parser import PathParser
 
 logger = logging.getLogger('garuda.comm.rest')
 
+
 class GARESTChannel(GAChannel):
     """
-
     """
+
     def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
         """
         """
         super(GARESTChannel, self).__init__()
 
-        self._is_running = False
         self._host = host
         self._port = port
         self._push_timeout = push_timeout
+        self._number_of_workers = (multiprocessing.cpu_count() * 2) + 1
 
-        self._api = falcon.API()
-        self._api.add_sink(self._handle_requests)
+        self._falcon = falcon.API()
+        self._falcon.add_sink(self._handle_requests)
+        self._server = GAGUnicorn(app=self._falcon, host=self._host, port=self._port, number_of_workers=self._number_of_workers)
 
+    @classmethod
+    def manifest(cls):
+        """
+        """
+        return GAPluginManifest(name='rest.falcon', version=1.0, identifier="garuda.communicationchannels.rest.falcon")
 
     def internal_thread_management(self):
         """
         """
         return True
 
-    @classmethod
-    def manifest(cls):
-        """
-        """
-        return GAPluginManifest(name='rest', version=1.0, identifier="garuda.communicationchannels.rest")
-
-
-
     def start(self):
         """
         """
-        if self._is_running:
-            return
-
-        self._is_running = True
-
-        logger.info("Communication channel listening on %s:%d" % (self._host, self._port))
+        logger.info("Communication listening to %s:%d" % (self._host, self._port))
 
         self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
-        self._server = GAGunicorn(self._api, self._host, self._port)
+        logger.info("Starting gunicorn with %s workers" % self._number_of_workers)
         self._server.run()
-        # self._server = GAThreadPoolWSGIServer(self._api, 60, (self._host, self._port), GAWSGIRequestHandler)
-        #
-        # try:
-        #     self._server.serve_forever()
-        # except:
-        #     pass
-
 
     def stop(self):
         """
         """
-        if not self.is_running:
-            return
-
-        self._is_running = False
         self._server.shutdown()
-
 
     def _handle_requests(self, http_request, http_response):
         """
@@ -91,7 +72,6 @@ class GARESTChannel(GAChannel):
             self._handle_events_request(http_request, http_response)
         else:
             self._handle_model_request(http_request, http_response)
-
 
     def _handle_model_request(self, http_request, http_response):
         """
@@ -125,13 +105,12 @@ class GARESTChannel(GAChannel):
                                 order_by=order_by,
                                 channel=self)
 
-        ga_response = self.core_controller.execute(request=ga_request)
+        ga_response = self.core_controller.execute_model_request(request=ga_request)
 
         logger.info('< %s %s to %s' % (http_request.method, http_request.path, http_request.host))
         logger.debug(json.dumps(content, indent=4))
 
         self._update_http_response(http_response=http_response, action=action, ga_response=ga_response)
-
 
     def _handle_events_request(self, http_request, http_response):
         """
@@ -149,21 +128,19 @@ class GARESTChannel(GAChannel):
                                 token=token,
                                 channel=self)
 
-        event_queue = self.core_controller.get_events_queue(request=ga_request)
+        session_uuid, ga_response_failure = self.core_controller.execute_events_request(request=ga_request)
 
-        if isinstance(event_queue, GAResponseFailure):
-            self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=queue_response)
+        if ga_response_failure:
+            self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=ga_response_failure)
             return
 
         events = []
 
-        for event in event_queue:
+        for event in self.core_controller.push_controller.get_next_event(session_uuid=session_uuid):
             events.append(event)
 
         ga_notification = GAPushNotification(events=events)
-
         logger.info('< %s %s events to %s' % (http_request.method, http_request.path, http_request.host))
-
         self._update_events_response(http_response=http_response, ga_notification=ga_notification)
 
     def _determine_action(self, method, resources):
@@ -181,14 +158,12 @@ class GARESTChannel(GAChannel):
         """
 
         """
-
         if not request.content_length:
             return {}
 
         return json.loads(request.stream.read())
 
         # we should raise a malformed query here
-
 
     def _extract_auth(self, headers):
         """
@@ -294,7 +269,6 @@ class GARESTChannel(GAChannel):
 
         return (code, content)
 
-
     def _update_http_response(self, http_response, action, ga_response):
         """
         """
@@ -321,7 +295,6 @@ class GARESTChannel(GAChannel):
         if ga_response.page_size is not None:
             http_response.set_header('X-Nuage-PageSize', str(ga_response.page_size))
 
-
     def _update_events_response(self, http_response, ga_notification):
         """
         """
@@ -334,64 +307,25 @@ class GARESTChannel(GAChannel):
         http_response.content_type = 'application/json'
 
 
+class GAGUnicorn(BaseApplication):
 
-
-
-class GAThreadPoolWSGIServer(WSGIServer):
-
-    def __init__(self, app, thread_count=10, *args, **kwargs):
+    def __init__(self, app, host, port, number_of_workers):
         """
         """
-        WSGIServer.__init__(self, *args, **kwargs)
-        self.thread_count = thread_count
-        self.set_app(app)
-        self.pool = multiprocessing.pool.ThreadPool(self.thread_count)
-
-
-    def process_request_thread(self, request, client_address):
-        """
-        """
-        try:
-            self.finish_request(request, client_address)
-            self.shutdown_request(request)
-        except:
-            self.handle_error(request, client_address)
-            self.shutdown_request(request)
-
-    def process_request(self, request, client_address):
-        """
-        """
-        self.pool.apply_async(self.process_request_thread, args=(request, client_address))
-
-
-class GAWSGIRequestHandler(WSGIRequestHandler):
-    """
-    """
-    def log_message(self, format, *args):
-        return
-
-
-class GAGunicorn(gunicorn.app.base.BaseApplication):
-
-    def __init__(self, app, host, port, workers=None):
-        """
-        """
-        self.app = app
-        self.host = host
-        self.port = port
-        self.workers = (multiprocessing.cpu_count() * 2) + 1 if not workers else workers
-        super(GAGunicorn, self).__init__()
-
+        self._app = app
+        self._host = host
+        self._port = port
+        self._number_of_workers = number_of_workers
+        super(GAGUnicorn, self).__init__()
 
     def load_config(self):
         """
         """
-        self.cfg.set('bind', '%s:%s' % (self.host, self.port))
-        self.cfg.set('workers', self.workers)
+        self.cfg.set('bind', '%s:%s' % (self._host, self._port))
+        self.cfg.set('workers', self._number_of_workers)
+        self.cfg.set('worker_class', 'eventlet')
 
     def load(self):
         """
         """
-        return self.app
-
-
+        return self._app

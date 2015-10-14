@@ -95,7 +95,6 @@ class GACoreController(object):
         """
         logger.debug('Starting core controller')
 
-        self.push_controller.start()
         self.channels_controller.start()
 
         logger.info('Garuda is initialized and ready to rock! (Press CTRL+C to quit)')
@@ -110,13 +109,12 @@ class GACoreController(object):
         self.sessions_controller.unregister_all_plugins()
         self.channels_controller.unregister_all_plugins()
 
-        self.push_controller.stop()
         self.channels_controller.stop()
-        self.sessions_controller.flush_garuda(self.uuid)
+        self.sessions_controller.flush_local_sessions()
 
         logger.info('Garuda has stopped.')
 
-    def execute(self, request):
+    def execute_model_request(self, request):
         """
         """
         session_uuid = self.sessions_controller.get_session_identifier(request=request)
@@ -126,7 +124,7 @@ class GACoreController(object):
             session = self.sessions_controller.get_session(session_uuid=session_uuid)
 
         if not session:
-            session = self.sessions_controller.create_session(request=request, garuda_uuid=self.uuid)
+            session = self.sessions_controller.create_session(request=request)
 
             if session:
                 return GAResponseSuccess(content=[session.root_object])
@@ -154,10 +152,9 @@ class GACoreController(object):
 
         return response
 
-    def get_events_queue(self, request):
+    def execute_events_request(self, request):
         """
         """
-
         session_uuid = request.token
         session = self.sessions_controller.get_session(session_uuid=session_uuid)
         context = GAContext(session=session, request=request)
@@ -168,11 +165,11 @@ class GACoreController(object):
                             description='Could not grant access. Please login.')
 
             context.report_error(error)
-            return GAResponseFailure(content=context.errors)
+            return (GAResponseFailure(content=context.errors), None)
 
         logger.debug('Set listening %s session UUID=%s for push notification' % (request.action, session_uuid))
 
         session.is_listening_push_notifications = True
         self.sessions_controller.save(session)
 
-        return self.push_controller.get_queue_for_session(session.uuid)
+        return (session.uuid, None)
