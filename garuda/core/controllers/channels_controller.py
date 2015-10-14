@@ -29,11 +29,12 @@ class GAChannelsController(GAPluginController):
     def start(self):
         """
         """
-        for channel in self._plugins:
-            if channel.internal_thread_management():
-                channel.start()
-            else:
-                self._thread_manager.start(channel.start)
+        self._thread_manager.start(self._start_channel, self._plugins, async=True)
+
+    def _start_channel(self, channel):
+        """
+        """
+        channel.start()
 
     def stop(self):
         """

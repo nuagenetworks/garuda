@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+
 from .request import GARequest
 from .response import GAResponseSuccess, GAResponseFailure
+
 
 class GAContext(object):
     """
@@ -41,7 +43,7 @@ class GAContext(object):
         """
         copy = GAContext(session=self.session, request=self.request)
         copy.parent_object = self.parent_object
-        copy.object = self.object.copy()
+        copy.object = self.object.copy() if self.object else None
         copy.objects = self.objects
 
         return copy

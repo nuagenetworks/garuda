@@ -6,6 +6,7 @@ logger = logging.getLogger('garuda.controller.logic')
 
 from garuda.core.controllers.abstracts import GAPluginController
 from garuda.core.lib import ThreadManager
+from garuda.core.plugins import GALogicPlugin
 
 class GALogicController(GAPluginController):
     """
@@ -17,8 +18,17 @@ class GALogicController(GAPluginController):
         """
         super(GALogicController, self).__init__(plugins=plugins, core_controller=core_controller)
 
-        self._managing_plugin_registry = []
+        self._managing_plugin_registry = {}
         self._thread_manager = ThreadManager()
+
+    # Override
+
+    def register_plugin(self, plugin):
+        """
+        """
+        super(GALogicController, self).register_plugin(plugin=plugin, plugin_type=GALogicPlugin)
+
+    # Implementation
 
     def _managing_plugins(self, resource_name, action):
         """
@@ -38,7 +48,7 @@ class GALogicController(GAPluginController):
 
         return []
 
-    def perform_delegate(self, delegate, context, timeout=2):
+    def perform_delegate(self, delegate, context):
         """
         """
         jobs = []
@@ -47,12 +57,18 @@ class GALogicController(GAPluginController):
         if not len(plugins):
             return
 
-        for plugin in plugins:
-            method = getattr(plugin, delegate, None)
-            jobs.append(self._thread_manager.start(method, context=context.copy()))
+        result = self._thread_manager.start(self._perform_delegate,
+                                   elements=plugins,
+                                   delegate=delegate,
+                                   context=context)
 
-        self._thread_manager.wait_until_exit()
+        print result
+        logger.info("Merging contexts %s" % result)
+        context.merge_contexts(result)
 
-        contexts = [job.value for job in jobs]
-
-        context.merge_contexts(contexts)
+    def _perform_delegate(self, plugin, delegate, context):
+        """
+        """
+        method = getattr(plugin, delegate, None)
+        logger.info("Calling delegate %s of plugin %s " % (delegate, plugin))
+        return  method(context=context.copy())

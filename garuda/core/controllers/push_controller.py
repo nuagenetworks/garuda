@@ -58,16 +58,12 @@ class GAPushController(object):
         """
         """
         session_uuids = self.core_controller.sessions_controller.get_all_sessions(garuda_uuid=garuda_uuid, listening=True)
-        jobs = []
 
         for session_uuid in session_uuids:
-
             if session_uuid not in self._queues:
                 continue
 
-            jobs.append(self._thread_manager.start(self._perform_enqueue_events, session_uuid=session_uuid, events=events))
-
-        # self._thread_manager.wait_until_exit()
+            self._thread_manager.start(method=self._perform_enqueue_events, elements=events, session_uuid=session_uuid)
 
     def _perform_enqueue_events(self, session_uuid, events):
         """
