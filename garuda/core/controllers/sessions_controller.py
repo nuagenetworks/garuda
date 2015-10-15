@@ -12,8 +12,6 @@ from garuda.core.lib import ThreadManager
 logging.getLogger
 logger = logging.getLogger('garuda.controller.sessions')
 
-REDIS_SESSION_TTL = 600
-
 
 class GASessionsController(GAPluginController):
     """
@@ -27,6 +25,7 @@ class GASessionsController(GAPluginController):
         self._garuda_uuid = self.core_controller.uuid
         self._pubsub = self._redis.pubsub()
         self._pubsub_thread = None
+        self._default_session_ttl = 600
         self._local_sessions_redis_key = None
         self._local_listening_sessions_redis_key = None
 
@@ -76,6 +75,10 @@ class GASessionsController(GAPluginController):
         """
         """
         session_keys = self._get_all_local_session_keys(listening=listening)
+
+        if not len(session_keys):
+            return []
+
         return [self._get_session_from_key(key) for key in session_keys]
 
     def get_session(self, session_uuid):
@@ -86,7 +89,7 @@ class GASessionsController(GAPluginController):
     def create_session(self, request):
         """
         """
-        logger.debug('Creating session for garuda_uuid=%s' % self._garuda_uuid)
+        logger.debug('Creating session for garuda_uuid=%s (ttl=%s)' % (self._garuda_uuid, self._default_session_ttl))
         session = GASession(garuda_uuid=self._garuda_uuid)
         plugin = self._plugin_for_request(request)
 
@@ -103,6 +106,14 @@ class GASessionsController(GAPluginController):
         self._save_session(session)
 
         return session
+
+    def delete_session(self, session):
+        """
+        """
+        logger.debug('Deleting session %s' % session.uuid)
+
+        print ('Deleting session %s' % (session.redis_key))
+        self._redis.delete(session.redis_key)
 
     def reset_session_ttl(self, session):
         """
@@ -140,7 +151,7 @@ class GASessionsController(GAPluginController):
 
         self._redis.hmset(session.redis_key, session.to_hash())
         self._redis.sadd(self.local_sessions_redis_key, session.redis_key)
-        self._redis.expire(session.redis_key, REDIS_SESSION_TTL)
+        self._redis.expire(session.redis_key, self._default_session_ttl)
 
         if session.is_listening_push_notifications:
             self._redis.sadd(self.local_listening_sessions_redis_key, session.redis_key)
@@ -150,6 +161,7 @@ class GASessionsController(GAPluginController):
         """
         """
         for event in self._pubsub.listen():
+
             if not event['pattern']:
                 continue
 

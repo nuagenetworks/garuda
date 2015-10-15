@@ -61,21 +61,11 @@ class GASessionsControllerTestCase(UnitTestCase):
     def create_session(self, request=None, garuda_uuid=None, is_listening_push_notifications=False):
         """
         """
-
-        session = self.sessions_controller.create_session(request=request)
-
-        if session:
-            self.save_session(session)
-
-        return session
+        return self.sessions_controller.create_session(request=request)
 
     def save_session(self, session):
         """
         """
-        import ipdb
-        if not session:
-            ipdb.set_trace()
-
         self.sessions_controller._save_session(session)
         return session
 
