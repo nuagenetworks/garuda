@@ -125,15 +125,10 @@ class GASessionsController(GAPluginController):
     def flush_local_sessions(self):
         """
         """
-        session_keys = self._get_all_local_session_keys()
+        logger.debug('Cleaning up local garuda session sets %s and %s' % (self.local_sessions_redis_key, self.local_listening_sessions_redis_key))
 
-        if len(session_keys) == 0:
-            return
-
-        logger.debug('Flushing garuda session %s' % self.local_sessions_redis_key)
-
-        self._redis.srem(self.local_sessions_redis_key, *session_keys)
-        self._redis.srem(self.local_listening_sessions_redis_key, *session_keys)
+        self._redis.delete(self.local_sessions_redis_key)
+        self._redis.delete(self.local_listening_sessions_redis_key)
 
     ## Utilties
 
