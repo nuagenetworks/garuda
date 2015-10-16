@@ -152,7 +152,7 @@ class GACoreController(object):
                             description='Could not grant access. Please login.')
 
             context.report_error(error)
-            return (GAResponseFailure(content=context.errors), None)
+            return (None, GAResponseFailure(content=context.errors))
 
         # reset the session ttl
         self.sessions_controller.reset_session_ttl(session)
