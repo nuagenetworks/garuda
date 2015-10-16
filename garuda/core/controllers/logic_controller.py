@@ -67,5 +67,7 @@ class GALogicController(GAPluginController):
         """
         """
         method = getattr(plugin, delegate, None)
+        if not method:
+            return context
         logger.info("Calling delegate %s of plugin %s " % (delegate, plugin))
-        return  method(context=context.copy())
+        return method(context=context.copy())
