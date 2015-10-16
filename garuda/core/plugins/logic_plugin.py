@@ -12,7 +12,7 @@ class GALogicPlugin(GAPlugin):
 
         """
         manifest = self.manifest()
-        if rest_name not in manifest.subscriptions:
+        if not rest_name in manifest.subscriptions:
             return False
 
         if action and action in manifest.subscriptions[rest_name]:
