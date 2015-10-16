@@ -38,15 +38,13 @@ class GALogicController(GAPluginController):
         if key in self._managing_plugin_registry:
             return self._managing_plugin_registry[key]
 
+        self._managing_plugin_registry[key] = []
+
         for plugin in self._plugins:
             if plugin.should_manage(rest_name=resource_name, action=action):
-
-                if not key in self._managing_plugin_registry:
-                    self._managing_plugin_registry[key] = []
-
                 self._managing_plugin_registry[key].append(plugin)
 
-        return []
+        return self._managing_plugin_registry[key]
 
     def perform_delegate(self, delegate, context):
         """
