@@ -55,10 +55,14 @@ class GALogicController(GAPluginController):
         if not len(plugins):
             return
 
-        result = self._thread_manager.start(self._perform_delegate,
-                                               elements=plugins,
-                                               delegate=delegate,
-                                               context=context)
+        result = []
+        for plugin in plugins:
+            result.append(self._perform_delegate(plugin, delegate, context))
+
+        # result = self._thread_manager.start(self._perform_delegate,
+        #                                        elements=plugins,
+        #                                        delegate=delegate,
+        #                                        context=context)
 
         logger.info("Merging contexts %s" % result)
         context.merge_contexts(result)
