@@ -118,7 +118,10 @@ class GASessionsController(GAPluginController):
     def reset_session_ttl(self, session):
         """
         """
-        self._save_session(session) # we might find something better
+        logger.debug('Reseting ttl for session key  %s for in garuda set %s)' % (session.redis_key, self.local_sessions_redis_key))
+
+        self._redis.persist(session.redis_key)
+        self._redis.expire(session.redis_key, self._default_session_ttl)
 
     def set_session_listening_status(self, session, status):
         """
@@ -131,7 +134,7 @@ class GASessionsController(GAPluginController):
         else:
             self._redis.srem(self.local_listening_sessions_redis_key, session.redis_key)
 
-        self._save_session(session)
+        self.reset_session_ttl(session)
 
     def flush_local_sessions(self):
         """
