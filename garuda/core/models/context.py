@@ -55,7 +55,11 @@ class GAContext(object):
             if context.has_errors():
                 self.report_errors(context.errors)
 
-            # if context.object:
+            # this is not a merge! this is stupid, but this is better that nothing
+            # at least it works when you use a single plugin
+            if context.object:
+                self.object = context.object
+
             self.user_info.update(context.user_info)
 
     # Event management
