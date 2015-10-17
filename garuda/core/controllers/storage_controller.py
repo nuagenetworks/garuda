@@ -45,11 +45,11 @@ class GAStorageController(GAPluginController):
         plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
         return plugin.instantiate(resource_name=resource_name) if plugin else None
 
-    def get(self, resource_name, identifier):
+    def get(self, resource_name, identifier=None, filter=None):
         """
         """
         plugin = self._managing_plugin(resource_name=resource_name, identifier=identifier)
-        return plugin.get(resource_name=resource_name, identifier=identifier) if plugin else None
+        return plugin.get(resource_name=resource_name, identifier=identifier, filter=filter) if plugin else None
 
     def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
         """

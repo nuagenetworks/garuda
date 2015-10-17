@@ -59,13 +59,20 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         data, count = self._get_children_data(parent=parent, resource_name=resource_name, filter=filter, grand_total=False)
         return count
 
-    def get(self, resource_name, identifier, filter=None):
+    def get(self, resource_name, identifier=None, filter=None):
         """
         """
-        if not ObjectId.is_valid(identifier):
+        if identifier and not ObjectId.is_valid(identifier):
             return None
 
-        data = self.db[resource_name].find_one({'_id': ObjectId(identifier)})
+        query_filter = {}
+        if filter:
+            query_filter = self._parse_filter(filter)
+
+        if identifier:
+            data = self.db[resource_name].find_one({'$and': [{'_id': ObjectId(identifier)}, query_filter]})
+        else:
+            data = self.db[resource_name].find_one(query_filter)
 
         if not data:
             return None
@@ -143,7 +150,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def delete_multiple(self, resources, cascade=True):
         """
         """
-
         for resource in resources:
 
             if cascade:
@@ -167,7 +173,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                     self.delete_multiple(child_resources, cascade=True)
 
         self.db[resource.rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
-
 
 
     def assign(self, resource_name, resources, parent):
