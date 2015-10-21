@@ -23,7 +23,7 @@ class GAFalconChannel(GAChannel):
     """
     """
 
-    def __init__(self, host='0.0.0.0', port=2000, push_timeout=60):
+    def __init__(self, ssl_certificate='', ssl_key='', host='0.0.0.0', port=2000, push_timeout=60,):
         """
         """
         super(GAFalconChannel, self).__init__()
@@ -37,6 +37,8 @@ class GAFalconChannel(GAChannel):
         self._server = GAGUnicorn(  app=self._falcon,
                                     host=self._host,
                                     port=self._port,
+                                    ssl_certificate=ssl_certificate,
+                                    ssl_key=ssl_key,
                                     number_of_workers=self._number_of_workers,
                                     timeout=push_timeout + 20,
                                     worker_init=self._worker_init,
@@ -323,12 +325,14 @@ class GAFalconChannel(GAChannel):
 
 class GAGUnicorn(BaseApplication):
 
-    def __init__(self, app, host, port, number_of_workers, timeout, worker_init, worker_exit):
+    def __init__(self, app, host, port, ssl_certificate, ssl_key, number_of_workers, timeout, worker_init, worker_exit):
         """
         """
         self._app = app
         self._host = host
         self._port = port
+        self._ssl_certificate = ssl_certificate
+        self._ssl_key = ssl_key
         self._timeout = timeout
         self._worker_init = worker_init
         self._worker_exit = worker_exit
@@ -346,6 +350,10 @@ class GAGUnicorn(BaseApplication):
         self.cfg.set('proc_name', 'garuda-worker')
         self.cfg.set('reload', False)
         self.cfg.set('loglevel', 'warning')
+
+        if self._ssl_certificate and self._ssl_key:
+            self.cfg.set('keyfile', self._ssl_key)
+            self.cfg.set('certfile', self._ssl_certificate)
 
         def post_worker_init(worker):
             self._worker_init(worker)
