@@ -163,7 +163,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                     children_key = '_%s' % children_rest_name
 
-                    if not children_key in data:
+                    if not children_key in data or not len(data[children_key]):
                         continue
 
                     klass = NURESTModelController.get_first_model(children_rest_name)
@@ -172,7 +172,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                     # recursively delete children
                     self.delete_multiple(child_resources, cascade=True)
 
-        self.db[resource.rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
+        self.db[resources[0].rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
 
 
     def assign(self, resource_name, resources, parent):

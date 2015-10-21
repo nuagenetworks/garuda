@@ -18,6 +18,16 @@ class GAOperationsController(object):
         """
         """
         action = self.context.request.action
+        resources = self.context.request.resources
+        resource = resources[-1]
+
+        if len(resources) == 2:
+            parent_resource = resources[0]
+            self.context.parent_object = self.storage_controller.get(parent_resource.name, parent_resource.value)
+
+            if self.context.parent_object is None:
+                self._report_resource_not_found(resource=parent_resource)
+                return
 
         if action is GARequest.ACTION_READALL:
             self._perform_readall_operation(count_only=False)
@@ -56,7 +66,14 @@ class GAOperationsController(object):
         self.context.report_error(GAError(  type=GAError.TYPE_NOTFOUND,
                                             title='Action not allowed',
                                             description='Unable to %s a resource without its identifier' % action)
-)
+                                            )
+
+    def _populate_parent_object_if_needed(self):
+        """
+        """
+        if not self.context.parent_object and (self.context.object and self.context.object.parent_type and self.context.object.parent_id):
+            self.context.parent_object = self.storage_controller.get(self.context.object.parent_type, self.context.object.parent_id)
+
 
     ## READ OPERATIONS
 
@@ -71,7 +88,6 @@ class GAOperationsController(object):
         if self.context.object is None:
             self._report_resource_not_found(resource=resource)
 
-
     def _perform_read_operation(self):
         """
         """
@@ -81,6 +97,8 @@ class GAOperationsController(object):
 
         if self.context.has_errors():
             return
+
+        self._populate_parent_object_if_needed()
 
         self.logic_controller.perform_delegate(delegate='begin_read_operation', context=self.context)
         self.logic_controller.perform_delegate(delegate='check_perform_read', context=self.context)
@@ -96,18 +114,6 @@ class GAOperationsController(object):
         """
         resources = self.context.request.resources
         resource = resources[-1]
-        parent = None
-
-        if len(resources) != 1:
-            parent_resource = resources[0]
-
-            parent = self.storage_controller.get(parent_resource.name, parent_resource.value)
-
-            if parent is None:
-                self._report_resource_not_found(resource=parent_resource)
-                return
-
-        self.context.parent_object = parent
 
         if count_only:
             self.context.total_count = self.storage_controller.count(   parent=self.context.parent_object,
@@ -131,6 +137,8 @@ class GAOperationsController(object):
 
         if self.context.has_errors():
             return
+
+        self._populate_parent_object_if_needed()
 
         self.logic_controller.perform_delegate(delegate='begin_readall_operation', context=self.context)
         self.logic_controller.perform_delegate(delegate='check_perform_readall', context=self.context)
@@ -203,15 +211,6 @@ class GAOperationsController(object):
             self._report_method_not_allowed(action=self.context.request.action)
             return
 
-        if len(resources) != 1:
-            parent_resource = resources[0]
-
-            self.context.parent_object = self.storage_controller.get(parent_resource.name, parent_resource.value)
-
-            if self.context.parent_object is None:
-                self._report_resource_not_found(resource=parent_resource)
-                return
-
         if action == GARequest.ACTION_CREATE:
             self._populate_context_for_create_with_resource(resource=resource)
 
@@ -224,6 +223,7 @@ class GAOperationsController(object):
         elif action == GARequest.ACTION_ASSIGN:
             self._populate_context_for_assign_with_resource(resource=resource)
 
+
     def _perform_write_operation(self):
         """
         """
@@ -231,6 +231,8 @@ class GAOperationsController(object):
 
         if self.context.has_errors():
             return
+
+        self._populate_parent_object_if_needed()
 
         self.logic_controller.perform_delegate(delegate='begin_write_operation', context=self.context)
         self.logic_controller.perform_delegate(delegate='check_perform_write', context=self.context)
