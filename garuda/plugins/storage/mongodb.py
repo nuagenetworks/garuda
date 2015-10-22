@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from bambou import NURESTModelController
 import pymongo
+from datetime import datetime
+import calendar
 import time
 from bson import ObjectId
 
@@ -100,11 +102,11 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def create(self, resource, parent=None):
         """
         """
-        resource.last_updated_date = str(time.time()) #this sucks... I think this is a bambou error
-        resource.last_updated_by = "111111111111111111111111"
+        resource.creation_date = time.time()
+        resource.last_updated_date = resource.creation_date
         resource.owner = "111111111111111111111111" # @TODO: we must give this information as a parameter
         resource.parent_type = parent.rest_name if parent else None
-        resource.parent_id = parent.id  if parent else None
+        resource.parent_id = parent.id if parent else None
         resource.id = str(ObjectId())
 
         validation = self._validate(resource)
@@ -123,9 +125,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def update(self, resource):
         """
         """
-
-        resource.last_updated_date = "now"
-        resource.last_updated_by = "me"
+        resource.last_updated_date = time.time()
 
         validation = self._validate(resource)
         if validation: return validation
@@ -254,6 +254,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             data['_id'] = ObjectId(data['ID'])
             del data['ID']
 
+        if data and data['creationDate']:
+            data['creationDate'] = datetime.utcfromtimestamp(float(data['creationDate']))
+
+        if data and data['lastUpdatedDate']:
+            data['lastUpdatedDate'] = datetime.utcfromtimestamp(float(data['lastUpdatedDate']))
+
         return data
 
     def _convert_from_dbid(self, data):
@@ -262,6 +268,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if data:
             data['ID'] = str(data['_id'])
             del data['_id']
+
+        if data and data['creationDate']:
+            data['creationDate'] = float(calendar.timegm(data['creationDate'].timetuple()))
+
+        if data and data['lastUpdatedDate']:
+            data['lastUpdatedDate'] = float(calendar.timegm(data['lastUpdatedDate'].timetuple()))
 
         return data
 
