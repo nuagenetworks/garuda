@@ -36,13 +36,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         """
         self.sdk = SDKLibrary().get_sdk('default')
-        root_rest_name = self.sdk.SDKInfo.root_object_class().rest_name
 
         for model in NURESTModelController.get_all_models():
             self.db[model[0].rest_name].create_index([('_id', pymongo.DESCENDING)], unique=True)
 
         if self.db_initialization_function:
-            self.db_initialization_function(db=self.db, root_rest_name=root_rest_name)
+            self.db_initialization_function(db=self.db, root_object_class=self.sdk.SDKInfo.root_object_class())
 
     def should_manage(self, resource_name, identifier):
         """

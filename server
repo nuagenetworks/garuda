@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
 
 from garuda import Garuda
 from garuda.channels.rest import GAFalconChannel, GAFlaskChannel
@@ -7,55 +8,52 @@ from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 
 
-def tdl_db_init(db, root_rest_name):
+def tdl_db_init(db, root_object_class):
     """
     """
-    from bson import ObjectId
-    if not db[root_rest_name].count():
-        db[root_rest_name].insert({'_id': ObjectId('111111111111111111111111') , 'userName': 'root', 'password': 'password'})
+    # from bson import ObjectId
+    # if not db[root_rest_name].count():
+    #     db[root_rest_name].insert({'_id': ObjectId('111111111111111111111111') , 'userName': 'root', 'password': 'password'})
+    pass
 
-def vsd_db_init(db, root_rest_name):
+def tdl_auth_function(request, session, root_object_class, storage_controller):
     """
     """
-    from bson import ObjectId
-    if not db[root_rest_name].count():
-        db[root_rest_name].insert({'_id': ObjectId('111111111111111111111111'), 'userName': 'csproot', 'password': 'csproot', 'enterpriseID': '444444444444444444444444', 'role': 'CSPROOT'})
-
-    if not db['user'].count():
-        db['user'].insert({'_id': ObjectId('222222222222222222222222'), 'userName': 'csproot', 'firstName': 'john', 'lastName': 'doe'})
-
-    if not db['group'].count():
-        db['group'].insert({'_id': ObjectId('333333333333333333333333'), 'name': 'Root Users', 'parentID': '222222222222', 'parentType': 'enterprise'})
-
-    if not db['enterprise'].count():
-        db['enterprise'].insert({'_id': ObjectId('444444444444444444444444'), 'name': 'csp', 'description': 'default enterprise'})
-
-    if not db['systemconfig'].count():
-        db['systemconfig'].insert({'_id': ObjectId('555555555555555555555555')})
-
-def tdl_auth_function(request, session, root_api, storage_controller):
-    """
-    """
-    auth = storage_controller.get(root_api, '111111111111111111111111')
-
-    if request.username == auth.user_name and request.token == auth.password:
-        auth.api_key = session.uuid
-        auth.password = None
-        return auth
-
-    return None
-
-def vsd_auth_function(request, session, root_api, storage_controller):
-    """
-    """
-    auth = storage_controller.get(root_api, '111111111111111111111111')
-
-    # if request.username == auth.userName and request.token == auth.password:
+    auth = root_object_class()
     auth.api_key = session.uuid
     auth.password = None
     return auth
 
-    return None
+# def vsd_db_init(db, root_rest_name):
+#     """
+#     """
+#     from bson import ObjectId
+#     if not db[root_rest_name].count():
+#         db[root_rest_name].insert({'_id': ObjectId('111111111111111111111111'), 'userName': 'csproot', 'password': 'csproot', 'enterpriseID': '444444444444444444444444', 'role': 'CSPROOT'})
+#
+#     if not db['user'].count():
+#         db['user'].insert({'_id': ObjectId('222222222222222222222222'), 'userName': 'csproot', 'firstName': 'john', 'lastName': 'doe'})
+#
+#     if not db['group'].count():
+#         db['group'].insert({'_id': ObjectId('333333333333333333333333'), 'name': 'Root Users', 'parentID': '222222222222', 'parentType': 'enterprise'})
+#
+#     if not db['enterprise'].count():
+#         db['enterprise'].insert({'_id': ObjectId('444444444444444444444444'), 'name': 'csp', 'description': 'default enterprise'})
+#
+#     if not db['systemconfig'].count():
+#         db['systemconfig'].insert({'_id': ObjectId('555555555555555555555555')})
+
+# def vsd_auth_function(request, session, root_api, storage_controller):
+#     """
+#     """
+#     auth = storage_controller.get(root_api, '111111111111111111111111')
+#
+#     # if request.username == auth.userName and request.token == auth.password:
+#     auth.api_key = session.uuid
+#     auth.password = None
+#     return auth
+#
+#     return None
 
 
 
@@ -75,7 +73,7 @@ def start():
     # authentication_plugin = GASimpleAuthenticationPlugin(auth_function=vsd_auth_function)
     # sdk_infos = [{'identifier': 'default', 'module': 'vspk.v3_2'}]
 
-    garuda = Garuda(sdks_info=sdk_infos, channels=[channel1], plugins=[storage_plugin, authentication_plugin])
+    garuda = Garuda(sdks_info=sdk_infos, channels=[channel1], plugins=[storage_plugin, authentication_plugin], log_level=logging.DEBUG)
     garuda.start()
 
 
