@@ -311,6 +311,8 @@ class GAFalconChannel(GAChannel):
         if ga_response.page_size is not None:
             http_response.set_header('X-Nuage-PageSize', str(ga_response.page_size))
 
+        http_response.set_header('X-Nuage-OrderBy', 'name ASC')
+
     def _update_events_response(self, http_response, ga_notification):
         """
         """

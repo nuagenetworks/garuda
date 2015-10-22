@@ -37,9 +37,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         self.sdk = SDKLibrary().get_sdk('default')
 
-        for model in NURESTModelController.get_all_models():
-            self.db[model[0].rest_name].create_index([('_id', pymongo.DESCENDING)], unique=True)
-
         if self.db_initialization_function:
             self.db_initialization_function(db=self.db, root_object_class=self.sdk.SDKInfo.root_object_class())
 
@@ -88,6 +85,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         objects = []
         data = []
+
+        # TODO: this is for the demo :)
+        order_by = [('type', pymongo.ASCENDING), ('name', pymongo.ASCENDING), ('title', pymongo.ASCENDING), ('creationDate', pymongo.ASCENDING)]
 
         data, count = self._get_children_data(parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by, grand_total=True)
 
@@ -213,10 +213,13 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                 data = self.db[resource_name].find({'$and': [{'_id': {'$in': identifiers}}, query_filter]})
         else:
-            data = self.db[resource_name].find(query_filter).skip(skip).limit(page_size)
+            data = self.db[resource_name].find(query_filter)
 
         if not data:
             return ([], 0)
+
+        if order_by:
+            data = data.sort(order_by)
 
         if grand_total:
             total_count = data.count()
