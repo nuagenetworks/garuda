@@ -2,8 +2,7 @@ falcon
 flask
 redis
 gunicorn
-eventlet
-logging
+gevent
 pymongo
 bambou
 setproctitle
