@@ -3,7 +3,7 @@
 import logging
 
 from garuda import Garuda
-from garuda.channels.rest import GAFalconChannel, GAFlaskChannel
+from garuda.channels.rest import GAFalconChannel
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 

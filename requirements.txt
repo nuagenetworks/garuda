@@ -1,5 +1,4 @@
 falcon
-flask
 redis
 gunicorn
 gevent
