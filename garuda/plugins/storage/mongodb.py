@@ -290,8 +290,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             operator = components[1].lower()
             value = components[2]
 
-            if operator == 'contains': operator = '$text'
-            elif operator == 'equals': operator = '$eq'
+            #if operator == 'contains': operator = '$in'
+            if operator == 'equals': operator = '$eq'
             elif operator == 'in': operator = '$in'
             elif operator == 'not in': operator = '$nin'
             elif operator == '==': operator = '$eq'
@@ -307,6 +307,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
             return {attribute: {operator: value}}
         except:
-            return {}
+            return {'$text': {'$search': filter}}
 
 
