@@ -22,7 +22,7 @@ class GACoreController(object):
     """
 
     """
-    def __init__(self, redis_info, authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
+    def __init__(self, redis_info, additional_controller_classes=[], authentication_plugins=[], logic_plugins=[], storage_plugins=[], permission_plugins=[]):
         """
         """
         self._uuid = str(uuid4())
@@ -31,12 +31,26 @@ class GACoreController(object):
         self._redis.config_set('notify-keyspace-events', 'KEA')
 
         self._running = False
+
+        self._additional_controllers = {}
+        for controller_class in additional_controller_classes:
+            self._additional_controllers[controller_class.identifier()] = controller_class(core_controller=self, redis_conn=self._redis)
+
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self, redis_conn=self._redis)
         self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self)
-
         self._push_controller = GAPushController(core_controller=self, redis_conn=self._redis)
+
+        self._logic_controller.ready()
+        self._storage_controller.ready()
+        self._sessions_controller.ready()
+        self._permissions_controller.ready()
+        self._push_controller.ready()
+
+        for additional_controller in self._additional_controllers.values():
+            additional_controller.ready()
+
 
     @property
     def uuid(self):
@@ -74,6 +88,11 @@ class GACoreController(object):
         """
         return self._sessions_controller
 
+    def additional_controller(self, identifier):
+        """
+        """
+        return self._additional_controllers[identifier]
+
     def start(self):
         """
         """
@@ -81,9 +100,11 @@ class GACoreController(object):
         self._running = True
 
         logger.debug('Starting core controller %s with pid %s' % (self.uuid, os.getpid()))
-        self.push_controller.subscribe()
-        self.sessions_controller.subscribe()
+        self.push_controller.start()
+        self.sessions_controller.start()
 
+        for additional_controller in self._additional_controllers.values():
+            additional_controller.start()
 
     def stop(self, signal=None, frame=None):
         """
@@ -93,8 +114,11 @@ class GACoreController(object):
 
         logger.debug('Stopping core controller %s with pid %s' % (self.uuid, os.getpid()))
 
-        self.sessions_controller.unsubscribe()
-        self.push_controller.unsubscribe()
+        for additional_controller in self._additional_controllers.values():
+            additional_controller.start()
+
+        self.sessions_controller.stop()
+        self.push_controller.stop()
 
         self.storage_controller.unregister_all_plugins()
         self.permissions_controller.unregister_all_plugins()

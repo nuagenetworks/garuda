@@ -3,7 +3,7 @@
 import logging
 logger = logging.getLogger('garuda.controller.storage')
 
-from garuda.core.controllers.abstracts import GAPluginController
+from garuda.core.models import GAPluginController
 from garuda.core.plugins import GAStoragePlugin
 
 
@@ -17,12 +17,19 @@ class GAStorageController(GAPluginController):
         super(GAStorageController, self).__init__(plugins=plugins, core_controller=core_controller)
         self._managing_plugin_registry = {}
 
-    # Override
+    @classmethod
+    def identifier(cls):
+        """
+        """
+        return 'garuda.controller.storage'
 
-    def register_plugin(self, plugin):
+    @classmethod
+    def managed_plugin_type(cls):
         """
         """
-        super(GAStorageController, self).register_plugin(plugin=plugin, plugin_type=GAStoragePlugin)
+        return GAStoragePlugin
+
+    # Override
 
     def unregister_plugin(self, plugin):
         """

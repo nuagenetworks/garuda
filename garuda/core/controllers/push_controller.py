@@ -5,25 +5,45 @@ import redis
 import logging
 from Queue import Queue
 
-from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext, GAPushEventQueue
+from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext, GAPushEventQueue, GAController
 from garuda.core.lib import ThreadManager
 from .operations_controller import GAOperationsController
 
 logger = logging.getLogger('garuda.controller.push')
 
 
-class GAPushController(object):
+class GAPushController(GAController):
     """
 
     """
     def __init__(self, core_controller, redis_conn):
         """
         """
-        self.core_controller = core_controller
-        self._redis = redis_conn
+        super(GAPushController, self).__init__(core_controller=core_controller, redis_conn=redis_conn)
+
         self._redis_event_thread = None
         self._pubsub_thread = None
         self._event_queues = {}
+        self._pubsub = None
+
+    @classmethod
+    def identifier(cls):
+        """
+        """
+        return 'garuda.controller.push'
+
+    def start(self):
+        """
+        """
+        self._pubsub = self._redis.pubsub()
+        self._pubsub.subscribe('event:new')
+        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_events)
+
+    def stop(self):
+        """
+        """
+        self._pubsub.unsubscribe()
+        ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub = None
 
     def push_events(self, events):
@@ -32,21 +52,7 @@ class GAPushController(object):
         data = dict()
         data['garuda_uuid'] = self.core_controller.uuid
         data['events'] = [event.to_dict() for event in events]
-        self._redis.publish('event:new', json.dumps(data))
-
-    def subscribe(self):
-        """
-        """
-        self._pubsub = self._redis.pubsub()
-        self._pubsub.subscribe('event:new')
-        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_events)
-
-    def unsubscribe(self):
-        """
-        """
-        self._pubsub.unsubscribe()
-        ThreadManager.stop_thread(self._pubsub_thread)
-        self._pubsub = None
+        self.redis.publish('event:new', json.dumps(data))
 
     def get_next_event(self, session):
         """

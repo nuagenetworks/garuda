@@ -20,4 +20,4 @@ class GAAuthenticationPlugin(GAPlugin):
     def authenticate(self, request):
         """
         """
-        raise NotImplementedError("%s should implement authenticate method" % self)
+        raise NotImplementedErrorError("%s should implement authenticate method" % self)

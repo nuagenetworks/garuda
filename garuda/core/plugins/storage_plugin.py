@@ -15,24 +15,24 @@ class GAStoragePlugin(GAPlugin):
     def instantiate(self, resource_name):
         """
         """
-        raise NotImplementedError("%s should implement instantiate method" % self)
+        raise NotImplementedErrorError("%s should implement instantiate method" % self)
 
     def get(self, resource_name, identifier):
         """
         """
-        raise NotImplementedError("%s should implement get method" % self)
+        raise NotImplementedErrorError("%s should implement get method" % self)
 
     def get_all(self, parent, resource_name):
         """
         """
-        raise NotImplementedError("%s should implement get_all method" % self)
+        raise NotImplementedErrorError("%s should implement get_all method" % self)
 
     def save(self, resource, parent=None):
         """
         """
-        raise NotImplementedError("%s should implement save method" % self)
+        raise NotImplementedErrorError("%s should implement save method" % self)
 
     def delete(self, resource, cascade=True):
         """
         """
-        raise NotImplementedError("%s should implement delete method" % self)
+        raise NotImplementedErrorError("%s should implement delete method" % self)

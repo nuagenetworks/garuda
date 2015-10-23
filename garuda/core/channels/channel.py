@@ -18,7 +18,7 @@ class GAChannel(object):
     def manifest(cls):
         """
         """
-        raise NotImplemented("manifest method must be implemented")
+        raise NotImplementedError("manifest method must be implemented")
 
     @property
     def core_controller(self):
@@ -35,27 +35,27 @@ class GAChannel(object):
     def channel_type(self):
         """
         """
-        raise NotImplemented('Channel must implement channel_type method')
+        raise NotImplementedError('Channel must implement channel_type method')
 
     def run(self):
         """
         """
-        raise NotImplemented('Channel must implement start method')
+        raise NotImplementedError('Channel must implement start method')
 
     def receive(self):
         """
         """
-        raise NotImplemented('Channel must implement receive method')
+        raise NotImplementedError('Channel must implement receive method')
 
     def send(self):
         """
         """
-        raise NotImplemented('Channel must implement send method')
+        raise NotImplementedError('Channel must implement send method')
 
     def push(self):
         """
         """
-        raise NotImplemented('Channel must implement push method')
+        raise NotImplementedError('Channel must implement push method')
 
     def did_fork(self):
         """

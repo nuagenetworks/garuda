@@ -33,4 +33,4 @@ class GAPlugin(object):
     def manifest(cls):
         """
         """
-        raise NotImplemented("manifest method must be implemented")
+        raise NotImplementedError("manifest method must be implemented")

@@ -11,11 +11,15 @@ __all__ = ['GAContext',
            'GAResource',
            'GAResponseFailure',
            'GAResponseSuccess',
-           'GASession']
+           'GASession',
+           'GAController',
+           'GAPluginController']
 
 from collections import namedtuple
 GAResource = namedtuple('GAResource', ['name', 'value'])
 
+from .controller import GAController
+from .plugin_controller import GAPluginController
 from .context import GAContext
 from .errors import GAError
 from .plugin import GAPlugin

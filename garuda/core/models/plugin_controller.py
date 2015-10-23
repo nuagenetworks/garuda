@@ -3,32 +3,37 @@
 import logging
 logger = logging.getLogger('garuda.controller.plugin')
 
-from garuda.core.models import GAPlugin
-from garuda.core.channels import GAChannel
+from plugin import GAPlugin
+from controller import GAController
 
-
-class GAPluginController(object):
+class GAPluginController(GAController):
     """
     """
-    def __init__(self, plugins, core_controller):
+    def __init__(self, plugins, core_controller, redis_conn=None):
         """
         """
+        super(GAPluginController, self).__init__(core_controller=core_controller, redis_conn=redis_conn)
 
-        self._core_controller = core_controller
+        self._pending_plugins = plugins
         self._plugins = []
 
-        for plugin in plugins:
+    @classmethod
+    def managed_plugin_type(cls):
+        """
+        """
+        raise NotImplementedError("managed_plugin_type method must be implemented")
+
+    def ready(self):
+        """
+        """
+        for plugin in self._pending_plugins:
             self.register_plugin(plugin=plugin)
 
-    @property
-    def core_controller(self):
+    def register_plugin(self, plugin):
         """
         """
-        return self._core_controller
+        plugin_type = self.managed_plugin_type()
 
-    def register_plugin(self, plugin, plugin_type):
-        """
-        """
         if not isinstance(plugin, plugin_type):
             logger.error("'%s' cannot register '%s': not a valid '%s'." % (self.__class__.__name__, plugin.manifest().identifier, plugin_type.__name__))
             return

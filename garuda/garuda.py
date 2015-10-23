@@ -20,7 +20,7 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
+    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], additional_controller_classes=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
         """
         """
         setproctitle('garuda-server')
@@ -36,7 +36,6 @@ class Garuda(object):
         self._logic_plugins = []
         self._permission_plugins = []
         self._debug = debug
-
 
         for sdk_info in self._sdks_info:
             self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
@@ -59,8 +58,11 @@ class Garuda(object):
 
         logger.setLevel(log_level)
 
+        self._additional_controller_classes = additional_controller_classes
+
         self._channels_controller = GAChannelsController(channels=self._channels,
                                                          redis_info=self._redis_info,
+                                                         additional_controller_classes=self._additional_controller_classes,
                                                          logic_plugins=self._logic_plugins,
                                                          authentication_plugins=self._authentication_plugins,
                                                          storage_plugins=self._storage_plugins,
