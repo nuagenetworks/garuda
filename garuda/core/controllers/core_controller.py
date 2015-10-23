@@ -26,7 +26,10 @@ class GACoreController(object):
         """
         """
         self._uuid = str(uuid4())
+
         self._redis = redis.StrictRedis(host=redis_info['host'], port=redis_info['port'], db=redis_info['db'])
+        self._redis.config_set('notify-keyspace-events', 'KEA')
+
         self._running = False
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
