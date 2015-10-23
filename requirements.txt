@@ -2,6 +2,7 @@ falcon
 flask
 redis
 gunicorn
+eventlet
 logging
 pymongo
 bambou
