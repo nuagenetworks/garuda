@@ -55,6 +55,9 @@ class GAContext(object):
             if context.has_errors():
                 self.report_errors(context.errors)
 
+            if context.has_events():
+                self.add_events(context.events)
+
             # this is not a merge! this is stupid, but this is better that nothing
             # at least it works when you use a single plugin
             if context.object:
@@ -64,17 +67,22 @@ class GAContext(object):
 
     # Event management
 
+    def add_events(self, events):
+        """
+        """
+        self._events += events
+
     def add_event(self, event):
         """
         """
         self._events.append(event)
 
-    # Errors management
+    def has_events(self):
+        """
+        """
+        return len(self._events) > 0
 
-    def has_errors(self):
-        """
-        """
-        return len(self._errors) > 0
+    # Errors management
 
     def report_errors(self, errors):
         """
@@ -86,10 +94,18 @@ class GAContext(object):
         """
         self._errors.append(error)
 
+    def has_errors(self):
+        """
+        """
+        return len(self._errors) > 0
+
     def clear_errors(self):
         """
         """
         self._errors = []
+
+
+    # Response management
 
     def make_response(self):
         """
