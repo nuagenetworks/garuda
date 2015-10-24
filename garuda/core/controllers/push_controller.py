@@ -44,10 +44,7 @@ class GAPushController(GAController):
     def push_events(self, events):
         """
         """
-        self.publish('event:new', {
-            'garuda_uuid': self.core_controller.uuid,
-            'events': [event.to_dict() for event in events]
-        })
+        self.publish('event:new', [event.to_dict() for event in events])
 
     def get_next_event(self, session):
         """
@@ -61,7 +58,7 @@ class GAPushController(GAController):
 
         data = json.loads(data)
 
-        events = [GAPushEvent.from_dict(event) for event in data['events']]
+        events = [GAPushEvent.from_dict(event) for event in data]
 
         for session in self.core_controller.sessions_controller.get_all_local_sessions(listening=True):
 
