@@ -346,9 +346,7 @@ class GAGUnicorn(BaseApplication):
         """
         self.cfg.set('bind', '%s:%s' % (self._host, self._port))
         self.cfg.set('workers', self._number_of_workers)
-        self.cfg.set('worker_class', 'gevent')
-        # self.cfg.set('worker_class', 'sync')
-        # self.cfg.set('worker_connections', 1000)
+        self.cfg.set('worker_class', 'eventlet')
         self.cfg.set('timeout', self._timeout)
         self.cfg.set('max_requests', 5000)
         self.cfg.set('proc_name', 'garuda-worker')
