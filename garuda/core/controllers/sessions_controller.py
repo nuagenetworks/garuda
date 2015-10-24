@@ -23,7 +23,7 @@ class GASessionsController(GAPluginController):
         super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller, redis_conn=redis_conn)
 
         self._garuda_uuid = self.core_controller.uuid
-        self._default_session_ttl = 10
+        self._default_session_ttl = 600
         self._local_sessions_redis_key = None
         self._local_listening_sessions_redis_key = None
 
