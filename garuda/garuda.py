@@ -20,22 +20,36 @@ class Garuda(object):
     """
     """
 
-    def __init__(self, sdks_info, redis_info=None, channels=[], plugins=[], additional_controller_classes=[], log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
+    def __init__(   self,
+                    sdks_info,
+                    redis_info,
+                    channels=[],
+                    plugins=[],
+                    additional_controller_classes=[],
+                    additional_master_controller_classes=[],
+                    log_level=logging.INFO,
+                    log_handler=None,
+                    runloop=True,
+                    banner=True,
+                    debug=False):
         """
         """
         setproctitle('garuda-server')
         BambouConfig.set_should_raise_bambou_http_error(False)
 
-        self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
-        self._runloop = runloop
-        self._sdks_info= sdks_info
-        self._sdk_library = SDKLibrary()
-        self._channels = channels
-        self._authentication_plugins = []
-        self._storage_plugins = []
-        self._logic_plugins = []
-        self._permission_plugins = []
-        self._debug = debug
+        self._redis_info                           = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
+        self._runloop                              = runloop
+        self._sdks_info                            = sdks_info
+        self._sdk_library                          = SDKLibrary()
+        self._channels                             = channels
+        self._debug                                = debug
+        self._additional_controller_classes        = additional_controller_classes
+        self._additional_master_controller_classes = additional_master_controller_classes
+
+        self._authentication_plugins               = []
+        self._storage_plugins                      = []
+        self._logic_plugins                        = []
+        self._permission_plugins                   = []
 
         for sdk_info in self._sdks_info:
             self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))
@@ -58,8 +72,6 @@ class Garuda(object):
 
         logger.setLevel(log_level)
 
-        self._additional_controller_classes = additional_controller_classes
-
         self._channels_controller = GAChannelsController(channels=self._channels,
                                                          redis_info=self._redis_info,
                                                          additional_controller_classes=self._additional_controller_classes,
@@ -67,6 +79,14 @@ class Garuda(object):
                                                          authentication_plugins=self._authentication_plugins,
                                                          storage_plugins=self._storage_plugins,
                                                          permission_plugins=self._permission_plugins)
+
+        self._master_core = GACoreController(redis_info=self._redis_info,
+                                             logic_plugins=[],
+                                             additional_controller_classes=self._additional_master_controller_classes,
+                                             authentication_plugins=self._authentication_plugins,
+                                             storage_plugins=self._storage_plugins,
+                                             permission_plugins=self._permission_plugins)
+
 
 
     def _init_debug_mode(self):
@@ -152,6 +172,8 @@ class Garuda(object):
             self._init_debug_mode()
 
         self._channels_controller.start()
+        self._master_core.start()
+
         logger.info('Garuda is up and ready to rock! (press CTRL-C to exit)')
 
         if self._runloop:
@@ -167,6 +189,7 @@ class Garuda(object):
         """
         """
         self._channels_controller.stop()
+        self._master_core.stop()
 
         logger.info('Garuda is stopped')
 
