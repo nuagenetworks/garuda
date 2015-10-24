@@ -20,11 +20,8 @@ class GAPushController(GAController):
         """
         """
         super(GAPushController, self).__init__(core_controller=core_controller, redis_conn=redis_conn)
-
-        self._redis_event_thread = None
-        self._pubsub_thread = None
         self._event_queues = {}
-        self._pubsub = None
+        self.subscribe(channel='event:new', handler=self._on_new_push_event)
 
     @classmethod
     def identifier(cls):
@@ -35,24 +32,22 @@ class GAPushController(GAController):
     def start(self):
         """
         """
-        self._pubsub = self._redis.pubsub()
-        self._pubsub.subscribe('event:new')
-        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_events)
+
+        self.start_listening_to_events()
+        pass
 
     def stop(self):
         """
         """
-        self._pubsub.unsubscribe()
-        ThreadManager.stop_thread(self._pubsub_thread)
-        self._pubsub = None
+        self.stop_listening_to_events()
 
     def push_events(self, events):
         """
         """
-        data = dict()
-        data['garuda_uuid'] = self.core_controller.uuid
-        data['events'] = [event.to_dict() for event in events]
-        self.redis.publish('event:new', json.dumps(data))
+        self.publish('event:new', {
+            'garuda_uuid': self.core_controller.uuid,
+            'events': [event.to_dict() for event in events]
+        })
 
     def get_next_event(self, session):
         """
@@ -60,47 +55,39 @@ class GAPushController(GAController):
         for event in self._queue_for_session_uuid(session.uuid):
             yield event
 
-    def _listen_to_redis_events(self):
+    def _on_new_push_event(self, data):
         """
         """
-        for content in self._pubsub.listen():
 
-            if content['type'] == 'subscribe':
-                continue
+        data = json.loads(data)
 
-            if content['type'] == 'unsubscribe':
-                break
+        events = [GAPushEvent.from_dict(event) for event in data['events']]
 
-            data = json.loads(content['data'])
+        for session in self.core_controller.sessions_controller.get_all_local_sessions(listening=True):
 
-            events = [GAPushEvent.from_dict(event) for event in data['events']]
-            #print('Receives redis push:\n%s' % json.dumps(data, indent=4))
+            events_to_send = []
 
-            for session in self.core_controller.sessions_controller.get_all_local_sessions(listening=True):
+            for event in events:
 
-                events_to_send = []
+                resources = [GAResource(name=event.entity.rest_name, value=event.entity.id)]
+                request = GARequest(action=GARequest.ACTION_READ, resources=resources)
+                context = GAContext(request=request, session=session)
+                context.object = event.entity
 
-                for event in events:
+                operation_manager = GAOperationsController( context=context,
+                                                            logic_controller=self.core_controller.logic_controller,
+                                                            storage_controller=self.core_controller.storage_controller)
+                operation_manager.run()
 
-                    resources = [GAResource(name=event.entity.rest_name, value=event.entity.id)]
-                    request = GARequest(action=GARequest.ACTION_READ, resources=resources)
-                    context = GAContext(request=request, session=session)
-                    context.object = event.entity
+                if not context.has_errors():
+                    event.entity = context.object
+                    events_to_send.append(event)
 
-                    operation_manager = GAOperationsController( context=context,
-                                                                logic_controller=self.core_controller.logic_controller,
-                                                                storage_controller=self.core_controller.storage_controller)
-                    operation_manager.run()
+            if len(events_to_send):
 
-                    if not context.has_errors():
-                        event.entity = context.object
-                        events_to_send.append(event)
-
-                if len(events_to_send):
-
-                    logger.info("Adding events queue for session uuid: %s" % session.uuid)
-                    queue = self._queue_for_session_uuid(session.uuid)
-                    queue.put(events_to_send)
+                logger.info("Adding events queue for session uuid: %s" % session.uuid)
+                queue = self._queue_for_session_uuid(session.uuid)
+                queue.put(events_to_send)
 
     ## Utilities
 

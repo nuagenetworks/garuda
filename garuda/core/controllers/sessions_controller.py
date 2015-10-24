@@ -23,12 +23,11 @@ class GASessionsController(GAPluginController):
         super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller, redis_conn=redis_conn)
 
         self._garuda_uuid = self.core_controller.uuid
-
-        self._pubsub = self.redis.pubsub()
-        self._pubsub_thread = None
-        self._default_session_ttl = 600
+        self._default_session_ttl = 10
         self._local_sessions_redis_key = None
         self._local_listening_sessions_redis_key = None
+
+        self.subscribe(channel='__keyevent@0__:expired', handler=self._on_session_expiration)
 
     @classmethod
     def identifier(cls):
@@ -69,14 +68,12 @@ class GASessionsController(GAPluginController):
     def start(self):
         """
         """
-        self._pubsub.psubscribe('__keyevent@0__:expired')
-        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_event)
+        self.start_listening_to_events()
 
     def stop(self):
         """
         """
-        self._pubsub.punsubscribe('__keyevent@0:expired')
-        ThreadManager.stop_thread(self._pubsub_thread)
+        self.stop_listening_to_events()
         self.flush_local_sessions()
 
     def get_all_local_sessions(self, listening=None):
@@ -167,18 +164,12 @@ class GASessionsController(GAPluginController):
         if session.is_listening_push_notifications:
             self.redis.sadd(self.local_listening_sessions_redis_key, session.redis_key)
 
-
-    def _listen_to_redis_event(self):
+    def _on_session_expiration(self, data):
         """
         """
-        for event in self._pubsub.listen():
-
-            if not event['pattern']:
-                continue
-
-            session_key = event['data']
-            self.redis.srem(self.local_sessions_redis_key, session_key)
-            self.redis.srem(self.local_listening_sessions_redis_key, session_key)
+        session_key = data
+        self.redis.srem(self.local_sessions_redis_key, session_key)
+        self.redis.srem(self.local_listening_sessions_redis_key, session_key)
 
     def _get_session_from_key(self, session_key):
         """
