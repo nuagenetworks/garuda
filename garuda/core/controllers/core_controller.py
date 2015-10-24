@@ -115,7 +115,7 @@ class GACoreController(object):
         logger.debug('Stopping core controller %s with pid %s' % (self.uuid, os.getpid()))
 
         for additional_controller in self._additional_controllers.values():
-            additional_controller.start()
+            additional_controller.stop()
 
         self.sessions_controller.stop()
         self.push_controller.stop()
