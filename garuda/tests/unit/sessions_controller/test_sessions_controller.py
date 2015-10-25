@@ -40,7 +40,6 @@ class GASessionsControllerTestCase(UnitTestCase):
         session = self.sessions_controller.create_session(request='fake-request')
         self.assertEquals(len(session.uuid), 36)
         self.assertEquals(session.garuda_uuid, self.sessions_controller._garuda_uuid)
-        self.assertEquals(session.is_listening_push_notifications, False)
 
     def test_create_session_without_authentication(self):
         """ Create a session with authentication failure should succeed
@@ -96,15 +95,14 @@ class GASessionsControllerTestCase(UnitTestCase):
         """
         session = self.sessions_controller.create_session(request='fake-request')
         self.sessions_controller.set_session_listening_status(session, True)
-        self.sessions_controller
-        self.assertTrue(self.sessions_controller.get_session(session.uuid).is_listening_push_notifications)
+        self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions(listening=True)])
 
     def test_unset_session_to_listening_status(self):
         """ Unsetting the a session listening state should update the value in redis db to False
         """
         session = self.sessions_controller.create_session(request='fake-request')
         self.sessions_controller.set_session_listening_status(session, False)
-        self.assertFalse(self.sessions_controller.get_session(session.uuid).is_listening_push_notifications)
+        self.assertNotIn(session, self.sessions_controller.get_all_local_sessions(listening=True))
 
     def test_getting_local_listening_sessions(self):
         """ Getting local listening session should only return local listening sessions

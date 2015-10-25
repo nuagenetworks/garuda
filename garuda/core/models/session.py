@@ -18,13 +18,11 @@ class GASession(GASerializable):
 
         self._uuid = str(uuid4())
         self._garuda_uuid = garuda_uuid
-        self.is_listening_push_notifications = False
         self.root_object = None
         self.ttl = None
 
         self.register_attribute(type=str, internal_name='_uuid')
         self.register_attribute(type=str, internal_name='_garuda_uuid')
-        self.register_attribute(type=bool, internal_name='is_listening_push_notifications')
         self.register_attribute(type=NURESTRootObject, internal_name='root_object')
 
     @property

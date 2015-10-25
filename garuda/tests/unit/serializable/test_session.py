@@ -31,7 +31,6 @@ class TestSerializeSession(UnitTestCase):
         session = GASession(garuda_uuid='xxx-yyy-zzzz')
 
         expected_result = {
-            'is_listening_push_notifications': False,
             'garuda_uuid': 'xxx-yyy-zzzz',
             'root_object': None,
             'uuid': session.uuid
@@ -46,7 +45,6 @@ class TestSerializeSession(UnitTestCase):
         session = GASession(garuda_uuid='xxx-yyy-zzzz')
 
         expected_result = {
-            'is_listening_push_notifications': False,
             'garuda_uuid': 'xxx-yyy-zzzz',
             'root_object': None,
             'uuid': session.uuid,

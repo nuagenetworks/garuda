@@ -76,7 +76,7 @@ class GASessionsController(GAPluginController):
         self.stop_listening_to_events()
         self.flush_local_sessions()
 
-    def get_all_local_sessions(self, listening=None):
+    def get_all_local_sessions(self, listening=False):
         """
         """
         session_keys = self._get_all_local_session_keys(listening=listening)
@@ -132,14 +132,12 @@ class GASessionsController(GAPluginController):
         """
         """
         logger.debug('Set session key %s listening status: %s' % (session.redis_key, status))
-        session.is_listening_push_notifications = status
 
         if status:
             self.redis.sadd(self.local_listening_sessions_redis_key, session.redis_key)
         else:
             self.redis.srem(self.local_listening_sessions_redis_key, session.redis_key)
 
-        self._save_session(session)
         self.reset_session_ttl(session)
 
     def flush_local_sessions(self):
@@ -161,9 +159,6 @@ class GASessionsController(GAPluginController):
         self.redis.hmset(session.redis_key, session.to_hash())
         self.redis.sadd(self.local_sessions_redis_key, session.redis_key)
         self.redis.expire(session.redis_key, self._default_session_ttl)
-
-        if session.is_listening_push_notifications:
-            self.redis.sadd(self.local_listening_sessions_redis_key, session.redis_key)
 
     def _on_session_expiration(self, data):
         """
