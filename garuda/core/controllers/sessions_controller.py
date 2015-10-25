@@ -139,6 +139,7 @@ class GASessionsController(GAPluginController):
         else:
             self.redis.srem(self.local_listening_sessions_redis_key, session.redis_key)
 
+        self._save_session(session)
         self.reset_session_ttl(session)
 
     def flush_local_sessions(self):
