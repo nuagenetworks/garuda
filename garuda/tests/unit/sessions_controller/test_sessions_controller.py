@@ -21,17 +21,18 @@ class GASessionsControllerTestCase(UnitTestCase):
         self.fake_auth_plugin = FakeAuthPlugin()
         self.fake_core_controller = FakeCoreController()
         self.sessions_controller = GASessionsController(plugins=[self.fake_auth_plugin], core_controller=self.fake_core_controller, redis_conn=redis_connection)
+        self.sessions_controller.ready()
         self.sessions_controller._default_session_ttl = 3
 
     def setUp(self):
         """ Initialize context
         """
-        self.sessions_controller.subscribe()
+        self.sessions_controller.start()
 
     def tearDown(self):
         """ Cleanup context
         """
-        self.sessions_controller.unsubscribe()
+        self.sessions_controller.stop()
 
     def test_create_session(self):
         """ Create a session with authentication success should succeed
@@ -95,6 +96,7 @@ class GASessionsControllerTestCase(UnitTestCase):
         """
         session = self.sessions_controller.create_session(request='fake-request')
         self.sessions_controller.set_session_listening_status(session, True)
+        self.sessions_controller
         self.assertTrue(self.sessions_controller.get_session(session.uuid).is_listening_push_notifications)
 
     def test_unset_session_to_listening_status(self):
