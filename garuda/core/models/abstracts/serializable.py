@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import json
+import msgpack
 
 from collections import namedtuple
 from datetime import datetime
@@ -72,10 +72,10 @@ class GASerializable(object):
                     for key in keys:
 
                         d = value[key].to_dict()
-                        result[attribute.name][key] = json.dumps(d) if hash_children else d
+                        result[attribute.name][key] = msgpack.packb(d) if hash_children else d
 
                 else:
-                    result[attribute.name] = json.dumps(value) if hash_children else value
+                    result[attribute.name] = msgpack.packb(value) if hash_children else value
 
             elif attribute.type is list and len(value) > 0:
                 result[attribute.name] = list()
@@ -84,14 +84,14 @@ class GASerializable(object):
                 if hasattr(object, 'to_dict'):
                     for object in value:
                         d = object.to_dict()
-                        result[attribute.name].append(json.dumps(d) if hash_children else d)
+                        result[attribute.name].append(msgpack.packb(d) if hash_children else d)
 
                 else:
-                    result[attribute.name] = json.dumps(value) if hash_children else value
+                    result[attribute.name] = msgpack.packb(value) if hash_children else value
 
             elif value is not None and hasattr(value, 'to_dict'):
                 d = value.to_dict()
-                result[attribute.name] = json.dumps(d) if hash_children else d
+                result[attribute.name] = msgpack.packb(d) if hash_children else d
 
             elif value is not None and attribute.type is datetime:
                 result[attribute.name] = value.strftime(self.DATE_FORMAT)
@@ -117,30 +117,30 @@ class GASerializable(object):
                     attribute_value = attribute.type()
                     for key in value.keys():
                         object = value[key]
-                        d = json.loads(object) if hash_children else object
+                        d = msgpack.unpackb(object) if hash_children else object
                         attribute_value[key] = attribute.children_type.from_dict(d)
 
                     setattr(instance, attribute.internal_name, attribute_value)
                 else:
-                    setattr(instance, attribute.internal_name, json.loads(value) if hash_children else value)
+                    setattr(instance, attribute.internal_name, msgpack.unpackb(value) if hash_children else value)
             # List
             elif attribute.type is list:
                 if attribute.children_type and hasattr(attribute.children_type, 'to_dict'):
                     attribute_value = attribute.type()
                     for object in value:
-                        d = json.loads(object) if hash_children else object
+                        d = msgpack.unpackb(object) if hash_children else object
                         attribute_value.append(attribute.children_type.from_dict(d))
 
                     setattr(instance, attribute.internal_name, attribute_value)
                 else:
-                    setattr(instance, attribute.internal_name, json.loads(value) if hash_children else value)
+                    setattr(instance, attribute.internal_name, msgpack.unpackb(value) if hash_children else value)
 
             elif value is not None:
 
                 # Objects
                 if hasattr(attribute.type, 'to_dict'):
                     object = attribute.type()  # Note: Allows to use NURESTObject as well
-                    d = json.loads(value) if hash_children else value
+                    d = msgpack.unpackb(value) if hash_children else value
                     value = object.from_dict(d)
                     setattr(instance, attribute.internal_name, value if value else object)
 

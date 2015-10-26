@@ -2,7 +2,7 @@
 
 import logging
 from uuid import uuid4
-import json
+import msgpack
 
 from garuda.core.lib import ThreadManager
 
@@ -89,7 +89,8 @@ class GAController(object):
     def publish(self, channel, data):
         """
         """
-        self.redis.publish(channel, json.dumps(data))
+
+        self.redis.publish(channel, data)
 
     def start_listening_to_events(self):
         """

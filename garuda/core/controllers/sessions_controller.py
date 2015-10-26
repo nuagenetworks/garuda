@@ -3,6 +3,7 @@
 import logging
 import redis
 import os
+import msgpack
 
 from garuda.core.models import GAPluginController
 from garuda.core.plugins import GAAuthenticationPlugin
@@ -170,12 +171,12 @@ class GASessionsController(GAPluginController):
     def _get_session_from_key(self, session_key):
         """
         """
-        session_hash = self.redis.hgetall(session_key)
+        session_data = self.redis.hgetall(session_key)
 
-        if not session_hash or not len(session_hash):
+        if not session_data or not len(session_data):
             return None
 
-        return GASession.from_hash(session_hash)
+        return GASession.from_hash(session_data)
 
     def _get_all_local_session_keys(self, listening=False):
         """
