@@ -3,6 +3,7 @@
 import logging
 from uuid import uuid4
 import msgpack
+from msgpack.exceptions import UnpackException
 
 from garuda.core.lib import ThreadManager
 
@@ -90,7 +91,7 @@ class GAController(object):
         """
         """
 
-        self.redis.publish(channel, data)
+        self.redis.publish(channel, msgpack.packb(data))
 
     def start_listening_to_events(self):
         """
@@ -121,7 +122,10 @@ class GAController(object):
 
             if channel in self._subscriptions:
                 handler = self._subscriptions[channel]
-                handler(event['data'])
+                try:
+                    handler(msgpack.unpackb(event['data']))
+                except:
+                    handler(event['data'])
 
 
 

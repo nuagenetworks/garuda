@@ -56,8 +56,6 @@ class GAPushController(GAController):
         """
         """
 
-        data = json.loads(data)
-
         events = [GAPushEvent.from_dict(event) for event in data]
 
         for session in self.core_controller.sessions_controller.get_all_local_sessions(listening=True):
