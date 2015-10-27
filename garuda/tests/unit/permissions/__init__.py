@@ -36,7 +36,7 @@ class PermissionsControllerTestCase(UnitTestCase):
         """
         super(PermissionsControllerTestCase, self).__init__(name)
 
-        redis_connection            = redis.StrictRedis(host='127.0.0.1', port='6379', db=0)
+        redis_connection            = redis.StrictRedis(host='127.0.0.1', port='6379', db=1)
         self.fake_core_controller   = FakeCoreController()
         self.permissions_controller = GAPermissionsController(plugins=[], core_controller=self.fake_core_controller, redis_conn=redis_connection)
         self.permissions_controller.ready()
