@@ -2,7 +2,6 @@
 
 import logging
 from uuid import uuid4
-from msgpack.exceptions import UnpackException
 
 from garuda.core.lib import ThreadManager
 

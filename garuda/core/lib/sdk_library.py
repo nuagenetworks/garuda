@@ -4,7 +4,6 @@ import logging
 logger = logging.getLogger('garuda.sdksmanager')
 
 from garuda.core.lib import SDKTransformer
-from garuda.core.exceptions import InternalInconsistencyException
 from bambou import NURESTModelController
 from garuda.core.lib import Singleton
 from collections import OrderedDict
