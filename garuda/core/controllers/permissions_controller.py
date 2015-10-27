@@ -13,8 +13,8 @@ class GAPermissionsController(GAPluginController):
     """
     """
 
-    DEFAULT_ACTION = 'read'
-    ACTIONS = ['read', 'use', 'extend', 'write', 'all']
+    DEFAULT_PERMISSION = 'read'
+    PERMISSIONS = ['read', 'use', 'extend', 'write', 'all']
 
     def __init__(self, plugins, core_controller, redis_conn):
         """
@@ -48,31 +48,31 @@ class GAPermissionsController(GAPluginController):
 
     # Implementation
 
-    def should_manage(self, resource, target, action):
+    def should_manage(self, resource, target, permission):
         """
         """
         return True
 
-    def create_permission(self, resource, target, action):
+    def create_permission(self, resource, target, permission):
         """
         """
         permission_key = self._get_permission_key(resource=resource, target=target)
-        extended_key = self._get_extended_key(permission_key=permission_key, action=action, implicit=False)
+        extended_key = self._get_extended_key(permission_key=permission_key, permission=permission, implicit=False)
 
         if self.redis.smembers(extended_key):
             return
 
-        self._create_permission(resource=resource, target=target, action=action, implicit=False)
+        self._create_permission(resource=resource, target=target, permission=permission, implicit=False)
 
-    def remove_permission(self, resource, target, action):
+    def remove_permission(self, resource, target, permission):
         """
         """
         permission_key = self._get_permission_key(resource=resource, target=target)
-        extended_key = self._get_extended_key(permission_key, action=action, implicit=False)
+        extended_key = self._get_extended_key(permission_key, permission=permission, implicit=False)
 
-        if not self.redis.smembers(self._get_extended_key(permission_key=permission_key, action=action, implicit=True)):
-            logger.info('Remove action %s permission to %s' % (action, permission_key))
-            self.redis.zrem(permission_key, action)
+        if not self.redis.smembers(self._get_extended_key(permission_key=permission_key, permission=permission, implicit=True)):
+            logger.info('Remove permission %s from %s' % (permission, permission_key))
+            self.redis.zrem(permission_key, permission)
 
         extended_implicit_keys = self.redis.smembers(extended_key)
 
@@ -94,9 +94,9 @@ class GAPermissionsController(GAPluginController):
                     self.redis.delete(extended_implicit_key)
 
                     implicit_permission_key = self._convert_extended_key(extended_implicit_key)
-                    if not self.redis.exists(self._get_extended_key(permission_key=implicit_permission_key, action=self.DEFAULT_ACTION, implicit=False)):
-                        logger.info('**Removes action %s from %s' % (action, implicit_permission_key))
-                        self.redis.zrem(implicit_permission_key, self.DEFAULT_ACTION)
+                    if not self.redis.exists(self._get_extended_key(permission_key=implicit_permission_key, permission=self.DEFAULT_PERMISSION, implicit=False)):
+                        logger.info('**Removes permission %s from %s' % (permission, implicit_permission_key))
+                        self.redis.zrem(implicit_permission_key, self.DEFAULT_PERMISSION)
 
                 else:
                     logger.info('Removing %s from %s' % (extended_key, extended_implicit_key))
@@ -104,19 +104,19 @@ class GAPermissionsController(GAPluginController):
 
         self.redis.delete(extended_key)
 
-    def has_permission(self, resource, target, action):
+    def has_permission(self, resource, target, permission):
         """
         """
         permission_key = self._get_permission_key(resource=resource, target=target)
 
-        authorized_action = self.redis.zrevrange(permission_key, 0, 0)
+        authorized_permission = self.redis.zrevrange(permission_key, 0, 0)
 
-        if authorized_action:
-            action_value = self._value_for_action(action=action)
-            authorized_action_value = self._value_for_action(action=authorized_action[0])
+        if authorized_permission:
+            permission_value = self._value_for_permission(permission=permission)
+            authorized_permission_value = self._value_for_permission(permission=authorized_permission[0])
 
-            if authorized_action_value >= action_value:
-                logger.info('Found %s >= %s' % (authorized_action, action))
+            if authorized_permission_value >= permission_value:
+                logger.info('Found %s >= %s' % (authorized_permission, permission))
                 return True
 
         if hasattr(target, "parent_object") is False:
@@ -128,14 +128,14 @@ class GAPermissionsController(GAPluginController):
             logger.info('No inherited permission')
             return False
 
-        return self.has_permission(resource=resource, target=target.parent_object, action=action)
+        return self.has_permission(resource=resource, target=target.parent_object, permission=permission)
 
     # UTILITIES
 
-    def _get_extended_key(self, permission_key, action, implicit):
+    def _get_extended_key(self, permission_key, permission, implicit):
         """
         """
-        return "%s:%s:%s" % (permission_key, action, "I" if implicit else "E")
+        return "%s:%s:%s" % (permission_key, permission, "I" if implicit else "E")
 
     def _get_permission_key(self, resource, target):
         """
@@ -147,36 +147,36 @@ class GAPermissionsController(GAPluginController):
         """
         return ':'.join(extended_key.split(':')[:3])
 
-    def _value_for_action(self, action):
+    def _value_for_permission(self, permission):
         """
         """
-        return self.ACTIONS.index(action.lower())
+        return self.PERMISSIONS.index(permission.lower())
 
-    def _create_permission(self, resource, target, action, implicit):
+    def _create_permission(self, resource, target, permission, implicit):
         """
         """
         permission_key = self._get_permission_key(resource=resource, target=target)
-        extended_key = self._get_extended_key(permission_key=permission_key, action=action, implicit=implicit)
+        extended_key = self._get_extended_key(permission_key=permission_key, permission=permission, implicit=implicit)
 
-        action_value = self._value_for_action(action=action)
-        read_value = self._value_for_action(action=self.DEFAULT_ACTION)
+        permission_value = self._value_for_permission(permission=permission)
+        read_value = self._value_for_permission(permission=self.DEFAULT_PERMISSION)
 
-        logger.info('Adding action %s permission (value=%s) to %s (implicit=%s)' % (action, action_value, permission_key, implicit))
+        logger.info('Adding permission %s (value=%s) to %s (implicit=%s)' % (permission, permission_value, permission_key, implicit))
 
-        self.redis.zadd(permission_key, action_value, action)
+        self.redis.zadd(permission_key, permission_value, permission)
 
         if hasattr(target, "parent_object") is False:
             raise Exception('%s does not have a parent_object attribute' % target)
 
         while target.parent_object != None:
             tmp_permission_key = self._get_permission_key(resource=resource, target=target.parent_object)
-            tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, action=self.DEFAULT_ACTION, implicit=True)
+            tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, permission=self.DEFAULT_PERMISSION, implicit=True)
 
             logger.info('Adding implicit %s to %s' % (tmp_extended_key, extended_key))
             logger.info('Link %s to %s' % (extended_key, tmp_extended_key))
 
             self.redis.sadd(extended_key, tmp_extended_key)
             self.redis.sadd(tmp_extended_key, extended_key)
-            self.redis.zadd(tmp_permission_key, read_value, self.DEFAULT_ACTION)
+            self.redis.zadd(tmp_permission_key, read_value, self.DEFAULT_PERMISSION)
 
             target = target.parent_object
