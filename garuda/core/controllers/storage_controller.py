@@ -64,35 +64,35 @@ class GAStorageController(GAPluginController):
         plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
         return plugin.get_all(parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by) if plugin else None
 
-    def create(self, resource, parent=None):
+    def create(self, resource, parent=None, user_identifier=None):
         """
         """
         plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
-        return plugin.create(resource=resource, parent=parent) if plugin else None
+        return plugin.create(resource=resource, parent=parent, user_identifier=user_identifier) if plugin else None
 
-    def update(self, resource):
+    def update(self, resource, user_identifier=None):
         """
         """
         plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
-        return plugin.update(resource=resource) if plugin else None
+        return plugin.update(resource=resource, user_identifier=user_identifier) if plugin else None
 
-    def delete(self, resource, cascade=True):
+    def delete(self, resource, cascade=True, user_identifier=None):
         """
         """
         plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
-        return plugin.delete(resource=resource, cascade=cascade) if plugin else None
+        return plugin.delete(resource=resource, cascade=cascade, user_identifier=user_identifier) if plugin else None
 
-    def delete_multiple(self, resources, cascade=True):
+    def delete_multiple(self, resources, cascade=True, user_identifier=None):
         """
         """
         plugin = self._managing_plugin(resource_name=resources[0].rest_name)
-        return plugin.delete_multiple(resources=resources, cascade=cascade) if plugin else None
+        return plugin.delete_multiple(resources=resources, cascade=cascade, user_identifier=user_identifier) if plugin else None
 
-    def assign(self, resource_name, resources, parent):
+    def assign(self, resource_name, resources, parent, user_identifier=None):
         """
         """
         plugin = self._managing_plugin(resource_name=resource_name, identifier=None)
-        return plugin.assign(resource_name=resource_name, resources=resources, parent=parent) if plugin else None
+        return plugin.assign(resource_name=resource_name, resources=resources, parent=parent, user_identifier=user_identifier) if plugin else None
 
     def count(self, parent, resource_name, filter=None):
         """

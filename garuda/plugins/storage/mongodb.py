@@ -98,12 +98,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return (objects, count)
 
-    def create(self, resource, parent=None):
+    def create(self, resource, parent=None, user_identifier=None):
         """
         """
         resource.creation_date = time.time()
         resource.last_updated_date = resource.creation_date
-        resource.owner = "111111111111111111111111" # @TODO: we must give this information as a parameter
+        resource.owner = user_identifier
         resource.parent_type = parent.rest_name if parent else None
         resource.parent_id = parent.id if parent else None
         resource.id = str(ObjectId())
@@ -121,7 +121,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
             self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {children_key: children}})
 
-    def update(self, resource):
+    def update(self, resource, user_identifier=None):
         """
         """
         resource.last_updated_date = time.time()
@@ -134,7 +134,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].update({'_id': {'$eq': ObjectId(resource.id)}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
-    def delete(self, resource, cascade=True):
+    def delete(self, resource, cascade=True, user_identifier=None):
         """
         """
         if resource.parent_id and resource.parent_type:
@@ -144,9 +144,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data[children_key].remove(resource.id)
                 self.db[resource.parent_type].update({'_id': {'$eq': ObjectId(resource.parent_id)}}, {'$set': data})
 
-        self.delete_multiple(resources=[resource], cascade=cascade)
+        self.delete_multiple(resources=[resource], cascade=cascade, user_identifier=user_identifier)
 
-    def delete_multiple(self, resources, cascade=True):
+    def delete_multiple(self, resources, cascade=True, user_identifier=None):
         """
         """
         for resource in resources:
@@ -169,12 +169,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                     child_resources = [klass(id=identifier) for identifier in data[children_key]]
 
                     # recursively delete children
-                    self.delete_multiple(child_resources, cascade=True)
+                    self.delete_multiple(child_resources, cascade=True, user_identifier=user_identifier)
 
         self.db[resources[0].rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
 
 
-    def assign(self, resource_name, resources, parent):
+    def assign(self, resource_name, resources, parent, user_identifier=None):
         """
         """
         self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
