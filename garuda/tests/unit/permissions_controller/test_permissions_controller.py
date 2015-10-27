@@ -26,7 +26,7 @@ class FakeCoreController(object):
         return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
 
 
-class TestPermissionsController(UnitTestCase):
+class GAPermissionsControllerTestCase(UnitTestCase):
     """
     """
 

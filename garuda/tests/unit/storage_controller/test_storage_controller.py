@@ -17,6 +17,7 @@ class FakeCoreController(object):
     def uuid(self):
         return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
 
+
 class GAStorageControllerTestCase(UnitTestCase):
     """
     """
