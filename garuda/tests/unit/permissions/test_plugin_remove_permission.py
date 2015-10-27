@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from garuda.tests.unit.permissions import PermissionPluginTestCase
+from garuda.tests.unit.permissions import PermissionsControllerTestCase
 
 
-class TestRemovePermissions(PermissionPluginTestCase):
+class TestRemovePermissions(PermissionsControllerTestCase):
     """
     """
 

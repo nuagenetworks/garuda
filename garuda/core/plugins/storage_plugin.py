@@ -17,22 +17,42 @@ class GAStoragePlugin(GAPlugin):
         """
         raise NotImplementedErrorError("%s should implement instantiate method" % self)
 
-    def get(self, resource_name, identifier):
+    def count(self, parent, resource_name, filter=None):
         """
         """
-        raise NotImplementedErrorError("%s should implement get method" % self)
+        raise NotImplementedErrorError("%s must implement count method" % self)
 
-    def get_all(self, parent, resource_name):
+    def get(self, resource_name, identifier=None, filter=None):
         """
         """
-        raise NotImplementedErrorError("%s should implement get_all method" % self)
+        raise NotImplementedErrorError("%s must implement get method" % self)
 
-    def save(self, resource, parent=None):
+    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
         """
         """
-        raise NotImplementedErrorError("%s should implement save method" % self)
+        raise NotImplementedErrorError("%s must implement get_all method" % self)
 
-    def delete(self, resource, cascade=True):
+    def create(self, resource, parent=None, user_identifier=None):
         """
         """
-        raise NotImplementedErrorError("%s should implement delete method" % self)
+        raise NotImplementedErrorError("%s must implement create method" % self)
+
+    def update(self, resource, user_identifier=None):
+        """
+        """
+        raise NotImplementedErrorError("%s must implement update method" % self)
+
+    def delete(self, resource, cascade=True, user_identifier=None):
+        """
+        """
+        raise NotImplementedErrorError("%s must implement delete method" % self)
+
+    def delete_multiple(self, resources, cascade=True, user_identifier=None):
+        """
+        """
+        raise NotImplementedErrorError("%s must implement delete_multiple method" % self)
+
+    def assign(self, resource_name, resources, parent, user_identifier=None):
+        """
+        """
+        raise NotImplementedErrorError("%s must implement assign method" % self)

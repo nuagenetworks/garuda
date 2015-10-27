@@ -12,17 +12,7 @@ class GAPermissionsPlugin(GAPlugin):
         """
         return True
 
-    def create_permission(self, resource, target, action, implicit=False):
+    def interpret_permissions(self, todo):
         """
         """
         raise NotImplementedErrorError("%s should implement create_permission method" % self)
-
-    def remove_permission(self, resource, target, action):
-        """
-        """
-        raise NotImplementedErrorError("%s should implement remove_permission method" % self)
-
-    def has_permission(self, resource, target, action):
-        """
-        """
-        raise NotImplementedErrorError("%s should implement has_permission method" % self)

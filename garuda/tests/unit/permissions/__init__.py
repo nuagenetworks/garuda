@@ -3,7 +3,7 @@
 import redis
 from uuid import uuid4
 
-from garuda.plugins.default_permissions_controller_plugin import DefaultPermissionsControllerPlugin
+from garuda.core.controllers import GAPermissionsController
 from garuda.tests import UnitTestCase
 
 
@@ -20,7 +20,13 @@ class CustomObject(object):
         return "<CustomObject uuid=%s>" % self.id
 
 
-class PermissionPluginTestCase(UnitTestCase):
+class FakeCoreController(object):
+
+    @property
+    def uuid(self):
+        return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
+
+class PermissionsControllerTestCase(UnitTestCase):
     """
     """
     def __init__(self, name):
@@ -28,10 +34,13 @@ class PermissionPluginTestCase(UnitTestCase):
         A - B - C - D - E
                     |-  F - G
         """
-        super(PermissionPluginTestCase, self).__init__(name)
+        super(PermissionsControllerTestCase, self).__init__(name)
 
-        redis_connection = redis.StrictRedis(host='127.0.0.1', port='6379', db=0)
-        self.plugin = DefaultPermissionsControllerPlugin(redis_connection)
+        redis_connection            = redis.StrictRedis(host='127.0.0.1', port='6379', db=0)
+        self.fake_core_controller   = FakeCoreController()
+        self.permissions_controller = GAPermissionsController(plugins=[], core_controller=self.fake_core_controller, redis_conn=redis_connection)
+        self.permissions_controller.ready()
+
         self.user = CustomObject()
 
         self.objectA = CustomObject()
@@ -45,17 +54,17 @@ class PermissionPluginTestCase(UnitTestCase):
     def grant_permission(self, to_object, permission):
         """
         """
-        self.plugin.create_permission(self.user, to_object, permission)
+        self.permissions_controller.create_permission(self.user, to_object, permission)
 
     def revoke_permission(self, to_object, permission):
         """
         """
-        self.plugin.remove_permission(self.user, to_object, permission)
+        self.permissions_controller.remove_permission(self.user, to_object, permission)
 
     def _assertHasPermission(self, obj, permission, expected):
         """
         """
-        self.assertEquals(self.plugin.has_permission(self.user, obj, permission), expected)
+        self.assertEquals(self.permissions_controller.has_permission(self.user, obj, permission), expected)
 
     def assertCanRead(self, obj):
         """
@@ -90,4 +99,4 @@ class PermissionPluginTestCase(UnitTestCase):
     def assertNoSessionExists(self):
         """
         """
-        self.assertTrue(self.plugin.is_empty())
+        self.assertTrue(self.permissions_controller.is_empty())

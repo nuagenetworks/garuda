@@ -39,7 +39,7 @@ class GACoreController(object):
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
         self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self, redis_conn=self._redis)
-        self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self)
+        self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self, redis_conn=self._redis)
         self._push_controller = GAPushController(core_controller=self, redis_conn=self._redis)
 
         self._logic_controller.ready()
