@@ -62,15 +62,16 @@ class GALogicController(GAPluginController):
 
         result = []
         for plugin in plugins:
-            result.append(self._perform_delegate(plugin, delegate, context))
+            # result.append(self._perform_delegate(plugin, delegate, context))
+            context = self._perform_delegate(plugin, delegate, context)
 
         # result = self._thread_manager.start(self._perform_delegate,
         #                                        elements=plugins,
         #                                        delegate=delegate,
         #                                        context=context)
 
-        logger.info("Merging contexts %s" % result)
-        context.merge_contexts(result)
+        # logger.info("Merging contexts %s" % result)
+        # context.merge_contexts(result)
 
     def _perform_delegate(self, plugin, delegate, context):
         """
@@ -79,4 +80,5 @@ class GALogicController(GAPluginController):
         if not method:
             return context
         logger.info("Calling delegate %s of plugin %s " % (delegate, plugin))
-        return method(context=context.copy())
+        # return method(context=context.copy())
+        return method(context=context)
