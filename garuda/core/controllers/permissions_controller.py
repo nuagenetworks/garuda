@@ -35,19 +35,6 @@ class GAPermissionsController(GAPluginController):
 
     # API
 
-    def flush_permissions(self):
-        """
-        """
-        keys = self.redis.keys('permission*')
-        self.redis.delete(*keys)
-
-    def is_empty(self):
-        """
-        """
-        return len(self.redis.keys('permission*')) == 0
-
-    # Implementation
-
     def should_manage(self, resource, target, permission):
         """
         """
@@ -130,7 +117,19 @@ class GAPermissionsController(GAPluginController):
 
         return self.has_permission(resource=resource, target=target.parent_object, permission=permission)
 
+
     # UTILITIES
+
+    def flush_permissions(self):
+        """
+        """
+        keys = self.redis.keys('permission*')
+        self.redis.delete(*keys)
+
+    def is_empty(self):
+        """
+        """
+        return len(self.redis.keys('permission*')) == 0
 
     def _get_extended_key(self, permission_key, permission, implicit):
         """
