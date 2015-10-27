@@ -46,7 +46,7 @@ class GAOperationsController(object):
     def _report_resource_not_found(self, resource):
         """
         """
-        self.context.report_error(GAError(  type=GAError.TYPE_NOTFOUND,
+        self.context.add_error(GAError(  type=GAError.TYPE_NOTFOUND,
                                             title='%s not found' % resource.name,
                                             description='Cannot find %s with ID %s' % (resource.name, resource.value)))
 
@@ -55,7 +55,7 @@ class GAOperationsController(object):
         """
         """
         for property_name, description in resource.errors.iteritems():
-            self.context.report_error(GAError(  type=GAError.TYPE_INVALID,
+            self.context.add_error(GAError(  type=GAError.TYPE_INVALID,
                                                 title='Invalid %s' % property_name,
                                                 description=description,
                                                 property_name=property_name))
@@ -63,7 +63,7 @@ class GAOperationsController(object):
     def _report_method_not_allowed(self, action):
         """
         """
-        self.context.report_error(GAError(  type=GAError.TYPE_NOTFOUND,
+        self.context.add_error(GAError(  type=GAError.TYPE_NOTFOUND,
                                             title='Action not allowed',
                                             description='Unable to %s a resource without its identifier' % action)
                                             )
@@ -271,9 +271,9 @@ class GAOperationsController(object):
 
         if err:
             if isinstance(err, list):
-                self.context.report_errors(err)
+                self.context.add_errors(err)
             else:
-                self.context.report_error(err)
+                self.context.add_error(err)
 
     def _perform_push(self):
         """

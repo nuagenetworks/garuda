@@ -147,7 +147,7 @@ class GACoreController(object):
                     title='Unauthorized access',
                     description='Could not grant access. Please log in.')
 
-            context.report_error(error)
+            context.add_error(error)
 
             return GAResponseFailure(content=context.errors)
 
@@ -178,7 +178,7 @@ class GACoreController(object):
                             title='Unauthorized access',
                             description='Could not grant access. Please login.')
 
-            context.report_error(error)
+            context.add_error(error)
             return (None, GAResponseFailure(content=context.errors))
 
         # reset the session ttl

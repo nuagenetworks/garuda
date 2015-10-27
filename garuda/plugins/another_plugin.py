@@ -34,7 +34,7 @@ class AnotherPlugin(GABusinessLogicPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         print 'AnotherPlugin\t\tcheck_perform_read\t\t(Host=%s)' % context.request.parameters['Host']
-        # context.report_error(type=GAError.TYPE_INVALID, property='what', title='NOWAY', description='TUUTUTUTUUT')
+        # context.add_error(type=GAError.TYPE_INVALID, property='what', title='NOWAY', description='TUUTUTUTUUT')
         return context
 
     def preprocess_readall(self, context, object):
