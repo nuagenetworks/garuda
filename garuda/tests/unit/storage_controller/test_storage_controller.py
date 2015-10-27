@@ -36,19 +36,18 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.storage_controller.ready()
 
     def setUp(self):
-        """ Initialize context
         """
-
+        """
         self.storage_controller.start()
 
     def tearDown(self):
-        """ Cleanup context
+        """
         """
         self.storage_controller.stop()
         self.mongo.drop_database('unit_test')
 
     def test_create_enterprise(self):
-        """ Test enterprise creation
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
 
@@ -57,7 +56,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(self.db.enterprise.count(), 1)
 
     def test_get_enterprise_by_id(self):
-        """ Test getting enterprise using id creation
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         self.storage_controller.create(resource=enterprise1, parent=None)
@@ -67,7 +66,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret.description, enterprise1.description)
 
     def test_count_enterprises(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         enterprise2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 2')
@@ -81,7 +80,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret, 3)
 
     def test_get_all_enterprises(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         enterprise2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 2')
@@ -108,7 +107,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret[2].description, enterprise3.description)
 
     def test_get_all_enterprises_with_filter(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         enterprise2 = tstdk.GAEnterprise(name='enterprise', description='the enterprise')
@@ -127,7 +126,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret[0].description, enterprise2.description)
 
     def test_update_enterprise(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         self.storage_controller.create(resource=enterprise1, parent=None)
@@ -159,8 +158,6 @@ class GAStorageControllerTestCase(UnitTestCase):
 
         count = self.storage_controller.count(resource_name=tstdk.GAEnterprise.rest_name, parent=None)
         self.assertEquals(count, 0)
-
-
 
     def test_create_user(self):
         """
@@ -216,7 +213,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret, 0)
 
     def test_get_all_users(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         enterprise2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 2')
@@ -250,7 +247,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(len(ret), 0)
 
     def test_get_all_users_with_filter(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         enterprise2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 2')
@@ -298,7 +295,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret.full_name, user1.full_name)
 
     def test_delete_users(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         user1 = tstdk.GAUser(username='primalmotion1', full_name='Antoine Mercadal 1')
@@ -314,7 +311,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(count, 0)
 
     def test_delete_enterprise_should_delete_users_and_addresses(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         enterprise2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 2')
@@ -322,7 +319,6 @@ class GAStorageControllerTestCase(UnitTestCase):
         user2 = tstdk.GAUser(username='primalmotion2', full_name='Antoine Mercadal 2')
         user3 = tstdk.GAUser(username='primalmotion3', full_name='Antoine Mercadal 3')
         address1 = tstdk.GAAddress(street='rue gretry')
-
 
         self.storage_controller.create(resource=enterprise1, parent=None)
         self.storage_controller.create(resource=enterprise2, parent=None)
@@ -348,7 +344,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(self.db.address.count(), 0)
 
     def test_assign_user(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         group1 = tstdk.GAGroup(name='group 1', description='the group 1')
@@ -377,7 +373,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(self.storage_controller.count(resource_name=tstdk.GAUser.rest_name, parent=group2), 1)
 
     def test_get_all_assigned_users(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         group1 = tstdk.GAGroup(name='group 1', description='the group 1')
@@ -409,7 +405,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret[2].full_name, user3.full_name)
 
     def test_get_all_assigned_users_with_filter(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         group1 = tstdk.GAGroup(name='group 1', description='the group 1')
@@ -433,7 +429,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(ret[0].full_name, user2.full_name)
 
     def test_unassign_user(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         group1 = tstdk.GAGroup(name='group 1', description='the group 1')
@@ -460,7 +456,7 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.assertEquals(self.storage_controller.count(resource_name=tstdk.GAUser.rest_name, parent=group2), 0)
 
     def test_delete_user_remove_assignation(self):
-        """ Test counting enterprises
+        """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         group1 = tstdk.GAGroup(name='group 1', description='the group 1')
