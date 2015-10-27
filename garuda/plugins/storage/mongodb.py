@@ -103,7 +103,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         resource.creation_date = time.time()
         resource.last_updated_date = resource.creation_date
-        resource.owner = user_identifier
+        resource.owner = resource.owner if resource.owner else user_identifier
         resource.parent_type = parent.rest_name if parent else None
         resource.parent_id = parent.id if parent else None
         resource.id = str(ObjectId())
