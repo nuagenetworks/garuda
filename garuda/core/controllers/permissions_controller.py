@@ -40,7 +40,7 @@ class GAPermissionsController(GAPluginController):
         """
         return True
 
-    def create_permission(self, resource, target, permission):
+    def create_permission(self, resource, target, permission, implicit=False):
         """
         """
         permission_key = self._get_permission_key(resource=resource, target=target)
@@ -49,7 +49,28 @@ class GAPermissionsController(GAPluginController):
         if self.redis.smembers(extended_key):
             return
 
-        self._create_permission(resource=resource, target=target, permission=permission, implicit=False)
+        permission_value = self._value_for_permission(permission=permission)
+        read_value = self._value_for_permission(permission=self.DEFAULT_PERMISSION)
+
+        logger.info('Adding permission %s (value=%s) to %s (implicit=%s)' % (permission, permission_value, permission_key, implicit))
+
+        self.redis.zadd(permission_key, permission_value, permission)
+
+        if hasattr(target, "parent_object") is False:
+            raise Exception('%s does not have a parent_object attribute' % target)
+
+        while target.parent_object != None:
+            tmp_permission_key = self._get_permission_key(resource=resource, target=target.parent_object)
+            tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, permission=self.DEFAULT_PERMISSION, implicit=True)
+
+            logger.info('Adding implicit %s to %s' % (tmp_extended_key, extended_key))
+            logger.info('Link %s to %s' % (extended_key, tmp_extended_key))
+
+            self.redis.sadd(extended_key, tmp_extended_key)
+            self.redis.sadd(tmp_extended_key, extended_key)
+            self.redis.zadd(tmp_permission_key, read_value, self.DEFAULT_PERMISSION)
+
+            target = target.parent_object
 
     def remove_permission(self, resource, target, permission):
         """
@@ -123,13 +144,13 @@ class GAPermissionsController(GAPluginController):
     def flush_permissions(self):
         """
         """
-        keys = self.redis.keys('permission*')
+        keys = self.redis.keys('permission:*')
         self.redis.delete(*keys)
 
     def is_empty(self):
         """
         """
-        return len(self.redis.keys('permission*')) == 0
+        return len(self.redis.keys('permission:*')) == 0
 
     def _get_extended_key(self, permission_key, permission, implicit):
         """
@@ -139,7 +160,8 @@ class GAPermissionsController(GAPluginController):
     def _get_permission_key(self, resource, target):
         """
         """
-        return "permission:%s:%s" % (resource.id, target.id)
+        resource_identifier = resource.id if hasattr(resource, 'id') else resource
+        return "permission:%s:%s" % (resource_identifier, target.id)
 
     def _convert_extended_key(self, extended_key):
         """
@@ -150,32 +172,3 @@ class GAPermissionsController(GAPluginController):
         """
         """
         return self.PERMISSIONS.index(permission.lower())
-
-    def _create_permission(self, resource, target, permission, implicit):
-        """
-        """
-        permission_key = self._get_permission_key(resource=resource, target=target)
-        extended_key = self._get_extended_key(permission_key=permission_key, permission=permission, implicit=implicit)
-
-        permission_value = self._value_for_permission(permission=permission)
-        read_value = self._value_for_permission(permission=self.DEFAULT_PERMISSION)
-
-        logger.info('Adding permission %s (value=%s) to %s (implicit=%s)' % (permission, permission_value, permission_key, implicit))
-
-        self.redis.zadd(permission_key, permission_value, permission)
-
-        if hasattr(target, "parent_object") is False:
-            raise Exception('%s does not have a parent_object attribute' % target)
-
-        while target.parent_object != None:
-            tmp_permission_key = self._get_permission_key(resource=resource, target=target.parent_object)
-            tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, permission=self.DEFAULT_PERMISSION, implicit=True)
-
-            logger.info('Adding implicit %s to %s' % (tmp_extended_key, extended_key))
-            logger.info('Link %s to %s' % (extended_key, tmp_extended_key))
-
-            self.redis.sadd(extended_key, tmp_extended_key)
-            self.redis.sadd(tmp_extended_key, extended_key)
-            self.redis.zadd(tmp_permission_key, read_value, self.DEFAULT_PERMISSION)
-
-            target = target.parent_object
