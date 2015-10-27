@@ -40,7 +40,7 @@ class ReaderPlugin(GALogicPlugin):
         If, after executing all Plugins delegates, one disagreement reason has been returned, the Read Operation stops.
         """
         logger.info('ReaderPlugin\t\tcheck_perform_readall\t\t(Host=%s)' % context.request.parameters['Host'])
-        # context.report_error(type=GAError.TYPE_INVALID, property='name', title='name is too long', description='name should have maximum 255 characters')
+        # context.add_error(type=GAError.TYPE_INVALID, property='name', title='name is too long', description='name should have maximum 255 characters')
         return context
 
     def preprocess_readall(self, context):

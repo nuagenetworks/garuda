@@ -52,8 +52,9 @@ class GAContext(object):
         """
         """
         for context in contexts:
+
             if context.has_errors():
-                self.report_errors(context.errors)
+                self.add_errors(context.errors)
 
             if context.has_events():
                 self.add_events(context.events)
@@ -62,6 +63,9 @@ class GAContext(object):
             # at least it works when you use a single plugin
             if context.object:
                 self.object = context.object
+
+            if context.objects:
+                self.objects = context.objects
 
             self.user_info.update(context.user_info)
 
@@ -84,12 +88,12 @@ class GAContext(object):
 
     # Errors management
 
-    def report_errors(self, errors):
+    def add_errors(self, errors):
         """
         """
         self._errors += errors
 
-    def report_error(self, error):
+    def add_error(self, error):
         """
         """
         self._errors.append(error)
