@@ -1,20 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import logging
+import argparse
 
 from garuda import Garuda
 from garuda.channels.rest import GAFalconChannel
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 
-
-def tdl_db_init(db, root_object_class):
-    """
-    """
-    # from bson import ObjectId
-    # if not db[root_rest_name].count():
-    #     db[root_rest_name].insert({'_id': ObjectId('111111111111111111111111') , 'userName': 'root', 'password': 'password'})
-    pass
 
 def tdl_auth_function(request, session, root_object_class, storage_controller):
     """
@@ -24,59 +17,92 @@ def tdl_auth_function(request, session, root_object_class, storage_controller):
     auth.password = None
     return auth
 
-# def vsd_db_init(db, root_rest_name):
-#     """
-#     """
-#     from bson import ObjectId
-#     if not db[root_rest_name].count():
-#         db[root_rest_name].insert({'_id': ObjectId('111111111111111111111111'), 'userName': 'csproot', 'password': 'csproot', 'enterpriseID': '444444444444444444444444', 'role': 'CSPROOT'})
-#
-#     if not db['user'].count():
-#         db['user'].insert({'_id': ObjectId('222222222222222222222222'), 'userName': 'csproot', 'firstName': 'john', 'lastName': 'doe'})
-#
-#     if not db['group'].count():
-#         db['group'].insert({'_id': ObjectId('333333333333333333333333'), 'name': 'Root Users', 'parentID': '222222222222', 'parentType': 'enterprise'})
-#
-#     if not db['enterprise'].count():
-#         db['enterprise'].insert({'_id': ObjectId('444444444444444444444444'), 'name': 'csp', 'description': 'default enterprise'})
-#
-#     if not db['systemconfig'].count():
-#         db['systemconfig'].insert({'_id': ObjectId('555555555555555555555555')})
-
-# def vsd_auth_function(request, session, root_api, storage_controller):
-#     """
-#     """
-#     auth = storage_controller.get(root_api, '111111111111111111111111')
-#
-#     # if request.username == auth.userName and request.token == auth.password:
-#     auth.api_key = session.uuid
-#     auth.password = None
-#     return auth
-#
-#     return None
-
-
-
-
-def start():
+def start(sdk_name, mongo_host, mongo_port, mongo_db, redis_host, redis_port, redis_db):
 
     """
     """
-    channel1 = GAFalconChannel()
-    channel2 = GAFlaskChannel()
+    # redis
+    redis_info = {'host': redis_host, 'port': redis_port, 'db': redis_db}
 
-    storage_plugin = GAMongoStoragePlugin(db_name='garuda', db_initialization_function=tdl_db_init)
+    #mongo
+    mongo_uri = 'mongodb://%s:%d' % (mongo_host, mongo_port)
+
+    # sdk info
+    sdk_infos = [{'identifier': 'default', 'module': sdk_name}]
+
+    channel = GAFalconChannel()
+    storage_plugin = GAMongoStoragePlugin(db_name=mongo_db, mongo_uri=mongo_uri)
     authentication_plugin = GASimpleAuthenticationPlugin(auth_function=tdl_auth_function)
-    sdk_infos = [{'identifier': 'default', 'module': 'tdldk.v1_0'}]
 
-    # storage_plugin = GAMongoStoragePlugin(db_name='vsd', db_initialization_function=vsd_db_init)
-    # authentication_plugin = GASimpleAuthenticationPlugin(auth_function=vsd_auth_function)
-    # sdk_infos = [{'identifier': 'default', 'module': 'vspk.v3_2'}]
-
-    garuda = Garuda(sdks_info=sdk_infos, channels=[channel1], plugins=[storage_plugin, authentication_plugin], log_level=logging.DEBUG)
+    garuda = Garuda(sdks_info=sdk_infos,
+                    redis_info=redis_info,
+                    channels=[channel],
+                    plugins=[storage_plugin, authentication_plugin],
+                    log_level=logging.DEBUG)
     garuda.start()
 
 
 if __name__ == '__main__':
-    start()
+
+    parser = argparse.ArgumentParser(description="Bladerunner")
+
+    parser.add_argument('--sdk-name',
+                        dest='sdk_name',
+                        help='the sdk module to use. Example "mysdk.v1_0"',
+                        required=True,
+                        type=str)
+
+    parser.add_argument('--port',
+                        dest='port',
+                        help='the port of the falcon ReST channel.',
+                        default=2000,
+                        type=int)
+
+    parser.add_argument('--mongo-host',
+                        dest='mongo_host',
+                        help='the hostname of the mongodb',
+                        default='127.0.0.1',
+                        type=str)
+
+    parser.add_argument('--mongo-port',
+                        dest='mongo_port',
+                        help='the port name for mongodb',
+                        default=27017,
+                        type=int)
+
+    parser.add_argument('--mongo-db',
+                        dest='mongo_db',
+                        help='the db name for mongodb',
+                        default='garuda',
+                        type=str)
+
+    parser.add_argument('--redis-host',
+                        dest='redis_host',
+                        help='the hostname of the redis',
+                        default='127.0.0.1',
+                        type=str)
+
+    parser.add_argument('--redis-port',
+                        dest='redis_port',
+                        help='the port name for redis',
+                        default=6379,
+                        type=int)
+
+    parser.add_argument('--redis-db',
+                        dest='redis_db',
+                        help='the db number for redis',
+                        default=0,
+                        type=int)
+
+    args = parser.parse_args()
+
+    start(  falcon_port=args.port
+            sdk_name=args.sdk_name,
+            mongo_host=args.mongo_host,
+            mongo_port=args.mongo_port,
+            mongo_db=args.mongo_db,
+            redis_host=args.redis_host,
+            redis_port=args.redis_port,
+            redis_db=args.redis_db)
+
 
