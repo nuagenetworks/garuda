@@ -17,7 +17,7 @@ def tdl_auth_function(request, session, root_object_class, storage_controller):
     auth.password = None
     return auth
 
-def start(sdk_name, mongo_host, mongo_port, mongo_db, redis_host, redis_port, redis_db):
+def start(falcon_port, sdk_name, mongo_host, mongo_port, mongo_db, redis_host, redis_port, redis_db):
 
     """
     """
@@ -30,7 +30,7 @@ def start(sdk_name, mongo_host, mongo_port, mongo_db, redis_host, redis_port, re
     # sdk info
     sdk_infos = [{'identifier': 'default', 'module': sdk_name}]
 
-    channel = GAFalconChannel()
+    channel = GAFalconChannel(port=falcon_port)
     storage_plugin = GAMongoStoragePlugin(db_name=mongo_db, mongo_uri=mongo_uri)
     authentication_plugin = GASimpleAuthenticationPlugin(auth_function=tdl_auth_function)
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    start(  falcon_port=args.port
+    start(  falcon_port=args.port,
             sdk_name=args.sdk_name,
             mongo_host=args.mongo_host,
             mongo_port=args.mongo_port,
