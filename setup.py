@@ -16,7 +16,6 @@ setup(
                 'garuda.core',
                 'garuda.core.channels',
                 'garuda.core.controllers',
-                'garuda.core.controllers.abstracts',
                 'garuda.core.lib',
                 'garuda.core.models',
                 'garuda.core.models.abstracts',
