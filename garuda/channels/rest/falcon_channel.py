@@ -88,22 +88,26 @@ class GAFalconChannel(GAChannel):
     def _handle_model_request(self, http_request, http_response):
         """
         """
+        method = http_request.method.upper()
+
+        if method == RESTConstants.HTTP_OPTIONS:
+            self._update_options_response(http_response=http_response)
+            return
+
+        parameters      = http_request.params
         content         = self._extract_content(http_request)
         username, token = self._extract_auth(http_request.headers)
         filter          = self._extract_filter(http_request.headers)
         page, page_size = self._extract_paging(http_request.headers)
         order_by        = self._extract_ordering(http_request.headers)
 
-        method          = http_request.method.upper()
-        parameters      = http_request.params
-
         logger.debug('> %s %s from %s' % (http_request.method, http_request.path, http_request.host))
         # logger.debug(json.dumps(content, indent=4))
 
-        parser = PathParser()
+        parser    = PathParser()
         resources = parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
+        action    = self._determine_action(http_request.method, resources)
 
-        action = self._determine_action(method, resources)
 
         ga_request = GARequest( action=action,
                                 content=content,
@@ -127,6 +131,12 @@ class GAFalconChannel(GAChannel):
     def _handle_event_request(self, http_request, http_response):
         """
         """
+        method = http_request.method.upper()
+
+        if method == RESTConstants.HTTP_OPTIONS:
+            self._update_options_response(http_response=http_response)
+            return
+
         content = self._extract_content(http_request)
         parameters = http_request.params
         username, token = self._extract_auth(http_request.headers)
@@ -162,6 +172,7 @@ class GAFalconChannel(GAChannel):
     def _determine_action(self, method, resources):
         """
         """
+        method = method.upper()
         if method == RESTConstants.HTTP_POST: return GARequest.ACTION_CREATE
         elif method == RESTConstants.HTTP_PUT: return GARequest.ACTION_ASSIGN if len(resources) == 2 else GARequest.ACTION_UPDATE
         elif method == RESTConstants.HTTP_DELETE: return GARequest.ACTION_DELETE
@@ -300,6 +311,8 @@ class GAFalconChannel(GAChannel):
         http_response.status = code
         http_response.content_type = 'application/json'
 
+        self._set_cors_headers(http_response=http_response)
+
         if ga_response.total_count is not None:
             http_response.set_header('X-Nuage-Count', str(ga_response.total_count))
 
@@ -324,6 +337,23 @@ class GAFalconChannel(GAChannel):
         http_response.status = falcon.HTTP_200
         http_response.content_type = 'application/json'
 
+        self._set_cors_headers(http_response=http_response)
+
+    def _update_options_response(self, http_response):
+        """
+        """
+        http_response.status = falcon.HTTP_200
+        self._set_cors_headers(http_response=http_response)
+
+    def _set_cors_headers(self, http_response):
+        """
+        """
+        http_response.set_header('Access-Control-Allow-Origin', '*')
+        http_response.set_header('Access-Control-Expose-Headers', 'X-Requested-With, X-Nuage-Organization, X-Nuage-Count, X-Nuage-Page, X-Nuage-PageSize, X-Nuage-OrderBy, X-Nuage-Filter, X-Nuage-FilterType')
+        http_response.set_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, HEAD, OPTIONS')
+        http_response.set_header('Access-Control-Allow-Headers', 'Authorization, Content-Type, Cache-Control, If-Modified-Since, X-Requested-With, X-Nuage-Organization, X-Nuage-Count, X-Nuage-Page, X-Nuage-PageSize, X-Nuage-OrderBy, X-Nuage-Filter, X-Nuage-FilterType')
+        http_response.set_header('Access-Control-Allow-Credentials', 'true')
+
 
 class GAGUnicorn(BaseApplication):
 
@@ -346,7 +376,7 @@ class GAGUnicorn(BaseApplication):
         """
         self.cfg.set('bind', '%s:%s' % (self._host, self._port))
         self.cfg.set('workers', self._number_of_workers)
-        self.cfg.set('worker_class', 'eventlet')
+        self.cfg.set('worker_class', 'gevent')
         self.cfg.set('timeout', self._timeout)
         self.cfg.set('max_requests', 5000)
         self.cfg.set('proc_name', 'garuda-worker')

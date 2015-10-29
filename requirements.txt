@@ -1,8 +1,9 @@
-falcon
-redis
-gunicorn
-gevent
-pymongo
 bambou
-setproctitle
+eventlet
+falcon
+gevent
+gunicorn
 msgpack-python
+pymongo
+redis
+setproctitle
