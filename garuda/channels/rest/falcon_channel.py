@@ -5,6 +5,7 @@ import json
 import logging
 import signal
 import falcon
+import time
 import multiprocessing
 from gunicorn.app.base import BaseApplication
 from base64 import urlsafe_b64decode
@@ -23,7 +24,7 @@ class GAFalconChannel(GAChannel):
     """
     """
 
-    def __init__(self, ssl_certificate='', ssl_key='', host='0.0.0.0', port=2000, push_timeout=60,):
+    def __init__(self, ssl_certificate='', ssl_key='', host='0.0.0.0', port=2000, push_timeout=60):
         """
         """
         super(GAFalconChannel, self).__init__()
@@ -156,12 +157,26 @@ class GAFalconChannel(GAChannel):
             self._update_http_response(http_response=http_response, action=GARequest.ACTION_READ, ga_response=ga_response_failure)
             return
 
-        events = []
-
         self.core_controller.sessions_controller.set_session_listening_status(session=session, status=True)
 
-        for event in self.core_controller.push_controller.get_next_event(session=session):
+        events = []
+
+        while True:
+
+            event = self.core_controller.push_controller.get_next_event(session=session, timeout=self._push_timeout)
+
+            # timeout expired and nothing to pop
+            if not event: break
+
             events.append(event)
+
+            if len(events) >= 100: break
+
+            if self.core_controller.push_controller.is_event_queue_empty(session=session):
+                time.sleep(0.3)
+                # if this is still empty, we send back the info
+                if self.core_controller.push_controller.is_event_queue_empty(session=session):
+                    break
 
         ga_notification = GAPushNotification(events=events)
         logger.info('< %s %s events to %s' % (http_request.method, http_request.path, http_request.host))

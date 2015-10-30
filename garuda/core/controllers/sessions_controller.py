@@ -24,7 +24,7 @@ class GASessionsController(GAPluginController):
         super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller, redis_conn=redis_conn)
 
         self._garuda_uuid = self.core_controller.uuid
-        self._default_session_ttl = 600
+        self._default_session_ttl = 300
         self._local_sessions_redis_key = None
         self._local_listening_sessions_redis_key = None
 
@@ -80,12 +80,32 @@ class GASessionsController(GAPluginController):
     def get_all_local_sessions(self, listening=False):
         """
         """
-        session_keys = self._get_all_local_session_keys(listening=listening)
+        session_keys = self._get_all_session_keys(listening=listening, local_only=True)
 
         if not len(session_keys):
             return []
 
         return [self._get_session_from_key(key) for key in session_keys]
+
+    def get_all_local_session_keys(self, listening=False):
+        """
+        """
+        return self._get_all_session_keys(listening=listening, local_only=True)
+
+    def get_all_sessions(self):
+        """
+        """
+        session_keys = self._get_all_session_keys(local_only=False)
+
+        if not len(session_keys):
+            return []
+
+        return [self._get_session_from_key(key) for key in session_keys]
+
+    def get_all_session_keys(self):
+        """
+        """
+        return self._get_all_session_keys(local_only=False)
 
     def get_session(self, session_uuid):
         """
@@ -154,7 +174,6 @@ class GASessionsController(GAPluginController):
     def _save_session(self, session):
         """
         """
-
         logger.debug('Saving session key  %s for in garuda set %s)' % (session.redis_key, self.local_sessions_redis_key))
 
         self.redis.hmset(session.redis_key, session.to_hash())
@@ -168,6 +187,8 @@ class GASessionsController(GAPluginController):
         self.redis.srem(self.local_sessions_redis_key, session_key)
         self.redis.srem(self.local_listening_sessions_redis_key, session_key)
 
+        self.core_controller.push_controller.delete_event_queue(session_key)
+
     def _get_session_from_key(self, session_key):
         """
         """
@@ -178,13 +199,15 @@ class GASessionsController(GAPluginController):
 
         return GASession.from_hash(session_data)
 
-    def _get_all_local_session_keys(self, listening=False):
+    def _get_all_session_keys(self, listening=False, local_only=True):
         """
         """
-        if listening:
+        if local_only and listening:
             return self.redis.smembers(self.local_listening_sessions_redis_key)
-        else:
+        elif local_only and not listening:
             return self.redis.smembers(self.local_sessions_redis_key)
+        else:
+            return self.redis.keys('sessions:*')
 
     def _plugin_for_request(self, request):
         """
