@@ -1,7 +1,6 @@
 bambou
-eventlet
 falcon
-gevent
+gevent>=1.1b6
 gunicorn
 msgpack-python
 pymongo
