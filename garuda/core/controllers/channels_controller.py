@@ -62,6 +62,5 @@ class GAChannelsController(object):
         """
         """
         for pid in self._channel_pids:
-            logger.info("Killing channels with pid %s" % pid)
-
+            logger.info("Killing channel with pid %s" % pid)
             os.kill(pid, signal.SIGTERM)
