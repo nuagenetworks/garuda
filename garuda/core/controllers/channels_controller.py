@@ -13,9 +13,10 @@ class GAChannelsController(object):
     """
 
     """
-    def __init__(self, channels, redis_info, additional_controller_classes, logic_plugins, authentication_plugins, storage_plugins, permission_plugins):
+    def __init__(self, garuda_uuid, channels, redis_info, additional_controller_classes, logic_plugins, authentication_plugins, storage_plugins, permission_plugins):
         """
         """
+        self._garuda_uuid                   = garuda_uuid
         self._channels                      = channels
         self._redis_info                    = redis_info
         self._logic_plugins                 = logic_plugins
@@ -42,7 +43,8 @@ class GAChannelsController(object):
                 logger.info('Channel %s forked with pid: %s' % (channel.manifest().identifier, pid))
 
         if not pid:
-            core = GACoreController(redis_info=self._redis_info,
+            core = GACoreController(garuda_uuid=self._garuda_uuid,
+                                    redis_info=self._redis_info,
                                     logic_plugins=self._logic_plugins,
                                     additional_controller_classes=self._additional_controller_classes,
                                     authentication_plugins=self._authentication_plugins,

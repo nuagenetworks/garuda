@@ -2,6 +2,7 @@
 import logging
 import os
 import importlib
+from uuid import uuid4
 from time import sleep
 from bambou import BambouConfig
 from setproctitle import setproctitle
@@ -37,6 +38,7 @@ class Garuda(object):
         setproctitle('garuda-server')
         BambouConfig.set_should_raise_bambou_http_error(False)
 
+        self._uuid                                 = str(uuid4())
         self._redis_info                           = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
         self._runloop                              = runloop
         self._sdks_info                            = sdks_info
@@ -72,7 +74,8 @@ class Garuda(object):
 
         logger.setLevel(log_level)
 
-        self._channels_controller = GAChannelsController(channels=self._channels,
+        self._channels_controller = GAChannelsController(garuda_uuid=self._uuid,
+                                                         channels=self._channels,
                                                          redis_info=self._redis_info,
                                                          additional_controller_classes=self._additional_controller_classes,
                                                          logic_plugins=self._logic_plugins,
@@ -80,14 +83,13 @@ class Garuda(object):
                                                          storage_plugins=self._storage_plugins,
                                                          permission_plugins=self._permission_plugins)
 
-        self._master_core = GACoreController(redis_info=self._redis_info,
+        self._master_core = GACoreController(garuda_uuid=self._uuid,
+                                             redis_info=self._redis_info,
                                              logic_plugins=[],
                                              additional_controller_classes=self._additional_master_controller_classes,
                                              authentication_plugins=self._authentication_plugins,
                                              storage_plugins=self._storage_plugins,
                                              permission_plugins=self._permission_plugins)
-
-
 
     def _init_debug_mode(self):
         """
