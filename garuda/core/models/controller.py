@@ -18,6 +18,7 @@ class GAController(object):
             raise Exception("core_controller must be given to all GAController subclasses")
 
         self._core_controller = core_controller
+        self._redis_database  = self.core_controller
         self._redis           = redis_conn
         self._uuid            = str(uuid4())
 
@@ -43,6 +44,24 @@ class GAController(object):
         """
         """
         return self._redis
+
+    @property
+    def redis_host(self):
+        """
+        """
+        return self.core_controller.redis_host
+
+    @property
+    def redis_port(self):
+        """
+        """
+        return self.core_controller.redis_port
+
+    @property
+    def redis_db(self):
+        """
+        """
+        return self.core_controller.redis_db
 
     @property
     def uuid(self):

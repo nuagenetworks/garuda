@@ -28,7 +28,7 @@ class GASessionsController(GAPluginController):
         self._local_sessions_redis_key = None
         self._local_listening_sessions_redis_key = None
 
-        self.subscribe(channel='__keyevent@0__:expired', handler=self._on_session_expiration)
+        self.subscribe(channel='__keyevent@%s__:expired' % self.redis_db, handler=self._on_session_expiration)
 
     @classmethod
     def identifier(cls):
@@ -186,6 +186,8 @@ class GASessionsController(GAPluginController):
         session_key = data
         self.redis.srem(self.local_sessions_redis_key, session_key)
         self.redis.srem(self.local_listening_sessions_redis_key, session_key)
+
+        logger.debug('Session %s is now expired' % session_key)
 
         self.core_controller.push_controller.delete_event_queue(session_key)
 

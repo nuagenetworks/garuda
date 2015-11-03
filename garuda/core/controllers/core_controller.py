@@ -28,7 +28,10 @@ class GACoreController(object):
         self._uuid = str(uuid4())
         self._garuda_uuid = garuda_uuid
 
-        self._redis = redis.StrictRedis(host=redis_info['host'], port=redis_info['port'], db=redis_info['db'])
+        self._redis_host = redis_info['host']
+        self._redis_port = redis_info['port']
+        self._redis_db = redis_info['db']
+        self._redis = redis.StrictRedis(host=self._redis_host, port=self._redis_port, db=self._redis_db)
         self._redis.config_set('notify-keyspace-events', 'KEA')
 
         self._running = False
@@ -64,6 +67,24 @@ class GACoreController(object):
         """
         """
         return self._garuda_uuid
+
+    @property
+    def redis_host(self):
+        """
+        """
+        return self._redis_host
+
+    @property
+    def redis_port(self):
+        """
+        """
+        return self._redis_port
+
+    @property
+    def redis_db(self):
+        """
+        """
+        return self._redis_db
 
     @property
     def storage_controller(self):
