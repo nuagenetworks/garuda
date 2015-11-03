@@ -9,7 +9,7 @@ from garuda.core.lib import SDKLibrary
 from garuda.tests import UnitTestCase
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.core.controllers import GAStorageController
-import tstdk.v1_0 as tstdk
+import garuda.tests.tstdk.v1_0 as tstdk
 
 class FakeCoreController(object):
 

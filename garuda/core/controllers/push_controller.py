@@ -32,7 +32,7 @@ class GAPushController(GAController):
 
         for session_key in self.core_controller.sessions_controller.get_all_session_keys():
             event_queue_key = 'eventqueue:%s' % session_key
-            logger.debug('Adding %d event(s) packs (%s) to the session event queue: %s' % (len(events), packs, event_queue_key))
+            logger.debug('Adding %d event pack(s) to the session event queue: %s' % (len(events), event_queue_key))
             pipeline.lpush(event_queue_key, *packs)
 
         logger.debug('Executing event queue command pipeline...')
@@ -77,4 +77,6 @@ class GAPushController(GAController):
     def delete_event_queue(self, session_key):
         """
         """
+        print session_key
+
         self.redis.delete('eventqueue:%s' % session_key)
