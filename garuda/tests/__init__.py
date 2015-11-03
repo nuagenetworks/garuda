@@ -2,7 +2,7 @@
 
 import logging
 
-from unittest2 import TestCase
+from unittest import TestCase
 
 class UnitTestCase(TestCase):
     """

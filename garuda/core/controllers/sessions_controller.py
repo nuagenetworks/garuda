@@ -138,7 +138,6 @@ class GASessionsController(GAPluginController):
         """
         logger.debug('Deleting session %s' % session.uuid)
 
-        print ('Deleting session %s' % (session.redis_key))
         self.redis.delete(session.redis_key)
 
     def reset_session_ttl(self, session):

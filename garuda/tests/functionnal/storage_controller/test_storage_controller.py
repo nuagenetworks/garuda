@@ -47,6 +47,12 @@ class GAStorageControllerTestCase(UnitTestCase):
         self.storage_controller.stop()
         self.mongo.drop_database('unit_test')
 
+    def test_instantiate_enterprise(self):
+        """
+        """
+        obj = self.storage_controller.instantiate(resource_name=tstdk.GAEnterprise.rest_name)
+        self.assertEquals(obj.__class__, tstdk.GAEnterprise)
+
     def test_create_enterprise(self):
         """
         """

@@ -77,6 +77,4 @@ class GAPushController(GAController):
     def delete_event_queue(self, session_key):
         """
         """
-        print session_key
-
         self.redis.delete('eventqueue:%s' % session_key)

@@ -308,5 +308,3 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             return {attribute: {operator: value}}
         except:
             return {'$text': {'$search': filter}}
-
-
