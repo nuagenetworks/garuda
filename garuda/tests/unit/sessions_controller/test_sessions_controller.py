@@ -1,13 +1,37 @@
 # -*- coding: utf-8 -*-
 
 import redis
+from bambou import NURESTRootObject
 from mock import patch
 
-from garuda.core.controllers import GASessionsController, GACoreController
-from garuda.core.models import GASession
+from garuda.core.controllers import GACoreController, GASessionsController, GACoreController
+from garuda.core.plugins import GAAuthenticationPlugin
+from garuda.core.models import GASession, GAPluginManifest
 from garuda.tests import UnitTestCase
 
-from .helpers import FakeCoreController, FakeAuthPlugin
+
+class FakeAuthPlugin(GAAuthenticationPlugin):
+
+    @classmethod
+    def manifest(self):
+        return GAPluginManifest(name='test.fake.auth', version=1.0, identifier="test.fake.auth")
+
+    def authenticate(self, request=None, session=None):
+        root = NURESTRootObject()
+        root.id = "bbbbbbbb-f93e-437d-b97e-4c945904e7bb"
+        root.api_key = "aaaaaaaa-98d4-4c2b-a136-770c9cbf7cdc"
+        root.user_name = "Test"
+        return root
+
+    def should_manage(self, request):
+        """
+        """
+        return True
+
+    def get_session_identifier(self, request):
+        """
+        """
+        return request.token
 
 
 class GASessionsControllerTestCase(UnitTestCase):
@@ -17,22 +41,23 @@ class GASessionsControllerTestCase(UnitTestCase):
         """
         """
         super(GASessionsControllerTestCase, self).__init__(name)
-        redis_connection = redis.StrictRedis(host='127.0.0.1', port='6379', db=0)
+        redis_connection = redis.StrictRedis()
+
         self.fake_auth_plugin = FakeAuthPlugin()
-        self.fake_core_controller = FakeCoreController()
-        self.sessions_controller = GASessionsController(plugins=[self.fake_auth_plugin], core_controller=self.fake_core_controller, redis_conn=redis_connection)
-        self.sessions_controller.ready()
+        self.core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5}, authentication_plugins=[self.fake_auth_plugin])
+
+        self.sessions_controller = self.core_controller.sessions_controller
         self.sessions_controller._default_session_ttl = 3
 
     def setUp(self):
         """ Initialize context
         """
-        self.sessions_controller.start()
+        self.core_controller.start()
 
     def tearDown(self):
         """ Cleanup context
         """
-        self.sessions_controller.stop()
+        self.core_controller.stop()
 
     def test_create_session(self):
         """ Create a session with authentication success should succeed

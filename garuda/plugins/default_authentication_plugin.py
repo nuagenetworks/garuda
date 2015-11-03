@@ -17,7 +17,7 @@ class DefaultAuthenticationPlugin(GAAuthenticationPlugin):
         """
 
         """
-        return GAPluginManifest(name='VSD Authentifcation',
+        return GAPluginManifest(name='v',
                                 version=1.0,
                                 identifier="garuda.plugins.vsd.authentication")
 
