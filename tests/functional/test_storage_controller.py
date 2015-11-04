@@ -3,49 +3,49 @@
 import redis
 import pymongo
 import bambou
-from mock import patch
+from unittest2 import TestCase
 
 from garuda.core.lib import SDKLibrary
-from garuda.tests import UnitTestCase
 from garuda.plugins.storage import GAMongoStoragePlugin
-from garuda.core.controllers import GAStorageController
-import garuda.tests.tstdk.v1_0 as tstdk
+from garuda.core.controllers import GAStorageController, GACoreController
 
-class FakeCoreController(object):
+from tests.tstdk import v1_0 as tstdk
 
-    @property
-    def uuid(self):
-        return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
-
-
-class GAStorageControllerTestCase(UnitTestCase):
+class GAStorageControllerTestCase(TestCase):
     """
     """
-    def __init__(self, name):
+    @classmethod
+    def setUpClass(cls):
         """
         """
-        super(GAStorageControllerTestCase, self).__init__(name)
-        self.mongo = pymongo.MongoClient('mongodb://127.0.0.1:27017')
-        self.db = self.mongo['unit_test']
-
         SDKLibrary().register_sdk('default', tstdk)
 
-        self.fake_core_controller = FakeCoreController()
-        self.mongo_plugin = GAMongoStoragePlugin(db_name='unit_test')
+        cls.mongo_plugin = GAMongoStoragePlugin(db_name='unit_test')
+        cls.core_controller = GACoreController( garuda_uuid='test-garuda',
+                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5},
+                                                storage_plugins=[cls.mongo_plugin])
 
-        self.storage_controller = GAStorageController(plugins=[self.mongo_plugin], core_controller=self.fake_core_controller)
-        self.storage_controller.ready()
+        cls.storage_controller = cls.core_controller.storage_controller
+
+        cls.db = cls.mongo_plugin.db
+
+        cls.core_controller.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        """
+        cls.core_controller.stop()
 
     def setUp(self):
         """
         """
-        self.storage_controller.start()
+        self.mongo_plugin.mongo.drop_database('unit_test')
 
     def tearDown(self):
         """
         """
-        self.storage_controller.stop()
-        self.mongo.drop_database('unit_test')
+        self.mongo_plugin.mongo.drop_database('unit_test')
 
     def test_instantiate_enterprise(self):
         """

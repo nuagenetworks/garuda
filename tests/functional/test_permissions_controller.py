@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import redis
 from uuid import uuid4
+from unittest import TestCase
 
 from garuda.core.controllers import GAPermissionsController
-from garuda.tests import UnitTestCase
-from garuda.tests import UnitTestCase
+from garuda.core.plugins import GAPermissionsPlugin
 
 class CustomObject(object):
     """
@@ -26,7 +26,7 @@ class FakeCoreController(object):
         return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
 
 
-class GAPermissionsControllerTestCase(UnitTestCase):
+class GAPermissionsControllerTestCase(TestCase):
     """
     """
 
@@ -101,6 +101,18 @@ class GAPermissionsControllerTestCase(UnitTestCase):
         """
         """
         pass
+
+    def test_identifier(self):
+        """
+        """
+        self.assertEquals(self.permissions_controller.identifier(), 'garuda.controller.permissions')
+        self.assertEquals(self.permissions_controller.__class__.identifier(), 'garuda.controller.permissions')
+
+    def test_managed_plugin_type(self):
+        """
+        """
+        self.assertEquals(self.permissions_controller.managed_plugin_type(), GAPermissionsPlugin)
+        self.assertEquals(self.permissions_controller.__class__.managed_plugin_type(), GAPermissionsPlugin)
 
     def test_remove_read_permission_at_root_level(self):
         """ Remove READ permission at the object level leaves no trace
@@ -294,3 +306,15 @@ class GAPermissionsControllerTestCase(UnitTestCase):
 
         self.permissions_controller.remove_permission(self.user, self.objectF, 'write')
         self.permissions_controller.remove_permission(self.user, self.objectC, 'use')
+
+    def test_create_same_permission_twice(self):
+        """
+        """
+        self.permissions_controller.create_permission(self.user, self.objectA, 'read')
+        self.permissions_controller.create_permission(self.user, self.objectA, 'read')
+
+        self.assertCanRead(self.objectA)
+
+        self.permissions_controller.remove_permission(self.user, self.objectA, 'read')
+
+        self.assertCanNotRead(self.objectA)

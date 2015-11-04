@@ -148,10 +148,6 @@ class GACoreController(object):
         self.sessions_controller.stop()
         self.push_controller.stop()
 
-        self.storage_controller.unregister_all_plugins()
-        self.permissions_controller.unregister_all_plugins()
-        self.sessions_controller.unregister_all_plugins()
-
     def execute_model_request(self, request):
         """
         """

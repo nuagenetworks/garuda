@@ -1,12 +1,13 @@
 # -*- coding:utf-8 -*-
 
 import logging
-logger = logging.getLogger('garuda.sdksmanager')
-
-from garuda.core.lib import SDKTransformer
 from bambou import NURESTModelController
-from garuda.core.lib import Singleton
 from collections import OrderedDict
+
+from sdk_transformer import SDKTransformer
+from singleton import Singleton
+
+logger = logging.getLogger('garuda.sdksmanager')
 
 
 class SDKLibrary(object):
@@ -36,7 +37,7 @@ class SDKLibrary(object):
         """
         """
         if not identifier in self._sdks:
-            logger.error("SDK version not found for identifier"  % identifier)
+            logger.error("SDK version not found for identifier %s"  % identifier)
             return None
 
         return self._sdks[identifier]

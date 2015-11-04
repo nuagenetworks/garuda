@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-
 import redis
+import time
+from uuid import uuid4
 from bambou import NURESTRootObject
 from mock import patch
+from unittest import TestCase
 
-from garuda.core.controllers import GACoreController, GASessionsController, GACoreController
+from garuda.core.controllers import GACoreController, GASessionsController
 from garuda.core.plugins import GAAuthenticationPlugin
-from garuda.core.models import GASession, GAPluginManifest
-from garuda.tests import UnitTestCase
+from garuda.core.models import GAPluginManifest, GASession, GARequest
 
 
 class FakeAuthPlugin(GAAuthenticationPlugin):
@@ -17,47 +18,61 @@ class FakeAuthPlugin(GAAuthenticationPlugin):
         return GAPluginManifest(name='test.fake.auth', version=1.0, identifier="test.fake.auth")
 
     def authenticate(self, request=None, session=None):
-        root = NURESTRootObject()
-        root.id = "bbbbbbbb-f93e-437d-b97e-4c945904e7bb"
-        root.api_key = "aaaaaaaa-98d4-4c2b-a136-770c9cbf7cdc"
+        root           = NURESTRootObject()
+        root.id        = str(uuid4())
+        root.api_key   = str(uuid4())
         root.user_name = "Test"
         return root
 
     def should_manage(self, request):
-        """
-        """
         return True
 
     def get_session_identifier(self, request):
-        """
-        """
         return request.token
 
 
-class GASessionsControllerTestCase(UnitTestCase):
+class GASessionsControllerTestCase(TestCase):
     """
     """
-    def __init__(self, name):
+    @classmethod
+    def setUpClass(cls):
         """
         """
-        super(GASessionsControllerTestCase, self).__init__(name)
-        redis_connection = redis.StrictRedis()
 
-        self.fake_auth_plugin = FakeAuthPlugin()
-        self.core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5}, authentication_plugins=[self.fake_auth_plugin])
+        cls.maxDiff = None
+        cls.fake_auth_plugin = FakeAuthPlugin()
+        cls.core_controller = GACoreController( garuda_uuid='test-garuda',
+                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 6},
+                                                authentication_plugins=[cls.fake_auth_plugin])
 
-        self.sessions_controller = self.core_controller.sessions_controller
-        self.sessions_controller._default_session_ttl = 3
+        cls.sessions_controller = cls.core_controller.sessions_controller
+        cls.sessions_controller._default_session_ttl = 3
 
     def setUp(self):
-        """ Initialize context
+        """
         """
         self.core_controller.start()
+        self.sessions_controller.redis.flushall()
 
     def tearDown(self):
-        """ Cleanup context
         """
+        """
+        self.sessions_controller.redis.flushall()
         self.core_controller.stop()
+
+    def test_identifier(self):
+        """
+        """
+        self.assertEquals(self.sessions_controller.identifier(), 'garuda.controller.sessions')
+        self.assertEquals(self.sessions_controller.__class__.identifier(), 'garuda.controller.sessions')
+
+    def test_get_session_identifier(self):
+        """
+        """
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.token = 'token'
+        identifier = self.sessions_controller.get_session_identifier(request=request)
+        self.assertEquals(identifier, 'token')
 
     def test_create_session(self):
         """ Create a session with authentication success should succeed
@@ -148,13 +163,13 @@ class GASessionsControllerTestCase(UnitTestCase):
         """
         self.sessions_controller._default_session_ttl = 1
         session = self.sessions_controller.create_session(request='fake-request')
+        self.assertIsNotNone(session)
 
         self.sessions_controller.set_session_listening_status(session, True)
 
         self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions()])
         self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions(listening=True)])
 
-        import time
         time.sleep(1.5)
 
         self.assertNotIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions()])
@@ -167,5 +182,33 @@ class GASessionsControllerTestCase(UnitTestCase):
         self.sessions_controller.flush_local_sessions()
         self.assertEquals(self.sessions_controller.get_all_local_sessions(listening=True), [])
 
+    def test_get_all_local_session_keys(self):
+        """
+        """
+        session1 = self.sessions_controller.create_session(request='fake-request')
+        session2 = self.sessions_controller.create_session(request='fake-request')
 
+        keys = self.sessions_controller.get_all_local_session_keys()
 
+        self.assertEquals(len(keys), 2)
+        self.assertIn(session1.redis_key, keys)
+        self.assertIn(session2.redis_key, keys)
+
+    def test_get_all_sessions_with_sessions(self):
+        """
+        """
+        session1 = self.sessions_controller.create_session(request='fake-request')
+        session2 = self.sessions_controller.create_session(request='fake-request')
+
+        sessions = self.sessions_controller.get_all_sessions()
+
+        self.assertEquals(len(sessions), 2)
+        self.assertIn(session1.uuid, [session.uuid for session in sessions])
+        self.assertIn(session2.uuid, [session.uuid for session in sessions])
+
+    def test_get_all_sessions_without_sessions(self):
+        """
+        """
+        sessions = self.sessions_controller.get_all_sessions()
+
+        self.assertEquals(len(sessions), 0)

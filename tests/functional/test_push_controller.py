@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import redis
-from bambou import NURESTRootObject, NURESTObject
+from unittest import TestCase
+from bambou import NURESTRootObject
 from mock import patch
 
-from garuda.core.controllers import GACoreController, GASessionsController, GACoreController
+from garuda.core.controllers import GACoreController, GASessionsController
 from garuda.core.plugins import GAAuthenticationPlugin
-from garuda.core.models import GASession, GAPluginManifest, GAPushEvent, GARequest
-from garuda.tests import UnitTestCase
-import garuda.tests.tstdk.v1_0 as tstdk
+from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest
+
+import tests.tstdk.v1_0 as tstdk
 
 class FakeAuthPlugin(GAAuthenticationPlugin):
 
@@ -17,37 +18,33 @@ class FakeAuthPlugin(GAAuthenticationPlugin):
         return GAPluginManifest(name='test.fake.auth', version=1.0, identifier="test.fake.auth")
 
     def authenticate(self, request=None, session=None):
-        root = NURESTRootObject()
-        root.id = "bbbbbbbb-f93e-437d-b97e-4c945904e7bb"
-        root.api_key = "aaaaaaaa-98d4-4c2b-a136-770c9cbf7cdc"
+        root           = NURESTRootObject()
+        root.id        = "bbbbbbbb-f93e-437d-b97e-4c945904e7bb"
+        root.api_key   = "aaaaaaaa-98d4-4c2b-a136-770c9cbf7cdc"
         root.user_name = "Test"
         return root
 
     def should_manage(self, request):
-        """
-        """
         return True
 
     def get_session_identifier(self, request):
-        """
-        """
         return request.token
 
 
-class GAPushControllerTestCase(UnitTestCase):
+class GAPushControllerTestCase(TestCase):
     """
     """
-    def __init__(self, name):
+    @classmethod
+    def setUpClass(cls):
         """
         """
-        super(GAPushControllerTestCase, self).__init__(name)
-        redis_connection = redis.StrictRedis()
+        cls.fake_auth_plugin = FakeAuthPlugin()
+        cls.core_controller = GACoreController( garuda_uuid='test-garuda',
+                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 6},
+                                                authentication_plugins=[cls.fake_auth_plugin])
 
-        self.fake_auth_plugin = FakeAuthPlugin()
-        self.core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5}, authentication_plugins=[self.fake_auth_plugin])
-
-        self.push_controller = self.core_controller.push_controller
-        self.core_controller.sessions_controller._default_session_ttl = 3
+        cls.push_controller = cls.core_controller.push_controller
+        cls.core_controller.sessions_controller._default_session_ttl = 3
 
     def setUp(self):
         """ Initialize context
@@ -60,6 +57,12 @@ class GAPushControllerTestCase(UnitTestCase):
         """ Cleanup context
         """
         self.core_controller.stop()
+
+    def test_identifier(self):
+        """
+        """
+        self.assertEquals(self.push_controller.identifier(), 'garuda.controller.push')
+        self.assertEquals(self.push_controller.__class__.identifier(), 'garuda.controller.push')
 
     def test_push_event_creates_event_queue(self):
         """

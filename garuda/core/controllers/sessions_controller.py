@@ -119,13 +119,13 @@ class GASessionsController(GAPluginController):
         session = GASession(garuda_uuid=self._garuda_uuid)
         plugin = self._plugin_for_request(request)
 
-        if plugin is None:
+        if plugin is None: # pragma: no cover
             logger.warn('No plugin found to create session')
             return None
 
         root_object = plugin.authenticate(request=request, session=session)
 
-        if not root_object:
+        if not root_object: # pragma: no cover
             return None
 
         session.root_object = root_object
@@ -185,10 +185,8 @@ class GASessionsController(GAPluginController):
         session_key = data
         self.redis.srem(self.local_sessions_redis_key, session_key)
         self.redis.srem(self.local_listening_sessions_redis_key, session_key)
-
-        logger.debug('Session %s is now expired' % session_key)
-
         self.core_controller.push_controller.delete_event_queue(session_key)
+        logger.debug('Session %s is now expired' % session_key)
 
     def _get_session_from_key(self, session_key):
         """
@@ -216,4 +214,4 @@ class GASessionsController(GAPluginController):
         for plugin in self._plugins:
             if plugin.should_manage(request):
                 return plugin
-        return None
+        return None # pragma: no cover

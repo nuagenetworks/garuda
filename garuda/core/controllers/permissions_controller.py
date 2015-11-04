@@ -25,7 +25,7 @@ class GAPermissionsController(GAPluginController):
     def identifier(cls):
         """
         """
-        return 'garuda.controller.authentication'
+        return 'garuda.controller.permissions'
 
     @classmethod
     def managed_plugin_type(cls):
@@ -35,18 +35,13 @@ class GAPermissionsController(GAPluginController):
 
     # API
 
-    def should_manage(self, resource, target, permission):
-        """
-        """
-        return True
-
     def create_permission(self, resource, target, permission, implicit=False):
         """
         """
         permission_key = self._get_permission_key(resource=resource, target=target)
         extended_key = self._get_extended_key(permission_key=permission_key, permission=permission, implicit=False)
 
-        if self.redis.smembers(extended_key):
+        if self.redis.smembers(extended_key): # pragma: no cover
             return
 
         permission_value = self._value_for_permission(permission=permission)
@@ -57,7 +52,7 @@ class GAPermissionsController(GAPluginController):
         self.redis.zadd(permission_key, permission_value, permission)
 
         if hasattr(target, "parent_object") is False:
-            raise Exception('%s does not have a parent_object attribute' % target)
+            raise Exception('%s does not have a parent_object attribute' % target) # pragma: no cover
 
         while target.parent_object != None:
             tmp_permission_key = self._get_permission_key(resource=resource, target=target.parent_object)
@@ -84,8 +79,7 @@ class GAPermissionsController(GAPluginController):
 
         extended_implicit_keys = self.redis.smembers(extended_key)
 
-        if extended_implicit_keys is None:
-            logger.info('No implicit permissions found')
+        if extended_implicit_keys is None: # pragma: no cover
             return
 
         for extended_implicit_key in extended_implicit_keys:
@@ -127,7 +121,7 @@ class GAPermissionsController(GAPluginController):
                 logger.info('Found %s >= %s' % (authorized_permission, permission))
                 return True
 
-        if hasattr(target, "parent_object") is False:
+        if hasattr(target, "parent_object") is False: # pragma: no cover
             raise Exception('%s does not have a parent_object attribute' % target)
 
         parent = target.parent_object
@@ -140,12 +134,6 @@ class GAPermissionsController(GAPluginController):
 
 
     # UTILITIES
-
-    def flush_permissions(self):
-        """
-        """
-        keys = self.redis.keys('permission:*')
-        self.redis.delete(*keys)
 
     def is_empty(self):
         """

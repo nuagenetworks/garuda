@@ -11,7 +11,6 @@ from .operations_controller import GAOperationsController
 
 logger = logging.getLogger('garuda.controller.push')
 
-
 class GAPushController(GAController):
     """
 
