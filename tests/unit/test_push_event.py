@@ -38,8 +38,6 @@ class TestPushEvent(TestCase):
 
         event = GAPushEvent(action=GARequest.ACTION_CREATE, entity=enterprise)
 
-        print event.to_dict()
-
         expected_result = {'entities': [{'description': None, 'zipcode': None, 'parentType': None, 'lastUpdatedDate': None, 'parentID': None, 'owner': None, 'creationDate': None, 'ID': None, 'name': 'enterprise1'}], 'entityType': 'enterprise', 'type': 'CREATE', 'updateMechanism': 'DEFAULT'}
 
         converted = event.to_dict()
