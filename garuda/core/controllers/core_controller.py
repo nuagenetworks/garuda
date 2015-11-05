@@ -93,6 +93,12 @@ class GACoreController(object):
         return self._redis_db
 
     @property
+    def running(self):
+        """
+        """
+        return self._running
+
+    @property
     def storage_controller(self):
         """
         """
