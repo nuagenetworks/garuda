@@ -56,13 +56,7 @@ class GASerializable(object):
 
             if attribute.type is dict and len(value) > 0:
                 result[attribute.name] = dict()
-                # try:
                 keys = value.keys()
-                # except:
-                #     print self
-                #     print self.user_info
-                #     print type(self.user_info)
-                #     raise Exception('stop')
                 key = keys[0]
 
                 object = value[key]
