@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
-from garuda.core.lib import SDKTransformer
+from bambou import NURESTModelController
 from garuda.core.models import GAResource
 
 RESOURCE_MAPPING = {'allalarms': 'alarms'}
@@ -71,7 +71,11 @@ class PathParser(object):
                 value = infos[index] if index < len(infos) and len(infos[index]) > 0 else None
 
                 name = self._get_resource(resource)
-                result.append(GAResource(SDKTransformer.get_singular_name(name), value))
+
+                if name == 'events':
+                    result.append(GAResource('event', value))
+                else:
+                    result.append(GAResource(NURESTModelController.get_first_model_with_resource_name(name).rest_name, value))
 
             index = index + 1
 

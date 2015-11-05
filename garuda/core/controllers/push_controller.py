@@ -64,7 +64,7 @@ class GAPushController(GAController):
                                                     storage_controller=self.core_controller.storage_controller)
         operation_manager.run()
 
-        if not context.has_errors():
+        if not context.has_errors:
             logger.debug('Returning one event to session %s' % session.redis_key)
             return event
 

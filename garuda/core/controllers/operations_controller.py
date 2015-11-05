@@ -95,7 +95,7 @@ class GAOperationsController(object):
         if self.context.object is None:
             self._prepare_context_for_read_operation()
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self._populate_parent_object_if_needed()
@@ -103,7 +103,7 @@ class GAOperationsController(object):
         self.logic_controller.perform_delegate(delegate='begin_read_operation', context=self.context)
         self.logic_controller.perform_delegate(delegate='check_perform_read', context=self.context)
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self.logic_controller.perform_delegate(delegate='preprocess_read', context=self.context)
@@ -135,7 +135,7 @@ class GAOperationsController(object):
         """
         self._prepare_context_for_readall_operation(count_only)
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self._populate_parent_object_if_needed()
@@ -143,7 +143,7 @@ class GAOperationsController(object):
         self.logic_controller.perform_delegate(delegate='begin_readall_operation', context=self.context)
         self.logic_controller.perform_delegate(delegate='check_perform_readall', context=self.context)
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self.logic_controller.perform_delegate(delegate='preprocess_readall', context=self.context)
@@ -229,7 +229,7 @@ class GAOperationsController(object):
         """
         self._prepare_context_for_write_operation()
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self._populate_parent_object_if_needed()
@@ -237,14 +237,14 @@ class GAOperationsController(object):
         self.logic_controller.perform_delegate(delegate='begin_write_operation', context=self.context)
         self.logic_controller.perform_delegate(delegate='check_perform_write', context=self.context)
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self.logic_controller.perform_delegate(delegate='preprocess_write', context=self.context)
 
         self._perform_store()
 
-        if self.context.has_errors():
+        if self.context.has_errors:
             return
 
         self.logic_controller.perform_delegate(delegate='did_perform_write', context=self.context)

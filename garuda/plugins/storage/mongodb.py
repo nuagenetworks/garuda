@@ -49,7 +49,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def instantiate(self, resource_name):
         """
         """
-        klass = NURESTModelController.get_first_model(resource_name)
+        klass = NURESTModelController.get_first_model_with_rest_name(resource_name)
         return klass()
 
     def count(self, parent, resource_name, filter=None):
@@ -165,7 +165,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                         # I tried manually, its fine
                         continue
 
-                    klass = NURESTModelController.get_first_model(children_rest_name)
+                    klass = NURESTModelController.get_first_model_with_rest_name(children_rest_name)
                     child_resources = [klass(id=identifier) for identifier in data[children_key]]
 
                     # recursively delete children

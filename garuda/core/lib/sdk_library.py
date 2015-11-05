@@ -4,10 +4,9 @@ import logging
 from bambou import NURESTModelController
 from collections import OrderedDict
 
-from sdk_transformer import SDKTransformer
 from singleton import Singleton
 
-logger = logging.getLogger('garuda.sdksmanager')
+logger = logging.getLogger('garuda.sdklibrary')
 
 
 class SDKLibrary(object):
@@ -37,8 +36,7 @@ class SDKLibrary(object):
         """
         """
         if not identifier in self._sdks:
-            logger.error("SDK version not found for identifier %s"  % identifier)
-            return None
+            raise IndexError("SDK version not found for identifier %s"  % identifier)
 
         return self._sdks[identifier]
 
@@ -59,9 +57,6 @@ class SDKLibrary(object):
         """
         sdk = self.get_sdk(identifier=identifier)
 
-        if sdk is None:
-            return None
-
         sdkinfo = getattr(sdk, 'SDKInfo', None)
 
         if sdkinfo:
@@ -71,20 +66,3 @@ class SDKLibrary(object):
 
         logger.warn("SDK %s does not provide SDKInfo class" % sdk) # pragma: no cover
         return None # pragma: no cover
-
-    def get_instance(self, resource_name, **attributes):
-        """
-        """
-        rest_name = SDKTransformer.get_singular_name(resource_name)
-        klass = NURESTModelController.get_first_model(rest_name)
-
-        if klass:
-            python_attributes = dict()
-
-            for attribute_name, attribute_value in attributes.iteritems():
-                python_name = SDKTransformer.get_python_name(attribute_name)
-                python_attributes[python_name] = attribute_value
-
-            return klass(**python_attributes)
-
-        return None
