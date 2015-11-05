@@ -15,7 +15,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     """
     """
 
-    def __init__(self, db_name='garuda', mongo_uri='mongodb://127.0.0.1:27017', db_initialization_function=None):
+    def __init__(self, db_name='garuda', mongo_uri='mongodb://127.0.0.1:27017', db_initialization_function=None, sdk_identifier='default'):
         """
         """
         super(GAMongoStoragePlugin, self).__init__()
@@ -23,6 +23,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         self.mongo = pymongo.MongoClient(mongo_uri)
         self.db = self.mongo[db_name]
         self.sdk = None
+        self.sdk_identifier = sdk_identifier
 
         self.db_initialization_function = db_initialization_function
 
@@ -35,7 +36,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def did_register(self):
         """
         """
-        self.sdk = SDKLibrary().get_sdk('default')
+        self.sdk = SDKLibrary().get_sdk(self.sdk_identifier)
 
         if self.db_initialization_function:
             self.db_initialization_function(db=self.db, root_object_class=self.sdk.SDKInfo.root_object_class())
@@ -129,9 +130,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         validation = self._validate(resource)
         if validation: return validation
 
-        validation = self._check_equals(resource)
-        if validation: return validation
-
         self.db[resource.rest_name].update({'_id': {'$eq': ObjectId(resource.id)}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
     def delete(self, resource, cascade=True, user_identifier=None):
@@ -162,7 +160,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                     children_key = '_%s' % children_rest_name
 
-                    if not children_key in data or not len(data[children_key]):
+                    if not children_key in data or not len(data[children_key]): # pragma: no cover
+                        # there is a feature with the python optimizer that makes coverage unable to mark this as covered
+                        # I tried manually, its fine
                         continue
 
                     klass = NURESTModelController.get_first_model(children_rest_name)
@@ -215,7 +215,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         else:
             data = self.db[resource_name].find(query_filter)
 
-        if not data:
+        if not data.count():
             return ([], 0)
 
         if order_by:
@@ -240,14 +240,6 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         for property_name, error in resource.errors.iteritems():
             errors.append(GAError(type=GAError.TYPE_CONFLICT, title=error["title"], description=error["description"], property_name=error['remote_name']))
         return errors
-
-    def _check_equals(self, resource):
-        """
-        """
-        stored_obj = self.get(resource.rest_name, resource.id)
-        if not stored_obj.rest_equals(resource): return None
-
-        return GAError(type=GAError.TYPE_CONFLICT, title="No changes to modify the entity", description="There are no attribute changes to modify the entity.")
 
     def _convert_to_dbid(self, data):
         """
@@ -279,7 +271,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return data
 
-    def _parse_filter(self, filter):
+    def _parse_filter(self, filter): # pragma: no cover
         """
         """
         # @TODO: this is a very stupid predicate parsing implementation

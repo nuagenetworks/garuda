@@ -7,17 +7,17 @@ class GAAuthenticationPlugin(GAPlugin):
     """
     """
 
-    def should_manage(self, request):
+    def should_manage(self, request): # pragma: no cover
         """
         """
         return True
 
-    def extract_session_identifier(self, request):
+    def extract_session_identifier(self, request): # pragma: no cover
         ""
         ""
         return
 
-    def authenticate(self, request):
+    def authenticate(self, request): # pragma: no cover
         """
         """
         raise NotImplementedErrorError("%s should implement authenticate method" % self)

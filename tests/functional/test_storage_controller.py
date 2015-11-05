@@ -6,6 +6,8 @@ import bambou
 from unittest2 import TestCase
 
 from garuda.core.lib import SDKLibrary
+from garuda.core.models import GAError, GAPluginManifest
+from garuda.core.plugins import GAStoragePlugin
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.core.controllers import GAStorageController, GACoreController
 
@@ -20,7 +22,12 @@ class GAStorageControllerTestCase(TestCase):
         """
         SDKLibrary().register_sdk('default', tstdk)
 
-        cls.mongo_plugin = GAMongoStoragePlugin(db_name='unit_test')
+        def db_init(db, root_object_class):
+            """
+            """
+            db['db_init_test'].insert_one({'hello': 'world'})
+
+        cls.mongo_plugin = GAMongoStoragePlugin(db_name='unit_test', db_initialization_function=db_init, sdk_identifier='default')
         cls.core_controller = GACoreController( garuda_uuid='test-garuda',
                                                 redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5},
                                                 storage_plugins=[cls.mongo_plugin])
@@ -47,6 +54,40 @@ class GAStorageControllerTestCase(TestCase):
         """
         self.mongo_plugin.mongo.drop_database('unit_test')
 
+    def test_identifier(self):
+        """
+        """
+        self.assertEquals(self.storage_controller.identifier(), 'garuda.controller.storage')
+        self.assertEquals(self.storage_controller.__class__.identifier(), 'garuda.controller.storage')
+
+    def test_plugin_caching(self):
+        """
+        """
+        self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, False)
+
+        managing_plugin = self.storage_controller._managing_plugin(resource_name='fake', identifier=None)
+        self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, True)
+        self.assertEquals(managing_plugin, self.mongo_plugin)
+
+        self.storage_controller.unregister_plugin(self.mongo_plugin)
+        self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, False)
+
+        self.storage_controller.register_plugin(self.mongo_plugin)
+
+    def test_db_init_function(self):
+        """
+        """
+        def db_init(db, root_object_class):
+            """
+            """
+            db['doc'].insert_one({'hello': 'world'})
+
+        plugin = GAMongoStoragePlugin(db_name='test_db_init', db_initialization_function=db_init, sdk_identifier='default')
+        plugin.did_register()
+
+        self.assertEquals(plugin.db['doc'].find_one()['hello'], 'world')
+        plugin.mongo.drop_database('test_db_init')
+
     def test_instantiate_enterprise(self):
         """
         """
@@ -59,8 +100,20 @@ class GAStorageControllerTestCase(TestCase):
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
 
         self.assertEquals(self.db.enterprise.count(), 0)
-        self.storage_controller.create(resource=enterprise1, parent=None)
+        validations = self.storage_controller.create(resource=enterprise1, parent=None)
+        self.assertIsNone(validations)
         self.assertEquals(self.db.enterprise.count(), 1)
+
+    def test_create_enterprise_with_missing_name(self):
+        ""
+        ""
+        enterprise1 = tstdk.GAEnterprise(name=None, description='the enterprise 1')
+        validations = self.storage_controller.create(resource=enterprise1, parent=None)
+
+        self.assertIsNotNone(validations)
+        self.assertEquals(len(validations), 1)
+        self.assertEquals(validations[0].type, GAError.TYPE_CONFLICT)
+        self.assertEquals(validations[0].property_name, 'name')
 
     def test_get_enterprise_by_id(self):
         """
@@ -71,6 +124,28 @@ class GAStorageControllerTestCase(TestCase):
         self.assertEquals(ret.id, enterprise1.id)
         self.assertEquals(ret.name, enterprise1.name)
         self.assertEquals(ret.description, enterprise1.description)
+
+    def test_get_enterprise_with_bad_id(self):
+        """
+        """
+        self.assertIsNone(self.storage_controller.get(resource_name=tstdk.GAEnterprise.rest_name, identifier='certainly not a good id'))
+
+    def test_get_enterprise_with_matching_filter(self):
+        """
+        """
+        enterprise = tstdk.GAEnterprise(name='enterprise1', description='the enterprise 1')
+        self.storage_controller.create(resource=enterprise, parent=None)
+
+        ret = self.storage_controller.get(resource_name=tstdk.GAEnterprise.rest_name, filter='name == enterprise1')
+
+        self.assertEquals(ret.id, enterprise.id)
+        self.assertEquals(ret.name, enterprise.name)
+        self.assertEquals(ret.description, enterprise.description)
+
+    def test_get_enterprise_with_not_matching_filter(self):
+        """
+        """
+        self.assertIsNone(self.storage_controller.get(resource_name=tstdk.GAEnterprise.rest_name, filter='name == notgood'))
 
     def test_count_enterprises(self):
         """
@@ -166,6 +241,24 @@ class GAStorageControllerTestCase(TestCase):
         count = self.storage_controller.count(resource_name=tstdk.GAEnterprise.rest_name, parent=None)
         self.assertEquals(count, 0)
 
+    def test_delete_non_existing_enterprise_should_not_crash(self):
+        """
+        """
+        enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        self.storage_controller.delete_multiple(resources=[enterprise1], cascade=True, user_identifier=None)
+
+    def test_delete_multiple_enterprises_with_no_child(self):
+        """
+        """
+        enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        self.storage_controller.create(resource=enterprise1, parent=None)
+
+        self.storage_controller.delete_multiple(resources=[enterprise1], cascade=True, user_identifier=None)
+
+        count = self.storage_controller.count(resource_name=tstdk.GAEnterprise.rest_name, parent=None)
+        self.assertEquals(count, 0)
+
+
     def test_create_user(self):
         """
         """
@@ -253,6 +346,13 @@ class GAStorageControllerTestCase(TestCase):
         self.assertEquals(count, 0)
         self.assertEquals(len(ret), 0)
 
+    def test_get_all_non_existing_objects(self):
+        """
+        """
+        ret, count = self.storage_controller.get_all(resource_name='not-existing', parent=None)
+        self.assertEquals(count, 0)
+        self.assertEquals(len(ret), 0)
+
     def test_get_all_users_with_filter(self):
         """
         """
@@ -278,6 +378,48 @@ class GAStorageControllerTestCase(TestCase):
         ret, count = self.storage_controller.get_all(resource_name=tstdk.GAUser.rest_name, parent=enterprise2, filter='username == primalmotion2')
         self.assertEquals(count, 0)
         self.assertEquals(len(ret), 0)
+
+    def test_get_all_enterprises_with_pagination(self):
+        """
+        """
+        enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        enterprise2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 2')
+        enterprise3 = tstdk.GAEnterprise(name='enterprise 3', description='the enterprise 3')
+        enterprise4 = tstdk.GAEnterprise(name='enterprise 4', description='the enterprise 4')
+        enterprise5 = tstdk.GAEnterprise(name='enterprise 5', description='the enterprise 5')
+
+        self.storage_controller.create(resource=enterprise1, parent=None)
+        self.storage_controller.create(resource=enterprise2, parent=None)
+        self.storage_controller.create(resource=enterprise3, parent=None)
+        self.storage_controller.create(resource=enterprise4, parent=None)
+        self.storage_controller.create(resource=enterprise5, parent=None)
+
+        ret, count = self.storage_controller.get_all(resource_name=tstdk.GAEnterprise.rest_name, parent=None)
+        self.assertEquals(count, 5)
+        self.assertEquals(len(ret), 5)
+
+        ret, count = self.storage_controller.get_all(resource_name=tstdk.GAEnterprise.rest_name, parent=None, page=0, page_size=50)
+        self.assertEquals(count, 5)
+        self.assertEquals(len(ret), 5)
+
+        ret, count = self.storage_controller.get_all(resource_name=tstdk.GAEnterprise.rest_name, parent=None, page=2, page_size=50)
+        self.assertEquals(count, 5)
+        self.assertEquals(len(ret), 0)
+
+        ret, count = self.storage_controller.get_all(resource_name=tstdk.GAEnterprise.rest_name, parent=None, page=1, page_size=2)
+        self.assertEquals(count, 5)
+        self.assertEquals(len(ret), 2)
+        self.assertEquals(ret[0].id, enterprise3.id)
+        self.assertEquals(ret[1].id, enterprise4.id)
+
+        ret, count = self.storage_controller.get_all(resource_name=tstdk.GAEnterprise.rest_name, parent=None, page=2, page_size=3)
+        self.assertEquals(count, 5)
+        self.assertEquals(len(ret), 0)
+
+        ret, count = self.storage_controller.get_all(resource_name=tstdk.GAEnterprise.rest_name, parent=None, page=2, page_size=2)
+        self.assertEquals(count, 5)
+        self.assertEquals(len(ret), 1)
+        self.assertEquals(ret[0].id, enterprise5.id)
 
     def test_update_user(self):
         """
@@ -487,4 +629,3 @@ class GAStorageControllerTestCase(TestCase):
 
         ret, count = self.storage_controller.get_all(resource_name=tstdk.GAUser.rest_name, parent=group1)
         self.assertEquals(count, 1)
-

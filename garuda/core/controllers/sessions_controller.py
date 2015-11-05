@@ -17,11 +17,11 @@ logger = logging.getLogger('garuda.controller.sessions')
 class GASessionsController(GAPluginController):
     """
     """
-    def __init__(self, plugins, core_controller, redis_conn):
+    def __init__(self, plugins, core_controller):
         """
 
         """
-        super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller, redis_conn=redis_conn)
+        super(GASessionsController, self).__init__(plugins=plugins, core_controller=core_controller)
 
         self._garuda_uuid = self.core_controller.uuid
         self._default_session_ttl = 300

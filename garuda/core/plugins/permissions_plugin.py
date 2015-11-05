@@ -7,12 +7,12 @@ class GAPermissionsPlugin(GAPlugin):
     """
     """
 
-    def should_manage(self, resource_name, identifier):
+    def should_manage(self, resource_name, identifier): # pragma: no cover
         """
         """
         return True
 
-    def interpret_permissions(self, todo):
+    def interpret_permissions(self, todo): # pragma: no cover
         """
         """
         raise NotImplementedErrorError("%s should implement create_permission method" % self)

@@ -7,16 +7,17 @@ class GAResponse(object):
     """
 
     """
-    def __init__(self, content, status=None, total_count=None, page=None, page_size=None, order_by=None, filter=None):
+    def __init__(self, content):
         """
         """
-        self.status = status
         self.content = content
-        self.filter = filter
-        self.total_count = total_count
-        self.order_by = order_by
-        self.page = page
-        self.page_size = page_size
+
+        self.status = None
+        self.filter = None
+        self.total_count = None
+        self.order_by = None
+        self.page = None
+        self.page_size = None
 
         self._uuid = str(uuid4())
 

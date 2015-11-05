@@ -65,3 +65,9 @@ class TestSession(TestCase):
         """
         session = GASession(garuda_uuid='xxx-yyy-zzzz')
         self.assertEqual(session.garuda_uuid, 'xxx-yyy-zzzz')
+
+    def test_session_redis_key(self):
+        """
+        """
+        session = GASession(garuda_uuid='xxx-yyy-zzzz')
+        self.assertEquals('sessions:%s' % session.uuid, session.redis_key)

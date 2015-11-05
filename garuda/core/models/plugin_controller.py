@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import copy
 logger = logging.getLogger('garuda.controller.plugin')
 
 from plugin import GAPlugin
@@ -9,10 +10,10 @@ from controller import GAController
 class GAPluginController(GAController):
     """
     """
-    def __init__(self, plugins, core_controller, redis_conn=None):
+    def __init__(self, plugins, core_controller):
         """
         """
-        super(GAPluginController, self).__init__(core_controller=core_controller, redis_conn=redis_conn)
+        super(GAPluginController, self).__init__(core_controller=core_controller)
 
         self._pending_plugins = plugins
         self._plugins = []
@@ -22,6 +23,10 @@ class GAPluginController(GAController):
         """
         """
         raise NotImplementedError("managed_plugin_type method must be implemented")
+
+    @property
+    def plugins(self):
+        return self._plugins
 
     def ready(self):
         """
@@ -35,12 +40,10 @@ class GAPluginController(GAController):
         plugin_type = self.managed_plugin_type()
 
         if not isinstance(plugin, plugin_type):
-            logger.error("'%s' cannot register '%s': not a valid '%s'." % (self.__class__.__name__, plugin.manifest().identifier, plugin_type.__name__))
-            return
+            raise AssertionError("'%s' cannot register '%s': not a valid '%s'." % (self.__class__.__name__, plugin.manifest().identifier, plugin_type.__name__))
 
         if plugin in self._plugins:
-            logger.warn("'%s' cannot register '%s': already registered." % (self.__class__.__name__, plugin.manifest().identifier))
-            return
+            raise AssertionError("'%s' cannot register '%s': already registered." % (self.__class__.__name__, plugin.manifest().identifier))
 
         plugin.will_register()
         plugin.core_controller = self.core_controller
@@ -52,10 +55,8 @@ class GAPluginController(GAController):
     def unregister_plugin(self, plugin):
         """
         """
-
         if not plugin in self._plugins:
-            logger.warn("'%s' cannot unregister '%s': not registered." % (self.__class__.__name__, plugin.manifest().identifier))
-            return
+            raise AssertionError("'%s' cannot unregister '%s': not registered." % (self.__class__.__name__, plugin.manifest().identifier))
 
         plugin.will_unregister()
         self._plugins.remove(plugin)
@@ -67,5 +68,7 @@ class GAPluginController(GAController):
     def unregister_all_plugins(self):
         """
         """
-        for plugin in self._plugins:
+        plugins = copy.copy(self._plugins)
+
+        for plugin in plugins:
             self.unregister_plugin(plugin)

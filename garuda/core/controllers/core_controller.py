@@ -38,13 +38,13 @@ class GACoreController(object):
 
         self._additional_controllers = {}
         for controller_class in additional_controller_classes:
-            self._additional_controllers[controller_class.identifier()] = controller_class(core_controller=self, redis_conn=self._redis)
+            self._additional_controllers[controller_class.identifier()] = controller_class(core_controller=self)
 
         self._logic_controller = GALogicController(plugins=logic_plugins, core_controller=self)
         self._storage_controller = GAStorageController(plugins=storage_plugins, core_controller=self)
-        self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self, redis_conn=self._redis)
-        self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self, redis_conn=self._redis)
-        self._push_controller = GAPushController(core_controller=self, redis_conn=self._redis)
+        self._sessions_controller = GASessionsController(plugins=authentication_plugins, core_controller=self)
+        self._permissions_controller = GAPermissionsController(plugins=permission_plugins, core_controller=self)
+        self._push_controller = GAPushController(core_controller=self)
 
         self._logic_controller.ready()
         self._storage_controller.ready()
@@ -67,6 +67,12 @@ class GACoreController(object):
         """
         """
         return self._garuda_uuid
+
+    @property
+    def redis(self):
+        """
+        """
+        return self._redis
 
     @property
     def redis_host(self):

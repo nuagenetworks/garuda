@@ -21,9 +21,15 @@ class CustomObject(object):
 
 class FakeCoreController(object):
 
+    def __init__(self):
+        """
+        """
+        self.redis = redis.StrictRedis(host='127.0.0.1', port='6379', db=1)
+
     @property
     def uuid(self):
         return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
+
 
 
 class GAPermissionsControllerTestCase(TestCase):
@@ -37,9 +43,8 @@ class GAPermissionsControllerTestCase(TestCase):
         """
         super(GAPermissionsControllerTestCase, self).__init__(name)
 
-        redis_connection            = redis.StrictRedis(host='127.0.0.1', port='6379', db=1)
         self.fake_core_controller   = FakeCoreController()
-        self.permissions_controller = GAPermissionsController(plugins=[], core_controller=self.fake_core_controller, redis_conn=redis_connection)
+        self.permissions_controller = GAPermissionsController(plugins=[], core_controller=self.fake_core_controller)
         self.permissions_controller.ready()
 
         self.user = CustomObject()

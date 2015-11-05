@@ -113,4 +113,4 @@ class GAStorageController(GAPluginController):
                 self._managing_plugin_registry[resource_name] = plugin
                 return plugin
 
-        return None
+        return None # pragma: no cover

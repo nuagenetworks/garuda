@@ -10,25 +10,23 @@ logger = logging.getLogger('garuda.controller')
 class GAController(object):
     """
     """
-    def __init__(self, core_controller, redis_conn=None):
+    def __init__(self, core_controller):
         """
         """
 
         if not core_controller:
-            raise Exception("core_controller must be given to all GAController subclasses")
+            raise RuntimeError("a valid core_controller must be given to all GAController subclasses")
 
         self._core_controller = core_controller
-        self._redis_database  = self.core_controller
-        self._redis           = redis_conn
         self._uuid            = str(uuid4())
 
-        if self._redis:
-            self._pubsub          = self._redis.pubsub()
-            self._pubsub_thread   = None
-            self._subscriptions   = {}
+        if self.redis:
+            self._pubsub           = self.redis.pubsub()
+            self._pubsub_thread    = None
+            self._subscriptions    = {}
 
     @classmethod
-    def identifier(cls):
+    def identifier(cls): # pragma: no cover
         """
         """
         raise NotImplementedError("identifier class method must be implemented")
@@ -43,7 +41,7 @@ class GAController(object):
     def redis(self):
         """
         """
-        return self._redis
+        return self.core_controller.redis
 
     @property
     def redis_host(self):
@@ -69,6 +67,12 @@ class GAController(object):
         """
         return self._uuid
 
+    @property
+    def subscriptions(self):
+        """
+        """
+        return self._subscriptions
+
     def ready(self):
         """
         """
@@ -91,28 +95,37 @@ class GAController(object):
         """
         self._subscriptions[channel] = handler
 
+        if self._pubsub_thread:
+            self._pubsub.subscribe(channel)
+
     def unsubscribe(self, channel):
         """
         """
         if channel in self._subscriptions:
             del self._subscriptions[channel]
 
-        self._pubsub.unsubscribe(channel)
+        if self._pubsub_thread:
+            self._pubsub.unsubscribe(channel)
 
     def unsubscribe_all(self):
         """
         """
-        self._pubsub.unsubscribe()
+        self._subscriptions = {}
+
+        if self._pubsub_thread:
+            self._pubsub.unsubscribe()
 
     def publish(self, channel, data):
         """
         """
-
         self.redis.publish(channel, data)
 
     def start_listening_to_events(self):
         """
         """
+        if self._pubsub_thread:
+            return
+
         for channel in self._subscriptions:
             self._pubsub.subscribe(channel)
 
@@ -124,6 +137,7 @@ class GAController(object):
         if not self._pubsub_thread:
             return
 
+        self._pubsub.unsubscribe()
         ThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub_thread = None
 

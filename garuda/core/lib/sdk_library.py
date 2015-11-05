@@ -69,8 +69,8 @@ class SDKLibrary(object):
             logger.info("SDK %s defines %s %s" % (sdk, information_name,  klass))
             return klass()
 
-        logger.warn("SDK %s does not provide SDKInfo class" % sdk)
-        return None
+        logger.warn("SDK %s does not provide SDKInfo class" % sdk) # pragma: no cover
+        return None # pragma: no cover
 
     def get_instance(self, resource_name, **attributes):
         """

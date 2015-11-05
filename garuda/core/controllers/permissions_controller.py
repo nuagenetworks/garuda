@@ -16,10 +16,10 @@ class GAPermissionsController(GAPluginController):
     DEFAULT_PERMISSION = 'read'
     PERMISSIONS = ['read', 'use', 'extend', 'write', 'all']
 
-    def __init__(self, plugins, core_controller, redis_conn):
+    def __init__(self, plugins, core_controller):
         """
         """
-        super(GAPermissionsController, self).__init__(core_controller=core_controller, plugins=plugins, redis_conn=redis_conn)
+        super(GAPermissionsController, self).__init__(core_controller=core_controller, plugins=plugins)
 
     @classmethod
     def identifier(cls):
