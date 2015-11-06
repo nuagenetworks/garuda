@@ -10,7 +10,7 @@ class GASession(GASerializable):
     """
 
     """
-    def __init__(self, garuda_uuid=None):
+    def __init__(self, garuda_uuid=None, root_object=None):
         """
 
         """
@@ -18,7 +18,7 @@ class GASession(GASerializable):
 
         self._uuid = str(uuid4())
         self._garuda_uuid = garuda_uuid
-        self.root_object = None
+        self.root_object = root_object
         self.ttl = None
 
         self.register_attribute(type=str, internal_name='_uuid')

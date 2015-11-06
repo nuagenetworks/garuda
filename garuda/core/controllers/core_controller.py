@@ -197,7 +197,7 @@ class GACoreController(object):
 
         response = context.make_response()
 
-        if len(context.events) > 0:
+        if len(context.events) > 0: # pragma: no cover
             self.push_controller.push_events(events=context.events)
 
         return response

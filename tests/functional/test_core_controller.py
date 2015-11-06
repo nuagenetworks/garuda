@@ -4,10 +4,12 @@ import redis
 from unittest import TestCase
 from mock import patch
 
+from garuda.core.lib import SDKLibrary
 from garuda.core.controllers import GACoreController
 from garuda.core.plugins import GAAuthenticationPlugin
-from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest, GAController
+from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest, GAController, GAResource, GAError, GAResponseFailure, GAResponseSuccess
 
+import tests.tstdk.v1_0 as tstdk
 
 class AdditionalController(GAController):
 
@@ -94,3 +96,72 @@ class TestCoreController(TestCase):
         core_controller.stop()
         self.assertFalse(core_controller.running)
         self.assertFalse(additional.is_started)
+
+    def test_execute_model_request_with_invalid_session(self):
+        """
+        """
+        SDKLibrary().register_sdk('default', tstdk)
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.resources = [GAResource(name='enterprise', value=None)]
+
+        with patch.object(core_controller.sessions_controller, 'get_session', return_value=None):
+            with patch.object(core_controller.sessions_controller, 'get_session', return_value=None):
+                result = core_controller.execute_model_request(request)
+                self.assertEquals(result.__class__, GAResponseFailure)
+                self.assertEquals(result.content[0].type, GAError.TYPE_UNAUTHORIZED)
+
+    def test_execute_model_request_with_create_session(self):
+        """
+        """
+        SDKLibrary().register_sdk('default', tstdk)
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.resources = [GAResource(name='root', value=None)]
+
+        with patch.object(core_controller.sessions_controller, 'get_session', return_value=None):
+            with patch.object(core_controller.sessions_controller, 'create_session', return_value=GASession(garuda_uuid='test-garuda', root_object=tstdk.GARoot())):
+                result = core_controller.execute_model_request(request)
+                self.assertEquals(result.__class__, GAResponseSuccess)
+                self.assertEquals(result.content[0].__class__, tstdk.GARoot)
+
+    def test_execute_model_request_with_valid_session(self):
+        """
+        """
+        SDKLibrary().register_sdk('default', tstdk)
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.resources = [GAResource(name='enterprise', value=None)]
+
+        with patch.object(core_controller.sessions_controller, 'get_session_identifier', return_value='token'):
+            with patch.object(core_controller.sessions_controller, 'get_session', return_value=GASession(garuda_uuid='test-garuda', root_object=tstdk.GARoot())):
+                result = core_controller.execute_model_request(request)
+                self.assertEquals(result.__class__, GAResponseFailure) # nothing exists that's fine
+
+    def test_execute_event_request_with_invalid_session(self):
+        """
+        """
+        SDKLibrary().register_sdk('default', tstdk)
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.resources = [GAResource(name='enterprise', value=None)]
+
+        with patch.object(core_controller.sessions_controller, 'get_session', return_value=None):
+            result = core_controller.execute_events_request(request)
+            self.assertEquals(result[0], None)
+            self.assertEquals(result[1].__class__, GAResponseFailure)
+            self.assertEquals(len(result[1].content), 1)
+            self.assertEquals(result[1].content[0].type, GAError.TYPE_UNAUTHORIZED)
+
+    def test_execute_event_request_with_valid_session(self):
+        """
+        """
+        SDKLibrary().register_sdk('default', tstdk)
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.resources = [GAResource(name='enterprise', value=None)]
+
+        with patch.object(core_controller.sessions_controller, 'get_session', return_value=GASession(garuda_uuid='test-garuda')):
+            result = core_controller.execute_events_request(request)
+            self.assertEquals(result[0].__class__, GASession)
+            self.assertEquals(result[1], None)
