@@ -4,18 +4,17 @@ import re
 from bambou import NURESTModelController
 from garuda.core.models import GAResource
 
-RESOURCE_MAPPING = {'allalarms': 'alarms'}
-
 
 class PathParser(object):
     """ Parse Path to retrieve resources and values information
 
     """
-    def __init__(self):
+    def __init__(self, resource_mappings={'allalarms': 'alarms'}):
         """
         """
         self._version = None
         self._resources = []
+        self._resource_mappings = resource_mappings
 
     @property
     def resources(self):
@@ -48,9 +47,6 @@ class PathParser(object):
         if path.startswith('/'):
             path = path[1:]
 
-        if path.startswith(url_prefix):
-            path = path[len(url_prefix):]
-
         index = path.find('/')
 
         if index > 0 and re.match('v[0-9]_[0-9]', path[:index]):
@@ -82,11 +78,11 @@ class PathParser(object):
         self._resources = result
         return self._resources
 
-    def _get_resource(cls, resource):
+    def _get_resource(self, resource):
         """ Get the resource
 
         """
-        if resource in RESOURCE_MAPPING:
-            return RESOURCE_MAPPING[resource]
+        if resource in self._resource_mappings:
+            return self._resource_mappings[resource]
 
         return resource
