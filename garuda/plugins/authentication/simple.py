@@ -12,7 +12,7 @@ class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):
     """
     """
 
-    def __init__(self, auth_function):
+    def __init__(self, auth_function=None):
         """
         """
         super(GASimpleAuthenticationPlugin, self).__init__()
@@ -44,4 +44,10 @@ class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):
         if request.resources[0].name != root_api:
             return None
 
-        return self._auth_function(request=request, session=session, root_object_class=root_object_class, storage_controller=self.core_controller.storage_controller)
+        if self._auth_function:
+            return self._auth_function(request=request, session=session, root_object_class=root_object_class, storage_controller=self.core_controller.storage_controller)
+        else:
+            auth = root_object_class()
+            auth.api_key = session.uuid
+            auth.password = None
+            return auth

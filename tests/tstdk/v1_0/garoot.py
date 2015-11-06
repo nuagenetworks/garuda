@@ -22,9 +22,9 @@ class GARoot(NURESTRootObject):
     """
 
     __rest_name__ = "root"
-    __resource_name__ = "roots"
+    __resource_name__ = "root"
 
-    
+
 
     def __init__(self, **kwargs):
         """ Initializes a Root instance
@@ -42,19 +42,18 @@ class GARoot(NURESTRootObject):
         super(GARoot, self).__init__()
 
         # Read/Write Attributes
-        
-        
-        
+
+
+
 
         # Fetchers
-        
-        
+
+
         self.enterprises = GAEnterprisesFetcher.fetcher_with_object(parent_object=self, relationship="child")
-        
+
 
         self._compute_args(**kwargs)
 
     # Properties
-    
 
-    
+

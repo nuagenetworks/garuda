@@ -8,8 +8,6 @@ from garuda.core.controllers import GACoreController
 from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest, GAController
 
-import tests.tstdk.v1_0 as tstdk
-
 
 class AdditionalController(GAController):
 

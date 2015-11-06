@@ -13,7 +13,7 @@ from garuda.core.controllers import GAStorageController, GACoreController
 
 from tests.tstdk import v1_0 as tstdk
 
-class GAStorageControllerTestCase(TestCase):
+class TestMongoPlugin(TestCase):
     """
     """
     @classmethod

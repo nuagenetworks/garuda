@@ -28,6 +28,60 @@ class GAChannelsController(object):
 
     # Implementation
 
+    @property
+    def garuda_uuid(self):
+        """
+        """
+        return self._garuda_uuid
+
+    @property
+    def channels(self):
+        """
+        """
+        return self._channels
+
+    @property
+    def redis_info(self):
+        """
+        """
+        return self._redis_info
+
+    @property
+    def logic_plugins(self):
+        """
+        """
+        return self._logic_plugins
+
+    @property
+    def authentication_plugins(self):
+        """
+        """
+        return self._authentication_plugins
+
+    @property
+    def storage_plugins(self):
+        """
+        """
+        return self._storage_plugins
+
+    @property
+    def permission_plugins(self):
+        """
+        """
+        return self._permission_plugins
+
+    @property
+    def additional_controller_classes(self):
+        """
+        """
+        return self._additional_controller_classes
+
+    @property
+    def channel_pids(self):
+        """
+        """
+        return self._channel_pids
+
     def start(self):
         """
         """
@@ -36,13 +90,13 @@ class GAChannelsController(object):
         for channel in self._channels:
 
             pid = os.fork()
-            if not pid:
+            if not pid: # pragma: no cover
                 break
             else:
                 self._channel_pids.append(pid)
                 logger.info('Channel %s forked with pid: %s' % (channel.manifest().identifier, pid))
 
-        if not pid:
+        if not pid: # pragma: no cover
             core = GACoreController(garuda_uuid=self._garuda_uuid,
                                     redis_info=self._redis_info,
                                     logic_plugins=self._logic_plugins,
@@ -66,3 +120,5 @@ class GAChannelsController(object):
         for pid in self._channel_pids:
             logger.info("Killing channel with pid %s" % pid)
             os.kill(pid, signal.SIGTERM)
+
+        self._channel_pids = []
