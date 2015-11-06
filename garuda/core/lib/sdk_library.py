@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 
 import logging
-from bambou import NURESTModelController
 from collections import OrderedDict
 
 from singleton import Singleton
@@ -35,7 +34,7 @@ class SDKLibrary(object):
     def get_sdk(self, identifier):
         """
         """
-        if not identifier in self._sdks:
+        if identifier not in self._sdks:
             raise IndexError("SDK version not found for identifier %s"  % identifier)
 
         return self._sdks[identifier]
@@ -61,8 +60,8 @@ class SDKLibrary(object):
 
         if sdkinfo:
             klass = getattr(sdkinfo, information_name, None)
-            logger.info("SDK %s defines %s %s" % (sdk, information_name,  klass))
+            logger.info("SDK %s defines %s %s" % (sdk, information_name, klass))
             return klass()
 
-        logger.warn("SDK %s does not provide SDKInfo class" % sdk) # pragma: no cover
-        return None # pragma: no cover
+        logger.warn("SDK %s does not provide SDKInfo class" % sdk)  # pragma: no cover
+        return None  # pragma: no cover

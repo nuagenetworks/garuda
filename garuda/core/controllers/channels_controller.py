@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
+import sys
 import signal
 import logging
 
 from garuda.core.controllers import GACoreController
-from garuda.core.channels import GAChannel
-from garuda.core.lib import ThreadManager
 
 logger = logging.getLogger('garuda.controller.channels')
+
 
 class GAChannelsController(object):
     """
@@ -90,13 +90,13 @@ class GAChannelsController(object):
         for channel in self._channels:
 
             pid = os.fork()
-            if not pid: # pragma: no cover
+            if not pid:  # pragma: no cover
                 break
             else:
                 self._channel_pids.append(pid)
                 logger.info('Channel %s forked with pid: %s' % (channel.manifest().identifier, pid))
 
-        if not pid: # pragma: no cover
+        if not pid:  # pragma: no cover
             core = GACoreController(garuda_uuid=self._garuda_uuid,
                                     redis_info=self._redis_info,
                                     logic_plugins=self._logic_plugins,

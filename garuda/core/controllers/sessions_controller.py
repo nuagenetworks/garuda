@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import redis
 import os
-import msgpack
 
 from garuda.core.models import GAPluginController
 from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.models import GASession
-from garuda.core.lib import ThreadManager
 
 logging.getLogger
 logger = logging.getLogger('garuda.controller.sessions')
@@ -62,7 +59,7 @@ class GASessionsController(GAPluginController):
         """
         """
         if not self._local_listening_sessions_redis_key:
-            self._local_listening_sessions_redis_key =  'gnode:%s-%s:sessions:listening' % (self._garuda_uuid, os.getpid())
+            self._local_listening_sessions_redis_key = 'gnode:%s-%s:sessions:listening' % (self._garuda_uuid, os.getpid())
 
         return self._local_listening_sessions_redis_key
 
@@ -119,13 +116,13 @@ class GASessionsController(GAPluginController):
         session = GASession(garuda_uuid=self._garuda_uuid)
         plugin = self._plugin_for_request(request)
 
-        if plugin is None: # pragma: no cover
+        if plugin is None:  # pragma: no cover
             logger.warn('No plugin found to create session')
             return None
 
         root_object = plugin.authenticate(request=request, session=session)
 
-        if not root_object: # pragma: no cover
+        if not root_object:  # pragma: no cover
             return None
 
         session.root_object = root_object
@@ -168,7 +165,7 @@ class GASessionsController(GAPluginController):
         self.redis.delete(self.local_sessions_redis_key)
         self.redis.delete(self.local_listening_sessions_redis_key)
 
-    ## Utilties
+    # Utilties
 
     def _save_session(self, session):
         """
@@ -214,4 +211,4 @@ class GASessionsController(GAPluginController):
         for plugin in self._plugins:
             if plugin.should_manage(request):
                 return plugin
-        return None # pragma: no cover
+        return None  # pragma: no cover

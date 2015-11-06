@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from garuda.core.models import GARequest, GAError, GAPushEvent
-from .logic_controller import GALogicController
+
 
 class GAOperationsController(object):
     """
@@ -19,7 +19,6 @@ class GAOperationsController(object):
         """
         action = self.context.request.action
         resources = self.context.request.resources
-        resource = resources[-1]
 
         if len(resources) == 2:
             parent_resource = resources[0]
@@ -41,32 +40,30 @@ class GAOperationsController(object):
         else:
             self._perform_write_operation()
 
-    ## UTILITIES
+    # UTILITIES
 
     def _report_resource_not_found(self, resource):
         """
         """
-        self.context.add_error(GAError(  type=GAError.TYPE_NOTFOUND,
-                                            title='%s not found' % resource.name,
-                                            description='Cannot find %s with ID %s' % (resource.name, resource.value)))
-
+        self.context.add_error(GAError(type=GAError.TYPE_NOTFOUND,
+                                       title='%s not found' % resource.name,
+                                       description='Cannot find %s with ID %s' % (resource.name, resource.value)))
 
     def _report_validation_error(self, resource):
         """
         """
         for property_name, description in resource.errors.iteritems():
-            self.context.add_error(GAError(  type=GAError.TYPE_CONFLICT,
-                                                title='Invalid %s' % property_name,
-                                                description=description,
-                                                property_name=property_name))
+            self.context.add_error(GAError(type=GAError.TYPE_CONFLICT,
+                                           title='Invalid %s' % property_name,
+                                           description=description,
+                                           property_name=property_name))
 
     def _report_method_not_allowed(self, action):
         """
         """
-        self.context.add_error(GAError(  type=GAError.TYPE_NOTALLOWED,
-                                            title='Action not allowed',
-                                            description='Unable to %s a resource without its identifier' % action)
-                                            )
+        self.context.add_error(GAError(type=GAError.TYPE_NOTALLOWED,
+                                       title='Action not allowed',
+                                       description='Unable to %s a resource without its identifier' % action))
 
     def _populate_parent_object_if_needed(self):
         """
@@ -74,8 +71,7 @@ class GAOperationsController(object):
         if not self.context.parent_object and (self.context.object and self.context.object.parent_type and self.context.object.parent_id):
             self.context.parent_object = self.storage_controller.get(self.context.object.parent_type, self.context.object.parent_id)
 
-
-    ## READ OPERATIONS
+    # READ OPERATIONS
 
     def _prepare_context_for_read_operation(self):
         """
@@ -116,16 +112,16 @@ class GAOperationsController(object):
         resource = resources[-1]
 
         if count_only:
-            self.context.total_count = self.storage_controller.count(   parent=self.context.parent_object,
-                                                                        resource_name=resource.name,
-                                                                        filter=self.context.request.filter)
+            self.context.total_count = self.storage_controller.count(parent=self.context.parent_object,
+                                                                     resource_name=resource.name,
+                                                                     filter=self.context.request.filter)
         else:
-            self.context.objects, self.context.total_count = self.storage_controller.get_all(   parent=self.context.parent_object,
-                                                                                                resource_name=resource.name,
-                                                                                                page=self.context.request.page,
-                                                                                                page_size=self.context.request.page_size,
-                                                                                                filter=self.context.request.filter,
-                                                                                                order_by=self.context.request.order_by)
+            self.context.objects, self.context.total_count = self.storage_controller.get_all(parent=self.context.parent_object,
+                                                                                             resource_name=resource.name,
+                                                                                             page=self.context.request.page,
+                                                                                             page_size=self.context.request.page_size,
+                                                                                             filter=self.context.request.filter,
+                                                                                             order_by=self.context.request.order_by)
 
         if self.context.objects is None:
             self._report_resource_not_found(resource=resource)
@@ -149,8 +145,7 @@ class GAOperationsController(object):
         self.logic_controller.perform_delegate(delegate='preprocess_readall', context=self.context)
         self.logic_controller.perform_delegate(delegate='end_readall_operation', context=self.context)
 
-
-    ## WRITE OPERATIONS
+    # WRITE OPERATIONS
 
     def _populate_context_for_create_with_resource(self, resource):
         """
@@ -192,7 +187,6 @@ class GAOperationsController(object):
         if self.context.object is None:
             self._report_resource_not_found(resource=resource)
 
-
     def _populate_context_for_assign_with_resource(self, resource):
         """
         """
@@ -227,7 +221,6 @@ class GAOperationsController(object):
 
         elif action == GARequest.ACTION_ASSIGN:
             self._populate_context_for_assign_with_resource(resource=resource)
-
 
     def _perform_write_operation(self):
         """
@@ -287,4 +280,3 @@ class GAOperationsController(object):
             self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.parent_object))
         else:
             self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))
-

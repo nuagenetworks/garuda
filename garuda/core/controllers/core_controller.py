@@ -12,8 +12,7 @@ from .sessions_controller import GASessionsController
 from .permissions_controller import GAPermissionsController
 from .logic_controller import GALogicController
 
-from garuda.core.lib import SDKLibrary
-from garuda.core.models import GAContext, GAResponseFailure, GAResponseSuccess, GARequest, GAError
+from garuda.core.models import GAContext, GAResponseFailure, GAResponseSuccess, GAError
 
 logger = logging.getLogger('garuda.core')
 
@@ -54,7 +53,6 @@ class GACoreController(object):
 
         for additional_controller in self._additional_controllers.values():
             additional_controller.ready()
-
 
     @property
     def uuid(self):
@@ -136,7 +134,9 @@ class GACoreController(object):
     def start(self):
         """
         """
-        if self._running: return
+        if self._running:
+            return
+
         self._running = True
 
         logger.debug('Starting core controller %s with pid %s' % (self.uuid, os.getpid()))
@@ -149,7 +149,9 @@ class GACoreController(object):
     def stop(self, signal=None, frame=None):
         """
         """
-        if not self._running: return
+        if not self._running:
+            return
+
         self._running = False
 
         logger.debug('Stopping core controller %s with pid %s' % (self.uuid, os.getpid()))
@@ -180,8 +182,8 @@ class GACoreController(object):
 
         if not session:
             error = GAError(type=GAError.TYPE_UNAUTHORIZED,
-                    title='Unauthorized access',
-                    description='Could not grant access. Please log in.')
+                            title='Unauthorized access',
+                            description='Could not grant access. Please log in.')
 
             context.add_error(error)
 
@@ -197,7 +199,7 @@ class GACoreController(object):
 
         response = context.make_response()
 
-        if len(context.events) > 0: # pragma: no cover
+        if len(context.events) > 0:  # pragma: no cover
             self.push_controller.push_events(events=context.events)
 
         return response

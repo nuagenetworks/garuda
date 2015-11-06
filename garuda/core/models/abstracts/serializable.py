@@ -6,10 +6,11 @@ import msgpack
 from collections import namedtuple
 from datetime import datetime
 
+logger = logging.getLogger('garuda.serializable')
+
+
 GASerializableAttribute = namedtuple('GASerializableAttribute', ['internal_name', 'name', 'type', 'children_type'])
 
-
-logger = logging.getLogger('garuda.serializable')
 
 class GASerializable(object):
     """

@@ -4,6 +4,7 @@ import threading
 from functools import partial
 from multiprocessing.pool import ThreadPool
 
+
 class StoppableThread(threading.Thread):
     """
     """

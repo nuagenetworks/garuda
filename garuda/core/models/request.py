@@ -38,4 +38,3 @@ class GARequest(object):
         """
         """
         return self._uuid
-

@@ -69,7 +69,7 @@ class GAContext(object):
         return context_copy
 
     # there's no need to test that crappy method for now
-    def merge_contexts(self, contexts): # pragma: no cover
+    def merge_contexts(self, contexts):  # pragma: no cover
         """
         """
         for context in contexts:
@@ -123,7 +123,6 @@ class GAContext(object):
         """
         """
         self._errors = []
-
 
     # Response management
 

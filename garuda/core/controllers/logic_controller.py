@@ -2,11 +2,12 @@
 
 import logging
 
-logger = logging.getLogger('garuda.controller.logic')
-
 from garuda.core.models import GAPluginController
 from garuda.core.lib import ThreadManager
 from garuda.core.plugins import GALogicPlugin
+
+logger = logging.getLogger('garuda.controller.logic')
+
 
 class GALogicController(GAPluginController):
     """
@@ -54,13 +55,12 @@ class GALogicController(GAPluginController):
     def perform_delegate(self, delegate, context):
         """
         """
-        jobs = []
         plugins = self._managing_plugins(resource_name=context.request.resources[-1].name, action=context.request.action)
 
         if not len(plugins):
             return
 
-        result = []
+        # result = []
         for plugin in plugins:
             # result.append(self._perform_delegate(plugin, delegate, context))
             context = self._perform_delegate(plugin, delegate, context)

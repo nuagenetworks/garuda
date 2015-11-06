@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import os
 import json
 import logging
-import signal
 import falcon
 import time
 import multiprocessing
@@ -11,7 +9,7 @@ from gunicorn.app.base import BaseApplication
 from base64 import urlsafe_b64decode
 
 from garuda.core.lib import SDKLibrary
-from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseFailure, GAResponseSuccess
+from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseSuccess
 from garuda.core.channels import GAChannel
 
 from .constants import RESTConstants
@@ -35,15 +33,15 @@ class GAFalconChannel(GAChannel):
         self._number_of_workers = (multiprocessing.cpu_count() * 2) + 1
         self._falcon = falcon.API()
         self._falcon.add_sink(self._handle_requests)
-        self._server = GAGUnicorn(  app=self._falcon,
-                                    host=self._host,
-                                    port=self._port,
-                                    ssl_certificate=ssl_certificate,
-                                    ssl_key=ssl_key,
-                                    number_of_workers=self._number_of_workers,
-                                    timeout=push_timeout + 20,
-                                    worker_init=self._worker_init,
-                                    worker_exit=self._worker_exit)
+        self._server = GAGUnicorn(app=self._falcon,
+                                  host=self._host,
+                                  port=self._port,
+                                  ssl_certificate=ssl_certificate,
+                                  ssl_key=ssl_key,
+                                  number_of_workers=self._number_of_workers,
+                                  timeout=push_timeout + 20,
+                                  worker_init=self._worker_init,
+                                  worker_exit=self._worker_exit)
 
     def _worker_init(self, worker):
         """
@@ -109,18 +107,17 @@ class GAFalconChannel(GAChannel):
         resources = parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
         action    = self._determine_action(http_request.method, resources)
 
-
-        ga_request = GARequest( action=action,
-                                content=content,
-                                parameters=parameters,
-                                resources=resources,
-                                username=username,
-                                token=token,
-                                filter=filter,
-                                page=page,
-                                page_size=page_size,
-                                order_by=order_by,
-                                channel=self)
+        ga_request = GARequest(action=action,
+                               content=content,
+                               parameters=parameters,
+                               resources=resources,
+                               username=username,
+                               token=token,
+                               filter=filter,
+                               page=page,
+                               page_size=page_size,
+                               order_by=order_by,
+                               channel=self)
 
         ga_response = self.core_controller.execute_model_request(request=ga_request)
 
@@ -144,12 +141,12 @@ class GAFalconChannel(GAChannel):
 
         logger.info('= %s %s from %s' % (http_request.method, http_request.path, http_request.host))
 
-        ga_request = GARequest( action=GARequest.ACTION_LISTENEVENTS,
-                                content=content,
-                                parameters=parameters,
-                                username=username,
-                                token=token,
-                                channel=self)
+        ga_request = GARequest(action=GARequest.ACTION_LISTENEVENTS,
+                               content=content,
+                               parameters=parameters,
+                               username=username,
+                               token=token,
+                               channel=self)
 
         session, ga_response_failure = self.core_controller.execute_events_request(request=ga_request)
 
@@ -166,14 +163,18 @@ class GAFalconChannel(GAChannel):
             event = self.core_controller.push_controller.get_next_event(session=session, timeout=self._push_timeout)
 
             # timeout expired and nothing to pop
-            if not event: break
+            if not event:
+                break
 
             events.append(event)
 
-            if len(events) >= 100: break
+            if len(events) >= 100:
+                break
 
             if self.core_controller.push_controller.is_event_queue_empty(session=session):
+
                 time.sleep(0.3)
+
                 # if this is still empty, we send back the info
                 if self.core_controller.push_controller.is_event_queue_empty(session=session):
                     break
@@ -188,11 +189,17 @@ class GAFalconChannel(GAChannel):
         """
         """
         method = method.upper()
-        if method == RESTConstants.HTTP_POST: return GARequest.ACTION_CREATE
-        elif method == RESTConstants.HTTP_PUT: return GARequest.ACTION_ASSIGN if len(resources) == 2 else GARequest.ACTION_UPDATE
-        elif method == RESTConstants.HTTP_DELETE: return GARequest.ACTION_DELETE
-        elif method == RESTConstants.HTTP_HEAD: return GARequest.ACTION_COUNT
-        elif method == RESTConstants.HTTP_GET: return GARequest.ACTION_READALL if not resources[-1].value else GARequest.ACTION_READ
+
+        if method == RESTConstants.HTTP_POST:
+            return GARequest.ACTION_CREATE
+        elif method == RESTConstants.HTTP_PUT:
+            return GARequest.ACTION_ASSIGN if len(resources) == 2 else GARequest.ACTION_UPDATE
+        elif method == RESTConstants.HTTP_DELETE:
+            return GARequest.ACTION_DELETE
+        elif method == RESTConstants.HTTP_HEAD:
+            return GARequest.ACTION_COUNT
+        elif method == RESTConstants.HTTP_GET:
+            return GARequest.ACTION_READALL if not resources[-1].value else GARequest.ACTION_READ
 
         raise Exception("Unknown method %s" % method)
 
@@ -410,7 +417,6 @@ class GAGUnicorn(BaseApplication):
 
         self.cfg.set('post_worker_init', post_worker_init)
         self.cfg.set('worker_exit', worker_exit)
-
 
     def load(self):
         """

@@ -7,6 +7,7 @@ from garuda.core.lib import ThreadManager
 
 logger = logging.getLogger('garuda.controller')
 
+
 class GAController(object):
     """
     """
@@ -26,7 +27,7 @@ class GAController(object):
             self._subscriptions    = {}
 
     @classmethod
-    def identifier(cls): # pragma: no cover
+    def identifier(cls):  # pragma: no cover
         """
         """
         raise NotImplementedError("identifier class method must be implemented")
@@ -154,6 +155,3 @@ class GAController(object):
             if channel in self._subscriptions:
                 handler = self._subscriptions[channel]
                 handler(event['data'])
-
-
-

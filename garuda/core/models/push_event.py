@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from Queue import Empty
-import time
 
 from bambou import NURESTModelController
-from garuda.core.lib import SDKLibrary
 from .abstracts import GASerializable
 from .request import GARequest
+
 
 class GAPushEvent(GASerializable):
     """

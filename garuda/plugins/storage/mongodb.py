@@ -110,7 +110,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         resource.id = str(ObjectId())
 
         validation = self._validate(resource)
-        if validation: return validation
+
+        if validation:
+            return validation
 
         self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
@@ -128,7 +130,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         resource.last_updated_date = time.time()
 
         validation = self._validate(resource)
-        if validation: return validation
+
+        if validation:
+            return validation
 
         self.db[resource.rest_name].update({'_id': {'$eq': ObjectId(resource.id)}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
@@ -151,7 +155,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
             if cascade:
 
-                data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)}) # this could be optimized by only getting the children keys
+                data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)})  # this could be optimized by only getting the children keys
 
                 if not data:
                     return
@@ -160,7 +164,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
                     children_key = '_%s' % children_rest_name
 
-                    if not children_key in data or not len(data[children_key]): # pragma: no cover
+                    if children_key not in data or not len(data[children_key]):  # pragma: no cover
                         # there is a feature with the python optimizer that makes coverage unable to mark this as covered
                         # I tried manually, its fine
                         continue
@@ -173,14 +177,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resources[0].rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
 
-
     def assign(self, resource_name, resources, parent, user_identifier=None):
         """
         """
         self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
 
-
-    ## UTILITIES
+    # UTILITIES
 
     def _get_children_data(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, grand_total=True):
         """
@@ -206,7 +208,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 association_key = '_rel_%s' % resource_name
                 association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
 
-                if not association_data or not association_key in association_data:
+                if not association_data or association_key not in association_data:
                     return ([], 0)
 
                 identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
@@ -271,7 +273,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return data
 
-    def _parse_filter(self, filter): # pragma: no cover
+    def _parse_filter(self, filter):  # pragma: no cover
         """
         """
         # @TODO: this is a very stupid predicate parsing implementation
@@ -282,16 +284,25 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             operator = components[1].lower()
             value = components[2]
 
-            #if operator == 'contains': operator = '$in'
-            if operator == 'equals': operator = '$eq'
-            elif operator == 'in': operator = '$in'
-            elif operator == 'not in': operator = '$nin'
-            elif operator == '==': operator = '$eq'
-            elif operator == '!=': operator = '$neq'
-            elif operator == '>': operator = '$gt'
-            elif operator == '>=': operator = '$gte'
-            elif operator == '<': operator = '$lt'
-            elif operator == '<=': operator = '$lte'
+            # if operator == 'contains': operator = '$in'
+            if operator == 'equals':
+                operator = '$eq'
+            elif operator == 'in':
+                operator = '$in'
+            elif operator == 'not in':
+                operator = '$nin'
+            elif operator == '==':
+                operator = '$eq'
+            elif operator == '!=':
+                operator = '$neq'
+            elif operator == '>':
+                operator = '$gt'
+            elif operator == '>=':
+                operator = '$gte'
+            elif operator == '<':
+                operator = '$lt'
+            elif operator == '<=':
+                operator = '$lte'
 
             if attribute == 'ID':
                 attribute = '_id'

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import redis
-
-logger = logging.getLogger('garuda.controller.authentication')
 
 from garuda.core.models import GAPluginController
 from garuda.core.plugins import GAPermissionsPlugin
+
+logger = logging.getLogger('garuda.controller.authentication')
 
 
 class GAPermissionsController(GAPluginController):
@@ -41,7 +40,7 @@ class GAPermissionsController(GAPluginController):
         permission_key = self._get_permission_key(resource=resource, target=target)
         extended_key = self._get_extended_key(permission_key=permission_key, permission=permission, implicit=False)
 
-        if self.redis.smembers(extended_key): # pragma: no cover
+        if self.redis.smembers(extended_key):  # pragma: no cover
             return
 
         permission_value = self._value_for_permission(permission=permission)
@@ -52,9 +51,9 @@ class GAPermissionsController(GAPluginController):
         self.redis.zadd(permission_key, permission_value, permission)
 
         if hasattr(target, "parent_object") is False:
-            raise Exception('%s does not have a parent_object attribute' % target) # pragma: no cover
+            raise Exception('%s does not have a parent_object attribute' % target)  # pragma: no cover
 
-        while target.parent_object != None:
+        while target.parent_object is not None:
             tmp_permission_key = self._get_permission_key(resource=resource, target=target.parent_object)
             tmp_extended_key = self._get_extended_key(permission_key=tmp_permission_key, permission=self.DEFAULT_PERMISSION, implicit=True)
 
@@ -79,7 +78,7 @@ class GAPermissionsController(GAPluginController):
 
         extended_implicit_keys = self.redis.smembers(extended_key)
 
-        if extended_implicit_keys is None: # pragma: no cover
+        if extended_implicit_keys is None:  # pragma: no cover
             return
 
         for extended_implicit_key in extended_implicit_keys:
@@ -121,7 +120,7 @@ class GAPermissionsController(GAPluginController):
                 logger.info('Found %s >= %s' % (authorized_permission, permission))
                 return True
 
-        if hasattr(target, "parent_object") is False: # pragma: no cover
+        if hasattr(target, "parent_object") is False:  # pragma: no cover
             raise Exception('%s does not have a parent_object attribute' % target)
 
         parent = target.parent_object
@@ -131,7 +130,6 @@ class GAPermissionsController(GAPluginController):
             return False
 
         return self.has_permission(resource=resource, target=target.parent_object, permission=permission)
-
 
     # UTILITIES
 

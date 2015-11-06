@@ -2,10 +2,11 @@
 
 import logging
 import copy
+
+from controller import GAController
+
 logger = logging.getLogger('garuda.controller.plugin')
 
-from plugin import GAPlugin
-from controller import GAController
 
 class GAPluginController(GAController):
     """
@@ -55,7 +56,7 @@ class GAPluginController(GAController):
     def unregister_plugin(self, plugin):
         """
         """
-        if not plugin in self._plugins:
+        if plugin not in self._plugins:
             raise AssertionError("'%s' cannot unregister '%s': not registered." % (self.__class__.__name__, plugin.manifest().identifier))
 
         plugin.will_unregister()

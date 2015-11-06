@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import json
-import redis
 import logging
 import msgpack
 
 from garuda.core.models import GAPushEvent, GAResource, GARequest, GAContext, GAController
-from garuda.core.lib import ThreadManager
 from .operations_controller import GAOperationsController
 
 logger = logging.getLogger('garuda.controller.push')
+
 
 class GAPushController(GAController):
     """
@@ -59,9 +57,9 @@ class GAPushController(GAController):
         context        = GAContext(request=request, session=session)
         context.object = event.entity
 
-        operation_manager = GAOperationsController( context=context,
-                                                    logic_controller=self.core_controller.logic_controller,
-                                                    storage_controller=self.core_controller.storage_controller)
+        operation_manager = GAOperationsController(context=context,
+                                                   logic_controller=self.core_controller.logic_controller,
+                                                   storage_controller=self.core_controller.storage_controller)
         operation_manager.run()
 
         if not context.has_errors:

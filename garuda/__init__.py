@@ -15,24 +15,25 @@ from core.channels import GAChannel
 from core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
 
 __version__ = '1.0'
-__all__ = [ 'Garuda']
+__all__ = ['Garuda']
+
 
 class Garuda(object):
     """
     """
 
-    def __init__(   self,
-                    sdks_info,
-                    redis_info,
-                    channels=[],
-                    plugins=[],
-                    additional_controller_classes=[],
-                    additional_master_controller_classes=[],
-                    log_level=logging.INFO,
-                    log_handler=None,
-                    runloop=True,
-                    banner=True,
-                    debug=False):
+    def __init__(self,
+                 sdks_info,
+                 redis_info,
+                 channels=[],
+                 plugins=[],
+                 additional_controller_classes=[],
+                 additional_master_controller_classes=[],
+                 log_level=logging.INFO,
+                 log_handler=None,
+                 runloop=True,
+                 banner=True,
+                 debug=False):
         """
         """
         setproctitle('garuda-server')
@@ -58,11 +59,16 @@ class Garuda(object):
 
         for plugin in plugins:
 
-            if isinstance(plugin, GAChannel): self._channels.append(plugin)
-            elif isinstance(plugin, GAAuthenticationPlugin): self._authentication_plugins.append(plugin)
-            elif isinstance(plugin, GAStoragePlugin): self._storage_plugins.append(plugin)
-            elif isinstance(plugin, GAPermissionsPlugin): self._permission_plugins.append(plugin)
-            elif isinstance(plugin, GALogicPlugin): self._logic_plugins.append(plugin)
+            if isinstance(plugin, GAChannel):
+                self._channels.append(plugin)
+            elif isinstance(plugin, GAAuthenticationPlugin):
+                self._authentication_plugins.append(plugin)
+            elif isinstance(plugin, GAStoragePlugin):
+                self._storage_plugins.append(plugin)
+            elif isinstance(plugin, GAPermissionsPlugin):
+                self._permission_plugins.append(plugin)
+            elif isinstance(plugin, GALogicPlugin):
+                self._logic_plugins.append(plugin)
 
         if banner:
             self.print_banner()
@@ -95,12 +101,17 @@ class Garuda(object):
         """
         """
         try:
-            import ipdb, objgraph, resource, guppy, signal
+            import resource
+            import guppy
+            import signal
+
             print '# DBG MODE: Debug Mode active'
             print '# DBG MODE: Initial memory usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
             print '# DBG MODE: Collecting initial heap snaphot...'
             hp = guppy.hpy()
             heap_initial = hp.heap()
+
+            heap_initial  # make pep8 happy
 
             def handle_signal(signal_number, frame_stack):
                 self._launch_debug_mode()
@@ -119,19 +130,22 @@ class Garuda(object):
     def _launch_debug_mode(self):
         """
         """
-        import ipdb, objgraph, resource, guppy
+        import ipdb
+        import resource
+        import guppy
+
         print ''
         print '# DBG MODE: Entering Debugging Mode...'
         print '# DBG MODE: Final memory usage : %f (MB)' % (float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024 / 1024)
         print '# DBG MODE: Collecting final heap snaphot...'
         hp = guppy.hpy()
         heap_current = hp.heap()
+        heap_current  # make pep8 happy
         print '# DBG MODE: Current heap snaphot collected'
         print '# DBG MODE: You can see the heap snaphots in variables `heap_initial` and `heap_current`'
         print '# DBG MODE: Starting ipdb (CTRL+D to exit)'
         print ''
         ipdb.set_trace()
-
 
     def print_banner(self):
         """
@@ -160,12 +174,12 @@ class Garuda(object):
                '"N***xD"`
 
                """ % (__version__, os.getpid(),
-                       len(self._channels), "s" if len(self._channels) > 1 else "", ": %s" % all_channels if len(all_channels) else "",
-                       len(self._sdks_info), "s" if len(self._sdks_info) > 1 else "", ": %s" % all_sdks if len(all_sdks) else "",
-                       len(self._storage_plugins), "s" if len(self._storage_plugins) > 1 else "", ": %s" % all_storages if len(all_storages) else "",
-                       len(self._authentication_plugins), "s" if len(self._authentication_plugins) > 1 else "", ": %s" % all_auth if len(all_auth) else "",
-                       len(self._permission_plugins), "s" if len(self._permission_plugins) > 1 else "", ": %s" % all_perms if len(all_perms) else "",
-                       len(self._logic_plugins), "s" if len(self._logic_plugins) > 1 else "")
+                      len(self._channels), "s" if len(self._channels) > 1 else "", ": %s" % all_channels if len(all_channels) else "",
+                      len(self._sdks_info), "s" if len(self._sdks_info) > 1 else "", ": %s" % all_sdks if len(all_sdks) else "",
+                      len(self._storage_plugins), "s" if len(self._storage_plugins) > 1 else "", ": %s" % all_storages if len(all_storages) else "",
+                      len(self._authentication_plugins), "s" if len(self._authentication_plugins) > 1 else "", ": %s" % all_auth if len(all_auth) else "",
+                      len(self._permission_plugins), "s" if len(self._permission_plugins) > 1 else "", ": %s" % all_perms if len(all_perms) else "",
+                      len(self._logic_plugins), "s" if len(self._logic_plugins) > 1 else "")
 
     def start(self):
         """
