@@ -52,4 +52,3 @@ class TestPushEvent(TestCase):
         SDKLibrary().register_sdk('default', tstdk)
         event = GAPushEvent.from_dict(data)
         self.assertEqual(event.entity.name, 'enterprise1')
-

@@ -1,7 +1,8 @@
 from unittest import TestCase
 
 from garuda.core.controllers import GACoreController
-from garuda.core.models import GAPluginManifest, GARequest, GAPlugin, GAPluginController
+from garuda.core.models import GAPluginManifest, GAPlugin, GAPluginController
+
 
 class FakePlugin1(GAPlugin):
 
@@ -23,6 +24,7 @@ class FakePluginController(GAPluginController):
     def managed_plugin_type(cls):
         return FakePlugin1
 
+
 class TestPluginPlugin(TestCase):
     """
     """
@@ -30,7 +32,7 @@ class TestPluginPlugin(TestCase):
     def test_managed_plugin_type(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
         controller = FakePluginController(core_controller=core_controller, plugins=[])
         self.assertEquals(controller.managed_plugin_type(), FakePlugin1)
         self.assertEquals(controller.__class__.managed_plugin_type(), FakePlugin1)
@@ -48,7 +50,7 @@ class TestPluginPlugin(TestCase):
         """
         plugin = FakePlugin1()
 
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
         controller = FakePluginController(core_controller=core_controller, plugins=[])
         controller.register_plugin(plugin)
 
@@ -58,12 +60,11 @@ class TestPluginPlugin(TestCase):
         with self.assertRaises(AssertionError):
             controller.register_plugin(plugin)
 
-
     def test_invalid_plugin_resistration(self):
         """
         """
         plugin = FakePlugin2()
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
         controller = FakePluginController(core_controller=core_controller, plugins=[plugin])
 
         with self.assertRaises(AssertionError):
@@ -74,20 +75,19 @@ class TestPluginPlugin(TestCase):
         """
         plugin = FakePlugin1()
 
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
         controller = FakePluginController(core_controller=core_controller, plugins=[plugin])
         controller.ready()
 
         self.assertEquals(len(controller.plugins), 1)
         self.assertEquals(controller.plugins[0], plugin)
 
-
     def test_unregister_plugin(self):
         """
         """
         plugin = FakePlugin1()
 
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
         controller = FakePluginController(core_controller=core_controller, plugins=[])
         controller.register_plugin(plugin)
 
@@ -106,7 +106,7 @@ class TestPluginPlugin(TestCase):
         plugin1 = FakePlugin1()
         plugin2 = FakePlugin1()
 
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
         controller = FakePluginController(core_controller=core_controller, plugins=[plugin1, plugin2])
         controller.ready()
 

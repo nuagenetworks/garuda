@@ -27,5 +27,5 @@ class TestThreadManager(TestCase):
             time.sleep(1000)
 
         thread_manager = ThreadManager(size=2)
-        results = thread_manager.start(test, [1, 2, 3], async=True)
+        thread_manager.start(test, [1, 2, 3], async=True)
         thread_manager.stop_all()

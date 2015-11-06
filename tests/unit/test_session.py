@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import json
-from datetime import datetime
 from unittest import TestCase
 
 from garuda.core.models import GASession

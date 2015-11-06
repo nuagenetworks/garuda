@@ -1,8 +1,8 @@
 from unittest import TestCase
-import redis
 
 from garuda.core.controllers import GACoreController
 from garuda.core.models import GAController
+
 
 class FakeController(GAController):
 
@@ -32,12 +32,12 @@ class TestController(TestCase):
         """
         """
         with self.assertRaises(RuntimeError):
-            controller = GAController(core_controller=None)
+            GAController(core_controller=None)
 
     def test_identifier_must_be_implemented(self):
         """
         """
-        controller = GAController(core_controller=GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
+        controller = GAController(core_controller=GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
         with self.assertRaises(NotImplementedError):
             controller.identifier()
 
@@ -47,7 +47,7 @@ class TestController(TestCase):
     def test_redis_informations(self):
         """
         """
-        controller = GAController(core_controller=GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
+        controller = GAController(core_controller=GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
 
         self.assertEquals(controller.subscriptions, {})
         self.assertEquals(controller.redis_host, '127.0.0.1')
@@ -57,32 +57,32 @@ class TestController(TestCase):
     def test_uuid(self):
         """
         """
-        controller = GAController(core_controller=GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
+        controller = GAController(core_controller=GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
 
         self.assertIsNotNone(controller.uuid)
 
     def test_ready(self):
         """
         """
-        controller = GAController(core_controller=GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
+        controller = GAController(core_controller=GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
         controller.ready()
 
     def test_start(self):
         """
         """
-        controller = GAController(core_controller=GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
+        controller = GAController(core_controller=GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
         controller.start()
 
     def test_stop(self):
         """
         """
-        controller = GAController(core_controller=GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
+        controller = GAController(core_controller=GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}))
         controller.stop()
 
     def test_lifecycle(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         self.assertIsNotNone(controller)
@@ -100,7 +100,7 @@ class TestController(TestCase):
     def test_start_stop_twice(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         controller.start_listening_to_events()
@@ -116,7 +116,7 @@ class TestController(TestCase):
     def test_offline_subscriptions(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         def handler(data):
@@ -141,7 +141,7 @@ class TestController(TestCase):
     def test_online_subscriptions(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         def handler(data):
@@ -164,7 +164,7 @@ class TestController(TestCase):
     def test_mixed_subscriptions(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         def handler(data):
@@ -184,11 +184,10 @@ class TestController(TestCase):
         self.assertFalse('test-channel1' in controller.subscriptions)
         self.assertFalse('test-channel2' in controller.subscriptions)
 
-
     def test_unsubscribe_all_online(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         def handler(data):
@@ -210,7 +209,7 @@ class TestController(TestCase):
     def test_publish(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
 
         def handler(data):
@@ -226,6 +225,6 @@ class TestController(TestCase):
     def test_stop_listening_to_events_when_not_listening(self):
         """
         """
-        core_controller = GACoreController( garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[FakeController])
         controller = core_controller.additional_controller(identifier='the.id')
         controller.stop_listening_to_events()

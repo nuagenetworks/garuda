@@ -55,7 +55,7 @@ class GAOperationsController(object):
         """
         """
         for property_name, description in resource.errors.iteritems():
-            self.context.add_error(GAError(  type=GAError.TYPE_INVALID,
+            self.context.add_error(GAError(  type=GAError.TYPE_CONFLICT,
                                                 title='Invalid %s' % property_name,
                                                 description=description,
                                                 property_name=property_name))
@@ -63,7 +63,7 @@ class GAOperationsController(object):
     def _report_method_not_allowed(self, action):
         """
         """
-        self.context.add_error(GAError(  type=GAError.TYPE_NOTFOUND,
+        self.context.add_error(GAError(  type=GAError.TYPE_NOTALLOWED,
                                             title='Action not allowed',
                                             description='Unable to %s a resource without its identifier' % action)
                                             )
@@ -163,6 +163,8 @@ class GAOperationsController(object):
 
         self.context.object.from_dict(self.context.request.content)
 
+        self.context.object.validate()
+
         if not self.context.object.is_valid():
             self._report_validation_error(self.context.object)
 
@@ -177,6 +179,8 @@ class GAOperationsController(object):
 
         self.context.object.from_dict(self.context.request.content)
 
+        self.context.object.validate()
+
         if not self.context.object.is_valid():
             self._report_validation_error(self.context.object)
 
@@ -185,7 +189,8 @@ class GAOperationsController(object):
         """
         self.context.object = self.storage_controller.get(resource.name, resource.value)
 
-        if self.context.object is None: self._report_resource_not_found(resource=resource)
+        if self.context.object is None:
+            self._report_resource_not_found(resource=resource)
 
 
     def _populate_context_for_assign_with_resource(self, resource):

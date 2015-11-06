@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-
-import redis
-import pymongo
-import bambou
 from unittest2 import TestCase
 
 from garuda.core.lib import SDKLibrary
-from garuda.core.models import GAError, GAPluginManifest
-from garuda.core.plugins import GAStoragePlugin
+from garuda.core.models import GAError
 from garuda.plugins.storage import GAMongoStoragePlugin
-from garuda.core.controllers import GAStorageController, GACoreController
+from garuda.core.controllers import GACoreController
 
 from tests.tstdk import v1_0 as tstdk
+
 
 class TestMongoPlugin(TestCase):
     """
@@ -28,9 +24,9 @@ class TestMongoPlugin(TestCase):
             db['db_init_test'].insert_one({'hello': 'world'})
 
         cls.mongo_plugin = GAMongoStoragePlugin(db_name='unit_test', db_initialization_function=db_init, sdk_identifier='default')
-        cls.core_controller = GACoreController( garuda_uuid='test-garuda',
-                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5},
-                                                storage_plugins=[cls.mongo_plugin])
+        cls.core_controller = GACoreController(garuda_uuid='test-garuda',
+                                               redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5},
+                                               storage_plugins=[cls.mongo_plugin])
 
         cls.storage_controller = cls.core_controller.storage_controller
 
@@ -257,7 +253,6 @@ class TestMongoPlugin(TestCase):
 
         count = self.storage_controller.count(resource_name=tstdk.GAEnterprise.rest_name, parent=None)
         self.assertEquals(count, 0)
-
 
     def test_create_user(self):
         """

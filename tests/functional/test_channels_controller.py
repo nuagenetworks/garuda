@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import redis
 from unittest import TestCase
-from mock import patch
 
 from garuda.channels.rest import GAFalconChannel
-from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.core.controllers import GAChannelsController
-from garuda.core.plugins import GAAuthenticationPlugin
-from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest, GAController
+from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 
-import tests.tstdk.v1_0 as tstdk
 
 class TestChannelsController(TestCase):
     """
@@ -30,13 +25,14 @@ class TestChannelsController(TestCase):
         cls.redis_info = {'host': '127.0.0.1', 'port': 6379, 'db': 6}
 
         cls.channels_controller = GAChannelsController(garuda_uuid='garuda-uuid',
-                                                         channels=[cls.falcon_channel],
-                                                         redis_info=cls.redis_info,
-                                                         additional_controller_classes=[],
-                                                         logic_plugins=[],
-                                                         authentication_plugins=[cls.authentication_plugin],
-                                                         storage_plugins=[cls.storage_plugin],
-                                                         permission_plugins=[])
+                                                       channels=[cls.falcon_channel],
+                                                       redis_info=cls.redis_info,
+                                                       additional_controller_classes=[],
+                                                       logic_plugins=[],
+                                                       authentication_plugins=[cls.authentication_plugin],
+                                                       storage_plugins=[cls.storage_plugin],
+                                                       permission_plugins=[])
+
     def test_initialization(self):
         """
         """

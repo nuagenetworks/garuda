@@ -8,7 +8,7 @@
 # Don't forget to make it a comment
 
 
-__all__ = ['GAEnterprise', 'GAGroup', 'GARoot', 'GAUser', 'GATSTSession', 'GAAddress']
+__all__ = ['GAEnterprise', 'GAGroup', 'GARoot', 'GAUser', 'GATSTSession', 'GAAddress', 'SDKInfo']
 
 from .gaenterprise import GAEnterprise
 from .gagroup import GAGroup

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import redis
 from unittest import TestCase
 from mock import patch
 
 from garuda.core.lib import SDKLibrary
 from garuda.core.controllers import GACoreController
-from garuda.core.plugins import GAAuthenticationPlugin
-from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest, GAController, GAResource, GAError, GAResponseFailure, GAResponseSuccess
+from garuda.core.models import GASession, GARequest, GAController, GAResource, GAError, GAResponseFailure, GAResponseSuccess
 
 import tests.tstdk.v1_0 as tstdk
+
 
 class AdditionalController(GAController):
 
@@ -35,7 +34,6 @@ class AdditionalController(GAController):
         """
         """
         return 'test.controller.additional'
-
 
 
 class TestCoreController(TestCase):
@@ -77,7 +75,7 @@ class TestCoreController(TestCase):
             core_controller.additional_controller(identifier='nope')
 
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
-                                            additional_controller_classes=[AdditionalController])
+                                           additional_controller_classes=[AdditionalController])
 
         self.assertIsNotNone(core_controller.additional_controller(identifier='test.controller.additional'))
 
@@ -136,7 +134,7 @@ class TestCoreController(TestCase):
         with patch.object(core_controller.sessions_controller, 'get_session_identifier', return_value='token'):
             with patch.object(core_controller.sessions_controller, 'get_session', return_value=GASession(garuda_uuid='test-garuda', root_object=tstdk.GARoot())):
                 result = core_controller.execute_model_request(request)
-                self.assertEquals(result.__class__, GAResponseFailure) # nothing exists that's fine
+                self.assertEquals(result.__class__, GAResponseFailure)  # nothing exists that's fine
 
     def test_execute_event_request_with_invalid_session(self):
         """

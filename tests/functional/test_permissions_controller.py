@@ -6,6 +6,7 @@ from unittest import TestCase
 from garuda.core.controllers import GAPermissionsController
 from garuda.core.plugins import GAPermissionsPlugin
 
+
 class CustomObject(object):
     """
     """
@@ -29,7 +30,6 @@ class FakeCoreController(object):
     @property
     def uuid(self):
         return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
-
 
 
 class GAPermissionsControllerTestCase(TestCase):

@@ -7,11 +7,13 @@ from garuda.core.lib import SDKLibrary
 
 import tests.tstdk.v1_0 as tstdk
 
+
 class FakeCoreController(object):
 
     def __init__(self):
 
         self.storage_controller = 'fake_storage_controller'
+
 
 class TestSimpleAuthPlugin(TestCase):
     """
@@ -88,4 +90,3 @@ class TestSimpleAuthPlugin(TestCase):
         auth_info = auth_plugin.authenticate(request=request, session=session)
 
         self.assertIsNone(auth_info)
-

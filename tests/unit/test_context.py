@@ -169,12 +169,12 @@ class TestContext(TestCase):
         context = GAContext(session=session, request=request)
 
         enterprise1 = tstdk.GAEnterprise(name='enterprise1')
-        context.object = [enterprise1]
+        context.object = enterprise1
 
         response = context.make_response()
 
         self.assertEquals(response.__class__, GAResponseSuccess)
-        self.assertEquals(response.content, [enterprise1])
+        self.assertEquals(response.content, enterprise1)
 
     def test_make_response_for_create(self):
         """
@@ -184,12 +184,12 @@ class TestContext(TestCase):
         context = GAContext(session=session, request=request)
 
         enterprise1 = tstdk.GAEnterprise(name='enterprise1')
-        context.object = [enterprise1]
+        context.object = enterprise1
 
         response = context.make_response()
 
         self.assertEquals(response.__class__, GAResponseSuccess)
-        self.assertEquals(response.content, [enterprise1])
+        self.assertEquals(response.content, enterprise1)
 
     def test_make_response_for_update(self):
         """
@@ -199,12 +199,12 @@ class TestContext(TestCase):
         context = GAContext(session=session, request=request)
 
         enterprise1 = tstdk.GAEnterprise(name='enterprise1')
-        context.object = [enterprise1]
+        context.object = enterprise1
 
         response = context.make_response()
 
         self.assertEquals(response.__class__, GAResponseSuccess)
-        self.assertEquals(response.content, [enterprise1])
+        self.assertEquals(response.content, enterprise1)
 
     def test_make_response_for_delete(self):
         """
@@ -214,12 +214,12 @@ class TestContext(TestCase):
         context = GAContext(session=session, request=request)
 
         enterprise1 = tstdk.GAEnterprise(name='enterprise1')
-        context.object = [enterprise1]
+        context.object = enterprise1
 
         response = context.make_response()
 
         self.assertEquals(response.__class__, GAResponseSuccess)
-        self.assertEquals(response.content, [enterprise1])
+        self.assertEquals(response.content, enterprise1)
 
     def test_make_response_for_assign(self):
         """
@@ -229,9 +229,9 @@ class TestContext(TestCase):
         context = GAContext(session=session, request=request)
 
         enterprise1 = tstdk.GAEnterprise(name='enterprise1')
-        context.object = [enterprise1]
+        context.object = enterprise1
 
         response = context.make_response()
 
         self.assertEquals(response.__class__, GAResponseSuccess)
-        self.assertEquals(response.content, [enterprise1])
+        self.assertEquals(response.content, enterprise1)

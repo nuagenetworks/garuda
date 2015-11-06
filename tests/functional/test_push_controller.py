@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import redis
 from unittest import TestCase
 from bambou import NURESTRootObject
-from mock import patch
 
-from garuda.core.controllers import GACoreController, GASessionsController
+from garuda.core.controllers import GACoreController
 from garuda.core.plugins import GAAuthenticationPlugin
-from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest
+from garuda.core.models import GAPluginManifest, GAPushEvent, GARequest
 
 import tests.tstdk.v1_0 as tstdk
+
 
 class FakeAuthPlugin(GAAuthenticationPlugin):
 
@@ -39,9 +38,9 @@ class GAPushControllerTestCase(TestCase):
         """
         """
         cls.fake_auth_plugin = FakeAuthPlugin()
-        cls.core_controller = GACoreController( garuda_uuid='test-garuda',
-                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 6},
-                                                authentication_plugins=[cls.fake_auth_plugin])
+        cls.core_controller = GACoreController(garuda_uuid='test-garuda',
+                                               redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 6},
+                                               authentication_plugins=[cls.fake_auth_plugin])
 
         cls.push_controller = cls.core_controller.push_controller
         cls.core_controller.sessions_controller._default_session_ttl = 3

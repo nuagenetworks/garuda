@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import redis
 import time
 from uuid import uuid4
 from bambou import NURESTRootObject
 from mock import patch
 from unittest import TestCase
 
-from garuda.core.controllers import GACoreController, GASessionsController
+from garuda.core.controllers import GACoreController
 from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.models import GAPluginManifest, GASession, GARequest
 
@@ -41,9 +40,9 @@ class GASessionsControllerTestCase(TestCase):
 
         cls.maxDiff = None
         cls.fake_auth_plugin = FakeAuthPlugin()
-        cls.core_controller = GACoreController( garuda_uuid='test-garuda',
-                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 6},
-                                                authentication_plugins=[cls.fake_auth_plugin])
+        cls.core_controller = GACoreController(garuda_uuid='test-garuda',
+                                               redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 6},
+                                               authentication_plugins=[cls.fake_auth_plugin])
 
         cls.sessions_controller = cls.core_controller.sessions_controller
         cls.sessions_controller._default_session_ttl = 3
@@ -101,7 +100,7 @@ class GASessionsControllerTestCase(TestCase):
         session = self.sessions_controller.get_session('0000-000-0000000-00000')
         self.assertEquals(session, None)
 
-    def test_create_session(self):
+    def test_insert_session(self):
         """ Create a new session should insert data in redis db
         """
         session = self.sessions_controller.create_session(request='fake-request')
@@ -120,8 +119,8 @@ class GASessionsControllerTestCase(TestCase):
         not_session = GASession(garuda_uuid='not-garuda')
 
         session = self.sessions_controller.create_session(request='fake-request')
-        self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions()])
-        self.assertNotIn(session.uuid, [not_session.uuid for session in self.sessions_controller.get_all_local_sessions()])
+        self.assertIn(session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions()])
+        self.assertNotIn(not_session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions()])
 
     def test_flushing_local_sets_does_not_remove_sessions(self):
         """ Cleaning a garuda should only clean the session sets, not the sessions
@@ -135,7 +134,7 @@ class GASessionsControllerTestCase(TestCase):
         """
         session = self.sessions_controller.create_session(request='fake-request')
         self.sessions_controller.set_session_listening_status(session, True)
-        self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions(listening=True)])
+        self.assertIn(session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions(listening=True)])
 
     def test_unset_session_to_listening_status(self):
         """ Unsetting the a session listening state should update the value in redis db to False
@@ -167,18 +166,17 @@ class GASessionsControllerTestCase(TestCase):
 
         self.sessions_controller.set_session_listening_status(session, True)
 
-        self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions()])
-        self.assertIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions(listening=True)])
+        self.assertIn(session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions()])
+        self.assertIn(session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions(listening=True)])
 
         time.sleep(1.5)
 
-        self.assertNotIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions()])
-        self.assertNotIn(session.uuid, [session.uuid for session in self.sessions_controller.get_all_local_sessions(listening=True)])
+        self.assertNotIn(session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions()])
+        self.assertNotIn(session.uuid, [s.uuid for s in self.sessions_controller.get_all_local_sessions(listening=True)])
 
     def test_flush_all_sessions(self):
         """ Test flushing all sessions leaves no trace
         """
-        session = self.sessions_controller.create_session(request='fake-request')
         self.sessions_controller.flush_local_sessions()
         self.assertEquals(self.sessions_controller.get_all_local_sessions(listening=True), [])
 

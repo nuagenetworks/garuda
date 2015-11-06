@@ -1,9 +1,7 @@
 from unittest import TestCase
 
 from garuda.channels.rest.parser import PathParser
-from garuda.core.models import GAPluginManifest, GARequest
 
-from tests.tstdk import v1_0 as tstdk
 
 class TestPathParser(TestCase):
     """
@@ -34,7 +32,7 @@ class TestPathParser(TestCase):
         """
         """
         parser = PathParser()
-        result = parser.parse(path='/v1_0/enterprises/xxx/users', url_prefix='api')
+        parser.parse(path='/v1_0/enterprises/xxx/users', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 2)
         self.assertEquals(parser.resources[0].name, 'enterprise')
@@ -47,7 +45,7 @@ class TestPathParser(TestCase):
         """
         """
         parser = PathParser()
-        result = parser.parse(path='', url_prefix='api')
+        parser.parse(path='', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 0)
 
@@ -55,7 +53,7 @@ class TestPathParser(TestCase):
         """
         """
         parser = PathParser()
-        result = parser.parse(path='/v1_0/events', url_prefix='api')
+        parser.parse(path='/v1_0/events', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 1)
         self.assertEquals(parser.resources[0].name, 'event')
@@ -65,9 +63,8 @@ class TestPathParser(TestCase):
         """
         """
         parser = PathParser(resource_mappings={'totos': 'enterprises'})
-        result = parser.parse(path='/v1_0/totos', url_prefix='api')
+        parser.parse(path='/v1_0/totos', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 1)
         self.assertEquals(parser.resources[0].name, 'enterprise')
         self.assertEquals(parser.resources[0].value, None)
-

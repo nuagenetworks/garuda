@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-
-import redis
 from unittest import TestCase
 
 from garuda.core.controllers import GALogicController, GACoreController
 from garuda.core.plugins import GALogicPlugin
-from garuda.core.models import GAPluginManifest, GASession, GAPushEvent, GARequest, GAController, GAContext, GAResource
+from garuda.core.models import GAPluginManifest, GARequest, GAContext, GAResource
 
 
 class LogicPlugin1(GALogicPlugin):
@@ -22,6 +20,7 @@ class LogicPlugin1(GALogicPlugin):
         context.object = 'modified by LogicPlugin1'
         return context
 
+
 class LogicPlugin2(GALogicPlugin):
 
     @classmethod
@@ -31,6 +30,7 @@ class LogicPlugin2(GALogicPlugin):
                                     'fakeobject2': [GARequest.ACTION_CREATE],
                                     'shared': [GARequest.ACTION_CREATE, GARequest.ACTION_ASSIGN]
                                 })
+
     def delegate(self, context):
         context.object = 'modified by LogicPlugin2'
         return context
@@ -71,7 +71,7 @@ class TestLogicController(TestCase):
         self.assertEquals(sorted(managing_plugins), sorted([plugin1]))
 
         managing_plugins = logic_controller._managing_plugins(resource_name='fakeobject1', action=GARequest.ACTION_CREATE)
-        self.assertEquals(sorted(managing_plugins), sorted([plugin1])) # do it twice to check the cache
+        self.assertEquals(sorted(managing_plugins), sorted([plugin1]))  # do it twice to check the cache
 
         managing_plugins = logic_controller._managing_plugins(resource_name='fakeobject2', action=GARequest.ACTION_CREATE)
         self.assertEquals(sorted(managing_plugins), sorted([plugin2]))
@@ -105,7 +105,7 @@ class TestLogicController(TestCase):
 
         self.assertEquals(context.object, 'modified by LogicPlugin1')
 
-        logic_controller.perform_delegate(delegate='nope', context=context) # should not crash
+        logic_controller.perform_delegate(delegate='nope', context=context)  # should not crash
 
     def test_perform_delegate_with_no_plugin(self):
         """

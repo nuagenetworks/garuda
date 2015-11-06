@@ -4,6 +4,7 @@ from garuda.core.models import GAPushNotification, GAPushEvent, GARequest
 
 from tests.tstdk import v1_0 as tstdk
 
+
 class TestPushNotification(TestCase):
     """
     """
@@ -70,7 +71,6 @@ class TestPushNotification(TestCase):
              'updateMechanism': 'DEFAULT'}
          ]}
 
-
         data = notif.to_dict()
 
         self.assertIsNotNone(data['events'][0]['eventReceivedTime'])
@@ -89,32 +89,32 @@ class TestPushNotification(TestCase):
         self.maxDiff = None
 
         data = {'events': [
-            {'entities': [{'ID': None,
-                           'creationDate': None,
-                           'description': None,
-                           'lastUpdatedDate': None,
-                           'name': 'enterprise1',
-                           'owner': None,
-                           'parentID': None,
-                           'parentType': None,
-                           'zipcode': None}],
-             'entityType': 'enterprise',
-             'type': 'UPDATE',
-             'updateMechanism': 'DEFAULT'},
-            {'entities': [{'ID': None,
-                           'creationDate': None,
-                           'description': None,
-                           'lastUpdatedDate': None,
-                           'name': 'enterprise2',
-                           'owner': None,
-                           'parentID': None,
-                           'parentType': None,
-                           'zipcode': None}],
-             'entityType': 'enterprise',
-             'type': 'DELETE',
-             'updateMechanism': 'DEFAULT'}
-         ],
-         'uuid': 'xxx-xxx-xxx-xxx'}
+                    {'entities': [{'ID': None,
+                                   'creationDate': None,
+                                   'description': None,
+                                   'lastUpdatedDate': None,
+                                   'name': 'enterprise1',
+                                   'owner': None,
+                                   'parentID': None,
+                                   'parentType': None,
+                                   'zipcode': None}],
+                     'entityType': 'enterprise',
+                     'type': 'UPDATE',
+                     'updateMechanism': 'DEFAULT'},
+                    {'entities': [{'ID': None,
+                                   'creationDate': None,
+                                   'description': None,
+                                   'lastUpdatedDate': None,
+                                   'name': 'enterprise2',
+                                   'owner': None,
+                                   'parentID': None,
+                                   'parentType': None,
+                                   'zipcode': None}],
+                     'entityType': 'enterprise',
+                     'type': 'DELETE',
+                     'updateMechanism': 'DEFAULT'}
+                 ],
+                'uuid': 'xxx-xxx-xxx-xxx'}
 
         notif = GAPushNotification.from_dict(data=data)
 

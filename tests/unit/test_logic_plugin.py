@@ -16,6 +16,7 @@ class FakeLogicPlugin(GALogicPlugin):
                                     "fakeobject4": [GARequest.ACTION_ASSIGN]
                                 })
 
+
 class TestLogicPlugin(TestCase):
     """
     """

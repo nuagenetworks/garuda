@@ -3,6 +3,7 @@ from datetime import datetime
 
 from garuda.core.models.abstracts import GASerializable
 
+
 class SerializableObject(GASerializable):
 
     def __init__(self):
@@ -38,6 +39,7 @@ class SerializableObject(GASerializable):
         self.register_attribute(type=dict, internal_name='child_registry', children_type=SerializableObject2)
         self.register_attribute(type=SerializableObject2, internal_name='child')
 
+
 class SerializableObject2(GASerializable):
 
     def __init__(self):
@@ -59,9 +61,9 @@ class TestSerializable(TestCase):
         s = SerializableObject()
         data = s.to_dict()
         self.assertEquals(data, {'internal': 'internal', 'theBool': True, 'theFloat': 4.2, 'theInt': 42, 'theObject': '3', 'the_date': '2015-11-05 15 27 18 192158',
-                                'theList': ['1', '2'], 'theDict': {'hello': 'world'}, 'theString': 'string', 'theNone': None,
-                                'children': [{'name': 'name'}], 'child': {'name': 'name'},
-                                'child_registry': {'item': {'name': 'name'}}})
+                                 'theList': ['1', '2'], 'theDict': {'hello': 'world'}, 'theString': 'string', 'theNone': None,
+                                 'children': [{'name': 'name'}], 'child': {'name': 'name'},
+                                 'child_registry': {'item': {'name': 'name'}}})
 
     def test_from_dict(self):
         """
@@ -71,17 +73,17 @@ class TestSerializable(TestCase):
                                             'children': [{'name': 'name'}], 'child': {'name': 'name'},
                                             'child_registry': {'item': {'name': 'name'}}})
 
-        self.assertEquals(s.the_string , 'string2')
-        self.assertEquals(s.the_list , ['3', '4'])
-        self.assertEquals(s.the_dict , {'world': 'hello'})
-        self.assertEquals(s.the_object , '4')
-        self.assertEquals(s.the_float , 2.4)
-        self.assertEquals(s.the_int , 24)
-        self.assertEquals(s.the_bool , False)
-        self.assertEquals(s.internal , 'external')
-        self.assertEquals(s.children[0].name , 'name')
-        self.assertEquals(s.child_registry['item'].name , 'name')
-        self.assertEquals(s.child.name , 'name')
+        self.assertEquals(s.the_string, 'string2')
+        self.assertEquals(s.the_list, ['3', '4'])
+        self.assertEquals(s.the_dict, {'world': 'hello'})
+        self.assertEquals(s.the_object, '4')
+        self.assertEquals(s.the_float, 2.4)
+        self.assertEquals(s.the_int, 24)
+        self.assertEquals(s.the_bool, False)
+        self.assertEquals(s.internal, 'external')
+        self.assertEquals(s.children[0].name, 'name')
+        self.assertEquals(s.child_registry['item'].name, 'name')
+        self.assertEquals(s.child.name, 'name')
 
     def test_to_hash(self):
         """
@@ -89,9 +91,9 @@ class TestSerializable(TestCase):
         s = SerializableObject()
         data = s.to_hash()
         self.assertEquals(data, {'internal': 'internal', 'theBool': True, 'theFloat': 4.2, 'theInt': 42, 'theObject': '3', 'the_date': '2015-11-05 15 27 18 192158',
-                                    'theList': '\x92\xa11\xa12', 'theDict': '\x81\xa5hello\xa5world', 'theString': 'string', 'theNone': None,
-                                    'children': ['\x81\xa4name\xa4name'], 'child': '\x81\xa4name\xa4name',
-                                    'child_registry': {'item': '\x81\xa4name\xa4name'}})
+                                 'theList': '\x92\xa11\xa12', 'theDict': '\x81\xa5hello\xa5world', 'theString': 'string', 'theNone': None,
+                                 'children': ['\x81\xa4name\xa4name'], 'child': '\x81\xa4name\xa4name',
+                                 'child_registry': {'item': '\x81\xa4name\xa4name'}})
 
     def test_from_hash(self):
         """
@@ -101,13 +103,13 @@ class TestSerializable(TestCase):
                                             'children': ['\x81\xa4name\xa4name'], 'child': '\x81\xa4name\xa4name',
                                             'child_registry': {'item': '\x81\xa4name\xa4name'}})
 
-        self.assertEquals(s.the_string , 'string2')
-        self.assertEquals(s.the_list , ['3', '4'])
-        self.assertEquals(s.the_dict , {'world': 'hello'})
-        self.assertEquals(s.the_object , '4')
-        self.assertEquals(s.the_float , 2.4)
-        self.assertEquals(s.the_int , 24)
-        self.assertEquals(s.the_bool , False)
-        self.assertEquals(s.internal , 'external')
-        self.assertEquals(s.children[0].name , 'name')
-        self.assertEquals(s.child.name , 'name')
+        self.assertEquals(s.the_string, 'string2')
+        self.assertEquals(s.the_list, ['3', '4'])
+        self.assertEquals(s.the_dict, {'world': 'hello'})
+        self.assertEquals(s.the_object, '4')
+        self.assertEquals(s.the_float, 2.4)
+        self.assertEquals(s.the_int, 24)
+        self.assertEquals(s.the_bool, False)
+        self.assertEquals(s.internal, 'external')
+        self.assertEquals(s.children[0].name, 'name')
+        self.assertEquals(s.child.name, 'name')
