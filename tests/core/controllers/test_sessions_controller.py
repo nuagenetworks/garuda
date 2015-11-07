@@ -17,9 +17,9 @@ class FakeAuthPlugin(GAAuthenticationPlugin):
         return GAPluginManifest(name='test.fake.auth', version=1.0, identifier="test.fake.auth")
 
     def authenticate(self, request=None, session=None):
-        root           = NURESTRootObject()
-        root.id        = str(uuid4())
-        root.api_key   = str(uuid4())
+        root = NURESTRootObject()
+        root.id = str(uuid4())
+        root.api_key = str(uuid4())
         root.user_name = "Test"
         return root
 

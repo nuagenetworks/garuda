@@ -43,7 +43,7 @@ class GAPermissionsControllerTestCase(TestCase):
         """
         super(GAPermissionsControllerTestCase, self).__init__(name)
 
-        self.fake_core_controller   = FakeCoreController()
+        self.fake_core_controller = FakeCoreController()
         self.permissions_controller = GAPermissionsController(plugins=[], core_controller=self.fake_core_controller)
         self.permissions_controller.ready()
 

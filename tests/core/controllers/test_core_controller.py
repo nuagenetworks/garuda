@@ -101,7 +101,6 @@ class TestCoreController(TestCase):
         with self.assertRaises(RuntimeError):
             core_controller.stop()
 
-
     def test_execute_model_request_with_invalid_session(self):
         """
         """

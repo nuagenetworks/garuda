@@ -3,8 +3,8 @@ from unittest2 import TestCase
 from mock import patch
 
 from garuda.core.lib import SDKLibrary
-from garuda.core.models import GAError, GAPluginManifest
-from garuda.core.controllers import GACoreController, GAStorageController
+from garuda.core.models import GAPluginManifest
+from garuda.core.controllers import GACoreController
 from garuda.core.plugins import GAStoragePlugin
 
 from tests.tstdk import v1_0 as tstdk
@@ -75,7 +75,6 @@ class TestStorageController(TestCase):
         self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, False)
 
         self.storage_controller.register_plugin(self.plugin)
-
 
     def test_instantiate(self):
         """

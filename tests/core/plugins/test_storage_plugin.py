@@ -74,4 +74,3 @@ class TestStoragePlugin(TestCase):
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
             plugin.assign(resource_name='fake', resources=['fake'], parent='fake', user_identifier='fake')
-
