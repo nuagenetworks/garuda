@@ -2,7 +2,7 @@
 from unittest2 import TestCase
 from mock import patch
 
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 from garuda.core.models import GAPluginManifest
 from garuda.core.controllers import GACoreController
 from garuda.core.plugins import GAStoragePlugin
@@ -51,7 +51,7 @@ class TestStorageController(TestCase):
     def setUpClass(cls):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         cls.plugin = FakeStoragePlugin()
         cls.core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 5}, storage_plugins=[cls.plugin])
         cls.storage_controller = cls.core_controller.storage_controller

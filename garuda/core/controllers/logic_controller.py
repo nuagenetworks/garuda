@@ -3,7 +3,7 @@
 import logging
 
 from garuda.core.models import GAPluginController
-from garuda.core.lib import ThreadManager
+from garuda.core.lib import GAThreadManager
 from garuda.core.plugins import GALogicPlugin
 
 logger = logging.getLogger('garuda.controller.logic')
@@ -20,7 +20,7 @@ class GALogicController(GAPluginController):
         super(GALogicController, self).__init__(plugins=plugins, core_controller=core_controller)
 
         self._managing_plugin_registry = {}
-        self._thread_manager = ThreadManager()
+        self._thread_manager = GAThreadManager()
 
     @classmethod
     def identifier(cls):

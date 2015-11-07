@@ -3,7 +3,7 @@
 import logging
 logger = logging.getLogger('garuda.plugin.authentication.simple')
 
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 from garuda.core.models import GAPluginManifest
 from garuda.core.plugins import GAAuthenticationPlugin
 
@@ -38,7 +38,7 @@ class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):
     def authenticate(self, request, session):
         """
         """
-        root_object_class = SDKLibrary().get_sdk('default').SDKInfo.root_object_class()
+        root_object_class = GASDKLibrary().get_sdk('default').SDKInfo.root_object_class()
         root_api = root_object_class.rest_name
 
         if request.resources[0].name != root_api:

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from garuda.core.models import GAPushEvent, GARequest
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 
 from tests.tstdk import v1_0 as tstdk
 
@@ -49,6 +49,6 @@ class TestPushEvent(TestCase):
         """
         """
         data = {'entities': [{'description': None, 'zipcode': None, 'parentType': None, 'lastUpdatedDate': None, 'parentID': None, 'owner': None, 'creationDate': None, 'ID': None, 'name': 'enterprise1'}], 'entityType': 'enterprise', 'type': 'CREATE', 'updateMechanism': 'DEFAULT', 'eventReceivedTime': None}
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         event = GAPushEvent.from_dict(data)
         self.assertEqual(event.entity.name, 'enterprise1')

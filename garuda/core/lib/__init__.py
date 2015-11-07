@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['SDKLibrary', 'ThreadManager', 'Singleton']
+__all__ = ['GASDKLibrary', 'GAThreadManager', 'Singleton']
 
 from .singleton import Singleton
-from .sdk_library import SDKLibrary
-from .thread_manager import ThreadManager
+from .sdk_library import GASDKLibrary
+from .thread_manager import GAThreadManager

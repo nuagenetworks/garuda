@@ -8,7 +8,7 @@ from bson import ObjectId
 
 from garuda.core.models import GAError, GAPluginManifest
 from garuda.core.plugins import GAStoragePlugin
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 
 
 class GAMongoStoragePlugin(GAStoragePlugin):
@@ -36,7 +36,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def did_register(self):
         """
         """
-        self.sdk = SDKLibrary().get_sdk(self.sdk_identifier)
+        self.sdk = GASDKLibrary().get_sdk(self.sdk_identifier)
 
         if self.db_initialization_function:
             self.db_initialization_function(db=self.db, root_object_class=self.sdk.SDKInfo.root_object_class())

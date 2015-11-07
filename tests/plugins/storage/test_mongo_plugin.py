@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from unittest2 import TestCase
 
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 from garuda.core.models import GAError
 from garuda.plugins.storage import GAMongoStoragePlugin
 from garuda.core.controllers import GACoreController
@@ -16,7 +16,7 @@ class TestMongoPlugin(TestCase):
     def setUpClass(cls):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
 
         def db_init(db, root_object_class):
             """

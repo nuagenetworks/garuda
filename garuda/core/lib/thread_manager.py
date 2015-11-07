@@ -21,12 +21,12 @@ class StoppableThread(threading.Thread):
         self._Thread__stop()
 
 
-class ThreadManager(object):
+class GAThreadManager(object):
     """ Multi thread manager
 
     """
     def __init__(self, size=20):
-        """ Initializes a ThreadManager
+        """ Initializes a GAThreadManager
 
         """
         self._size = size

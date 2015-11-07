@@ -5,7 +5,7 @@ from bambou import NURESTModelController
 from garuda.core.models import GAResource
 
 
-class PathParser(object):
+class GAPathParser(object):
     """ Parse Path to retrieve resources and values information
 
     """

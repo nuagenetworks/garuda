@@ -8,12 +8,12 @@ import multiprocessing
 from gunicorn.app.base import BaseApplication
 from base64 import urlsafe_b64decode
 
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 from garuda.core.models import GAError, GAPluginManifest, GAPushNotification, GARequest, GAResponseSuccess
 from garuda.core.channels import GAChannel
 
 from .constants import RESTConstants
-from .parser import PathParser
+from .parser import GAPathParser
 
 logger = logging.getLogger('garuda.comm.rest')
 
@@ -62,7 +62,7 @@ class GAFalconChannel(GAChannel):  # pragma: no cover
     def run(self):
         """
         """
-        self._api_prefix = SDKLibrary().get_sdk('default').SDKInfo.api_prefix()
+        self._api_prefix = GASDKLibrary().get_sdk('default').SDKInfo.api_prefix()
 
         logger.info("Listening to inbound connection on %s:%d" % (self._host, self._port))
 
@@ -76,7 +76,7 @@ class GAFalconChannel(GAChannel):  # pragma: no cover
     def _handle_requests(self, http_request, http_response):
         """
         """
-        parser = PathParser()
+        parser = GAPathParser()
         parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
 
         if parser.resources[0].name == 'event':
@@ -103,7 +103,7 @@ class GAFalconChannel(GAChannel):  # pragma: no cover
         logger.debug('> %s %s from %s' % (http_request.method, http_request.path, http_request.host))
         # logger.debug(json.dumps(content, indent=4))
 
-        parser = PathParser()
+        parser = GAPathParser()
         resources = parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
         action = self._determine_action(http_request.method, resources)
 

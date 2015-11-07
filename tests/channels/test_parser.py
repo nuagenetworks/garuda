@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from garuda.channels.rest.parser import PathParser
+from garuda.channels.rest.parser import GAPathParser
 
 
 class TestPathParser(TestCase):
@@ -10,7 +10,7 @@ class TestPathParser(TestCase):
     def test_parse_root_resource(self):
         """
         """
-        parser = PathParser()
+        parser = GAPathParser()
         result = parser.parse(path='/v1_0/root', url_prefix='api')
 
         self.assertEquals(len(result), 1)
@@ -21,7 +21,7 @@ class TestPathParser(TestCase):
     def test_parse_self_resource(self):
         """
         """
-        parser = PathParser()
+        parser = GAPathParser()
         parser.parse(path='/v1_0/enterprises/xxx', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 1)
@@ -31,7 +31,7 @@ class TestPathParser(TestCase):
     def test_parse_child_resource(self):
         """
         """
-        parser = PathParser()
+        parser = GAPathParser()
         parser.parse(path='/v1_0/enterprises/xxx/users', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 2)
@@ -44,7 +44,7 @@ class TestPathParser(TestCase):
     def test_root(self):
         """
         """
-        parser = PathParser()
+        parser = GAPathParser()
         parser.parse(path='', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 0)
@@ -52,7 +52,7 @@ class TestPathParser(TestCase):
     def test_parse_events(self):
         """
         """
-        parser = PathParser()
+        parser = GAPathParser()
         parser.parse(path='/v1_0/events', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 1)
@@ -62,7 +62,7 @@ class TestPathParser(TestCase):
     def test_resource_mappings(self):
         """
         """
-        parser = PathParser(resource_mappings={'totos': 'enterprises'})
+        parser = GAPathParser(resource_mappings={'totos': 'enterprises'})
         parser.parse(path='/v1_0/totos', url_prefix='api')
 
         self.assertEquals(len(parser.resources), 1)

@@ -9,7 +9,7 @@ from setproctitle import setproctitle
 
 logger = logging.getLogger('garuda')
 
-from core.lib import SDKLibrary
+from core.lib import GASDKLibrary
 from core.controllers import GACoreController, GAChannelsController
 from core.channels import GAChannel
 from core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin, GAPermissionsPlugin
@@ -43,7 +43,7 @@ class Garuda(object):
         self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
         self._runloop = runloop
         self._sdks_info = sdks_info
-        self._sdk_library = SDKLibrary()
+        self._sdk_library = GASDKLibrary()
         self._channels = channels
         self._debug = debug
         self._additional_controller_classes = additional_controller_classes

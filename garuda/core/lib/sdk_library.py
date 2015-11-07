@@ -5,10 +5,10 @@ from collections import OrderedDict
 
 from singleton import Singleton
 
-logger = logging.getLogger('garuda.sdklibrary')
+logger = logging.getLogger('garuda.GASDKLibrary')
 
 
-class SDKLibrary(object):
+class GASDKLibrary(object):
     """
     """
     __metaclass__ = Singleton

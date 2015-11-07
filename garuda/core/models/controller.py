@@ -3,7 +3,7 @@
 import logging
 from uuid import uuid4
 
-from garuda.core.lib import ThreadManager
+from garuda.core.lib import GAThreadManager
 
 logger = logging.getLogger('garuda.controller')
 
@@ -130,7 +130,7 @@ class GAController(object):
         for channel in self._subscriptions:
             self._pubsub.subscribe(channel)
 
-        self._pubsub_thread = ThreadManager.start_thread(self._listen_to_redis_events)
+        self._pubsub_thread = GAThreadManager.start_thread(self._listen_to_redis_events)
 
     def stop_listening_to_events(self):
         """
@@ -139,7 +139,7 @@ class GAController(object):
             return
 
         self._pubsub.unsubscribe()
-        ThreadManager.stop_thread(self._pubsub_thread)
+        GAThreadManager.stop_thread(self._pubsub_thread)
         self._pubsub_thread = None
 
     def _listen_to_redis_events(self):

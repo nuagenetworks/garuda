@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from garuda.plugins.authentication import GASimpleAuthenticationPlugin
 from garuda.core.models import GASession, GARequest, GAResource
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 
 import tests.tstdk.v1_0 as tstdk
 
@@ -45,7 +45,7 @@ class TestSimpleAuthPlugin(TestCase):
     def test_authenticate_without_auth_function(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
 
         request = GARequest(action=GARequest.ACTION_READ)
         request.resources = [GAResource('root', None)]
@@ -59,7 +59,7 @@ class TestSimpleAuthPlugin(TestCase):
     def test_authenticate_with_auth_function(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
 
         o_request = GARequest(action=GARequest.ACTION_READ)
         o_request.resources = [GAResource('root', None)]
@@ -80,7 +80,7 @@ class TestSimpleAuthPlugin(TestCase):
     def test_authenticate_with_wrong_access(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
 
         request = GARequest(action=GARequest.ACTION_READ)
         request.resources = [GAResource('note-good', None)]

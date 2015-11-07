@@ -3,7 +3,7 @@
 from unittest import TestCase
 from mock import patch
 
-from garuda.core.lib import SDKLibrary
+from garuda.core.lib import GASDKLibrary
 from garuda.core.controllers import GACoreController
 from garuda.core.models import GASession, GARequest, GAController, GAResource, GAError, GAResponseFailure, GAResponseSuccess
 
@@ -104,7 +104,7 @@ class TestCoreController(TestCase):
     def test_execute_model_request_with_invalid_session(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
@@ -118,7 +118,7 @@ class TestCoreController(TestCase):
     def test_execute_model_request_with_create_session(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='root', value=None)]
@@ -132,7 +132,7 @@ class TestCoreController(TestCase):
     def test_execute_model_request_with_valid_session(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
@@ -145,7 +145,7 @@ class TestCoreController(TestCase):
     def test_execute_event_request_with_invalid_session(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
@@ -160,7 +160,7 @@ class TestCoreController(TestCase):
     def test_execute_event_request_with_valid_session(self):
         """
         """
-        SDKLibrary().register_sdk('default', tstdk)
+        GASDKLibrary().register_sdk('default', tstdk)
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
