@@ -35,7 +35,7 @@ class SDKLibrary(object):
         """
         """
         if identifier not in self._sdks:
-            raise IndexError("SDK version not found for identifier %s"  % identifier)
+            raise IndexError("SDK version not found for identifier %s" % identifier)
 
         return self._sdks[identifier]
 

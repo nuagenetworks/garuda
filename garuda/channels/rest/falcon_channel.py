@@ -93,19 +93,19 @@ class GAFalconChannel(GAChannel):  # pragma: no cover
             self._update_options_response(http_response=http_response)
             return
 
-        parameters      = http_request.params
-        content         = self._extract_content(http_request)
+        parameters = http_request.params
+        content = self._extract_content(http_request)
         username, token = self._extract_auth(http_request.headers)
-        filter          = self._extract_filter(http_request.headers)
+        filter = self._extract_filter(http_request.headers)
         page, page_size = self._extract_paging(http_request.headers)
-        order_by        = self._extract_ordering(http_request.headers)
+        order_by = self._extract_ordering(http_request.headers)
 
         logger.debug('> %s %s from %s' % (http_request.method, http_request.path, http_request.host))
         # logger.debug(json.dumps(content, indent=4))
 
-        parser    = PathParser()
+        parser = PathParser()
         resources = parser.parse(path=http_request.path, url_prefix="%s/" % self._api_prefix)
-        action    = self._determine_action(http_request.method, resources)
+        action = self._determine_action(http_request.method, resources)
 
         ga_request = GARequest(action=action,
                                content=content,
@@ -377,7 +377,7 @@ class GAFalconChannel(GAChannel):  # pragma: no cover
         http_response.set_header('Access-Control-Allow-Credentials', 'true')
 
 
-class GAGUnicorn(BaseApplication): # pragma: no cover
+class GAGUnicorn(BaseApplication):  # pragma: no cover
 
     def __init__(self, app, host, port, ssl_certificate, ssl_key, number_of_workers, timeout, worker_init, worker_exit):
         """

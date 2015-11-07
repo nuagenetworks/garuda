@@ -16,15 +16,15 @@ class GAChannelsController(object):
     def __init__(self, garuda_uuid, channels, redis_info, additional_controller_classes, logic_plugins, authentication_plugins, storage_plugins, permission_plugins):
         """
         """
-        self._garuda_uuid                   = garuda_uuid
-        self._channels                      = channels
-        self._redis_info                    = redis_info
-        self._logic_plugins                 = logic_plugins
-        self._authentication_plugins        = authentication_plugins
-        self._storage_plugins               = storage_plugins
-        self._permission_plugins            = permission_plugins
+        self._garuda_uuid = garuda_uuid
+        self._channels = channels
+        self._redis_info = redis_info
+        self._logic_plugins = logic_plugins
+        self._authentication_plugins = authentication_plugins
+        self._storage_plugins = storage_plugins
+        self._permission_plugins = permission_plugins
         self._additional_controller_classes = additional_controller_classes
-        self._channel_pids                  = []
+        self._channel_pids = []
 
     # Implementation
 

@@ -39,20 +39,20 @@ class Garuda(object):
         setproctitle('garuda-server')
         BambouConfig.set_should_raise_bambou_http_error(False)
 
-        self._uuid                                 = str(uuid4())
-        self._redis_info                           = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
-        self._runloop                              = runloop
-        self._sdks_info                            = sdks_info
-        self._sdk_library                          = SDKLibrary()
-        self._channels                             = channels
-        self._debug                                = debug
-        self._additional_controller_classes        = additional_controller_classes
+        self._uuid = str(uuid4())
+        self._redis_info = redis_info if redis_info else {'host': '127.0.0.1', 'port': '6379', 'db': 0}
+        self._runloop = runloop
+        self._sdks_info = sdks_info
+        self._sdk_library = SDKLibrary()
+        self._channels = channels
+        self._debug = debug
+        self._additional_controller_classes = additional_controller_classes
         self._additional_master_controller_classes = additional_master_controller_classes
 
-        self._authentication_plugins               = []
-        self._storage_plugins                      = []
-        self._logic_plugins                        = []
-        self._permission_plugins                   = []
+        self._authentication_plugins = []
+        self._storage_plugins = []
+        self._logic_plugins = []
+        self._permission_plugins = []
 
         for sdk_info in self._sdks_info:
             self._sdk_library.register_sdk(identifier=sdk_info['identifier'], sdk=importlib.import_module(sdk_info['module']))

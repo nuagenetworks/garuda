@@ -50,11 +50,11 @@ class GAPushController(GAController):
         if not blob:
             return
 
-        key, pack      = blob
-        event          = GAPushEvent.from_dict(data=msgpack.unpackb(pack))
-        resources      = [GAResource(name=event.entity.rest_name, value=event.entity.id)]
-        request        = GARequest(action=GARequest.ACTION_READ, resources=resources)
-        context        = GAContext(request=request, session=session)
+        key, pack = blob
+        event = GAPushEvent.from_dict(data=msgpack.unpackb(pack))
+        resources = [GAResource(name=event.entity.rest_name, value=event.entity.id)]
+        request = GARequest(action=GARequest.ACTION_READ, resources=resources)
+        context = GAContext(request=request, session=session)
         context.object = event.entity
 
         operation_manager = GAOperationsController(context=context,

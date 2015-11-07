@@ -13,17 +13,17 @@ class GAContext(object):
     def __init__(self, session, request):
         """
         """
-        self.request       = request
-        self.session       = session
+        self.request = request
+        self.session = session
 
-        self.object        = None
-        self.objects       = []
+        self.object = None
+        self.objects = []
         self.parent_object = None
-        self.total_count   = 0
+        self.total_count = 0
 
-        self.user_info     = {}
-        self._errors       = []
-        self._events       = []
+        self.user_info = {}
+        self._errors = []
+        self._events = []
 
     # Properties
 
@@ -58,10 +58,10 @@ class GAContext(object):
         """
         context_copy = GAContext(session=copy.copy(self.session), request=copy.copy(self.request))
 
-        context_copy.object        = self.object.copy() if self.object else None
-        context_copy.objects       = copy.copy(self.objects)
+        context_copy.object = self.object.copy() if self.object else None
+        context_copy.objects = copy.copy(self.objects)
         context_copy.parent_object = self.parent_object.copy() if self.parent_object else None
-        context_copy.total_count   = self.total_count
+        context_copy.total_count = self.total_count
 
         context_copy.add_errors(copy.copy(self.errors))
         context_copy.add_events(copy.copy(self.events))

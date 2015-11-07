@@ -19,12 +19,12 @@ class GAController(object):
             raise RuntimeError("a valid core_controller must be given to all GAController subclasses")
 
         self._core_controller = core_controller
-        self._uuid            = str(uuid4())
+        self._uuid = str(uuid4())
 
         if self.redis:
-            self._pubsub           = self.redis.pubsub()
-            self._pubsub_thread    = None
-            self._subscriptions    = {}
+            self._pubsub = self.redis.pubsub()
+            self._pubsub_thread = None
+            self._subscriptions = {}
 
     @classmethod
     def identifier(cls):  # pragma: no cover
