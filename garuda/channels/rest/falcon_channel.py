@@ -18,7 +18,7 @@ from .parser import PathParser
 logger = logging.getLogger('garuda.comm.rest')
 
 
-class GAFalconChannel(GAChannel):
+class GAFalconChannel(GAChannel):  # pragma: no cover
     """
     """
 
@@ -377,7 +377,7 @@ class GAFalconChannel(GAChannel):
         http_response.set_header('Access-Control-Allow-Credentials', 'true')
 
 
-class GAGUnicorn(BaseApplication):
+class GAGUnicorn(BaseApplication): # pragma: no cover
 
     def __init__(self, app, host, port, ssl_certificate, ssl_key, number_of_workers, timeout, worker_init, worker_exit):
         """

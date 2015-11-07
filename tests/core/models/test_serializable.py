@@ -1,7 +1,7 @@
 from unittest import TestCase
 from datetime import datetime
 
-from garuda.core.models.abstracts import GASerializable
+from garuda.core.models import GASerializable
 
 
 class SerializableObject(GASerializable):

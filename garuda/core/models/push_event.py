@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from bambou import NURESTModelController
-from .abstracts import GASerializable
+from .serializable import GASerializable
 from .request import GARequest
 
 

@@ -2,7 +2,7 @@
 from uuid import uuid4
 from bambou import NURESTRootObject
 
-from .abstracts import GASerializable
+from .serializable import GASerializable
 
 
 class GASession(GASerializable):

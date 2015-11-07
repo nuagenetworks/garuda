@@ -50,26 +50,6 @@ class TestMongoPlugin(TestCase):
         """
         self.mongo_plugin.mongo.drop_database('unit_test')
 
-    def test_identifier(self):
-        """
-        """
-        self.assertEquals(self.storage_controller.identifier(), 'garuda.controller.storage')
-        self.assertEquals(self.storage_controller.__class__.identifier(), 'garuda.controller.storage')
-
-    def test_plugin_caching(self):
-        """
-        """
-        self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, False)
-
-        managing_plugin = self.storage_controller._managing_plugin(resource_name='fake', identifier=None)
-        self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, True)
-        self.assertEquals(managing_plugin, self.mongo_plugin)
-
-        self.storage_controller.unregister_plugin(self.mongo_plugin)
-        self.assertEquals('fake' in self.storage_controller._managing_plugin_registry, False)
-
-        self.storage_controller.register_plugin(self.mongo_plugin)
-
     def test_db_init_function(self):
         """
         """
@@ -222,6 +202,25 @@ class TestMongoPlugin(TestCase):
         self.assertEquals(ret.id, enterprise1.id)
         self.assertEquals(ret.name, enterprise1.name)
         self.assertEquals(ret.description, enterprise1.description)
+
+    def test_update_enterprise_with_validation_error(self):
+        """
+        """
+        enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        self.storage_controller.create(resource=enterprise1, parent=None)
+
+        enterprise1.name = None
+        enterprise1.description = 'modified description'
+
+        ret = self.storage_controller.get(resource_name=tstdk.GAEnterprise.rest_name, identifier=enterprise1.id)
+        self.assertEquals(ret.id, enterprise1.id)
+        self.assertNotEquals(ret.name, enterprise1.name)
+        self.assertNotEquals(ret.description, enterprise1.description)
+
+        errors = self.storage_controller.update(resource=enterprise1)
+        self.assertIsNotNone(errors)
+        self.assertEquals(len(errors), 1)
+        self.assertEquals(errors[0].type, GAError.TYPE_CONFLICT)
 
     def test_delete_enterprise(self):
         """ Test counting enterprises

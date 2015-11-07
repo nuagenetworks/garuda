@@ -20,6 +20,23 @@ class FakeLogicPlugin(GALogicPlugin):
 class TestLogicPlugin(TestCase):
     """
     """
+    def test_methods(self):
+        """
+        """
+        plugin = GALogicPlugin()
+        self.assertTrue(plugin.begin_read_operation(context=True))
+        self.assertTrue(plugin.check_perform_read(context=True))
+        self.assertTrue(plugin.preprocess_read(context=True))
+        self.assertTrue(plugin.end_read_operation(context=True))
+        self.assertTrue(plugin.begin_readall_operation(context=True))
+        self.assertTrue(plugin.check_perform_readall(context=True))
+        self.assertTrue(plugin.preprocess_readall(context=True))
+        self.assertTrue(plugin.end_readall_operation(context=True))
+        self.assertTrue(plugin.begin_write_operation(context=True))
+        self.assertTrue(plugin.check_perform_write(context=True))
+        self.assertTrue(plugin.preprocess_write(context=True))
+        self.assertTrue(plugin.did_perform_write(context=True))
+        self.assertTrue(plugin.end_write_operation(context=True))
 
     def test_should_manage(self):
         """

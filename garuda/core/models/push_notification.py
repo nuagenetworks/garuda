@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from uuid import uuid4
-from .abstracts import GASerializable
+from .serializable import GASerializable
 
 
 class GAPushNotification(GASerializable):

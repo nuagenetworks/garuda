@@ -91,9 +91,16 @@ class TestCoreController(TestCase):
         self.assertTrue(core_controller.running)
         self.assertTrue(additional.is_started)
 
+        with self.assertRaises(RuntimeError):
+            core_controller.start()
+
         core_controller.stop()
         self.assertFalse(core_controller.running)
         self.assertFalse(additional.is_started)
+
+        with self.assertRaises(RuntimeError):
+            core_controller.stop()
+
 
     def test_execute_model_request_with_invalid_session(self):
         """

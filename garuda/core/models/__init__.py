@@ -12,7 +12,8 @@ __all__ = ['GAContext',
            'GAResponseSuccess',
            'GASession',
            'GAController',
-           'GAPluginController']
+           'GAPluginController',
+           'GASerializable']
 
 from collections import namedtuple
 GAResource = namedtuple('GAResource', ['name', 'value'])
@@ -28,3 +29,4 @@ from .push_notification import GAPushNotification
 from .request import GARequest
 from .response import GAResponseFailure, GAResponseSuccess
 from .session import GASession
+from .serializable import GASerializable

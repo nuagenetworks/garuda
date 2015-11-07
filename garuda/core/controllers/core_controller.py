@@ -135,7 +135,7 @@ class GACoreController(object):
         """
         """
         if self._running:
-            return
+            raise RuntimeError('core controller %s is already running' % self.uuid)
 
         self._running = True
 
@@ -150,7 +150,7 @@ class GACoreController(object):
         """
         """
         if not self._running:
-            return
+            raise RuntimeError('core controller %s is not running' % self.uuid)
 
         self._running = False
 
