@@ -16,25 +16,43 @@ from core.plugins import GALogicPlugin, GAAuthenticationPlugin, GAStoragePlugin,
 
 __version__ = '1.0'
 __all__ = ['Garuda']
+__doc__ = """
 
+## Welcome to Garuda!
+
+Garuda is a Python Application Server that allows you to spawn projects in no time, using a tool set that will take care of:
+
+ - Designing your data model using a GUI
+ - Providing a full blown client sdk
+ - Providing a cli to interact with your data model
+ - Providing a back end to store information (this is Garuda)
+ - Providing a UI ToolKit to quickly create the user interfaces
+ - Providing a test suite that will run advanced tests, using a GUI
+
+Without adding a single line of code, you will have:
+
+ - All hierarchical CRUD operations on your data model
+ - Low level validation for the requests (required attribute, or wrong type, etc)
+ - Persistence in a MongoDB (but it could be anything)
+ - Flask channel for incoming messages (but it could be anything)
+ - Comet-style Push Channel
+ - Filtering
+ - Pagination
+
+A ready to use system, if you like. The only thing you will need to do, is to focuse on your
+business logic, by writing very small plugins. That way your logic is all contained. Garuda will
+take care of all the `rest` (pun itended) for you.
+"""
 
 class Garuda(object):
     """
+        Garuda is the base object of the system. This class allows you to easily start a Garuda project.
     """
 
-    def __init__(self,
-                 sdks_info,
-                 redis_info,
-                 channels=[],
-                 plugins=[],
-                 additional_controller_classes=[],
-                 additional_master_controller_classes=[],
-                 log_level=logging.INFO,
-                 log_handler=None,
-                 runloop=True,
-                 banner=True,
-                 debug=False):
-        """
+    def __init__(self, sdks_info, redis_info, channels=[], plugins=[], additional_controller_classes=[], additional_master_controller_classes=[],
+                 log_level=logging.INFO, log_handler=None, runloop=True, banner=True, debug=False):
+        """ Initializes Garuda.
+
         """
         setproctitle('garuda-server')
         BambouConfig.set_should_raise_bambou_http_error(False)
