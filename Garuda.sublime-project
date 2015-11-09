@@ -1,0 +1,10 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+            "folder_exclude_patterns": ["*.egg-info", "dist"],
+            "file_exclude_patterns": ["*dump.rdb", ".coverage", ".tm_properties"]
+		}
+	]
+}
