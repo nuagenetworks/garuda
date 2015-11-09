@@ -44,6 +44,7 @@ business logic, by writing very small plugins. That way your logic is all contai
 take care of all the `rest` (pun itended) for you.
 """
 
+
 class Garuda(object):
     """
         Garuda is the base object of the system. This class allows you to easily start a Garuda project.
