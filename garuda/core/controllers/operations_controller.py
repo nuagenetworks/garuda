@@ -256,16 +256,20 @@ class GAOperationsController(object):
         err = None
 
         if self.context.request.action == GARequest.ACTION_CREATE:
-            err = self.storage_controller.create(resource=self.context.object, parent=self.context.parent_object)
+            err = self.storage_controller.create(resource=self.context.object,
+                                                 parent=self.context.parent_object)
 
         elif self.context.request.action == GARequest.ACTION_UPDATE:
             err = self.storage_controller.update(resource=self.context.object)
 
         elif self.context.request.action == GARequest.ACTION_DELETE:
-            err = self.storage_controller.delete(resource=self.context.object, cascade=True)
+            err = self.storage_controller.delete(resource=self.context.object,
+                                                 cascade=True)
 
         elif self.context.request.action == GARequest.ACTION_ASSIGN:
-            err = self.storage_controller.assign(resource_name=self.context.request.resources[-1].name, resources=self.context.objects, parent=self.context.parent_object)
+            err = self.storage_controller.assign(resource_name=self.context.request.resources[-1].name,
+                                                 resources=self.context.objects,
+                                                 parent=self.context.parent_object)
 
         if err:
             if isinstance(err, list):
@@ -277,6 +281,8 @@ class GAOperationsController(object):
         """
         """
         if self.context.request.action == GARequest.ACTION_ASSIGN:
-            self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.parent_object))
+            self.context.add_event(GAPushEvent(action=self.context.request.action,
+                                               entity=self.context.parent_object))
         else:
-            self.context.add_event(GAPushEvent(action=self.context.request.action, entity=self.context.object))
+            self.context.add_event(GAPushEvent(action=self.context.request.action,
+                                               entity=self.context.object))
