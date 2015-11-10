@@ -24,7 +24,7 @@ class TestPathParser(TestCase):
         """
         """
         parser = GAPathParser()
-        result = parser.parse(path='api/v1_0/root', url_prefix='api')
+        result = parser.parse(path='/api/v1_0/root', url_prefix='api')
 
         self.assertEquals(len(result), 1)
         self.assertEquals(parser.version, 'v1_0')
