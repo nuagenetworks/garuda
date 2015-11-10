@@ -18,7 +18,6 @@ setup(
                 'garuda.core.controllers',
                 'garuda.core.lib',
                 'garuda.core.models',
-                'garuda.core.models.abstracts',
                 'garuda.core.plugins'],
 
     author_email='christophe.serafin@nuagenetworks.net, antoine@nuagenetworks.net',

@@ -144,10 +144,26 @@ class TestOperationsController(TestCase):
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAUser(username='test')):
-            operations_controller._retrieve_parent_object()
+            operations_controller._populate_parent_object_if_needed()
 
         self.assertEquals(context.parent_object.username, 'test')
         self.assertEquals(context.parent_object.rest_name, 'user')
+
+    def test_run_with_unknown_parent(self):
+        """
+        """
+        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        request = GARequest(action='not-good')
+        request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
+
+        context = GAContext(session=session, request=request)
+
+        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
+
+        with patch.object(self.fake_storage_controller, 'get', return_value=None):
+            operations_controller.run()
+            self.assertEquals(len(context.errors), 1)
+            self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
 
     def test_run_with_unknown_action(self):
         """
@@ -160,8 +176,9 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with self.assertRaises(Exception):
-            operations_controller.run()
+        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
+            with self.assertRaises(Exception):
+                operations_controller.run()
 
     def test_run_readall(self):
         """
@@ -177,8 +194,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self, count_only):
-                """
-                """
+                """ """
                 assert self.context.request.action == GARequest.ACTION_READALL
                 self.context.object = 'did_read_all'
 
@@ -202,6 +218,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self, count_only):
+                """ """
                 assert count_only
                 assert self.context.request.action == GARequest.ACTION_COUNT
                 self.context.object = 'did_read_all_with_count'
@@ -226,6 +243,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self):
+                """ """
                 assert self.context.request.action == GARequest.ACTION_READ
                 self.context.object = 'did_read'
 
@@ -249,6 +267,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self):
+                """ """
                 assert self.context.request.action == GARequest.ACTION_CREATE
                 self.context.object = 'did_create'
 
@@ -272,6 +291,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self):
+                """ """
                 assert self.context.request.action == GARequest.ACTION_UPDATE
                 self.context.object = 'did_update'
 
@@ -295,6 +315,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self):
+                """ """
                 assert self.context.request.action == GARequest.ACTION_DELETE
                 self.context.object = 'did_delete'
 
@@ -318,6 +339,7 @@ class TestOperationsController(TestCase):
         with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
 
             def mocked_method(self):
+                """ """
                 assert self.context.request.action == GARequest.ACTION_ASSIGN
                 self.context.object = 'did_assign'
 
@@ -394,6 +416,7 @@ class TestOperationsController(TestCase):
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
         def mocked_method(self, delegate, context):
+            """ """
             context.add_error('fake')
             context.performed_delegates.append(delegate)
 
@@ -477,6 +500,7 @@ class TestOperationsController(TestCase):
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
         def mocked_method(self, delegate, context):
+            """ """
             context.add_error('fake')
             context.performed_delegates.append(delegate)
 
@@ -502,6 +526,7 @@ class TestOperationsController(TestCase):
         context.request.action = GARequest.ACTION_CREATE
 
         def mocked_create(self, resource, parent):
+            """ """
             context.object = 'did_create'
 
         with patch.object(FakeStorageController, 'create', autospec=True) as m:
@@ -512,6 +537,7 @@ class TestOperationsController(TestCase):
         context.request.action = GARequest.ACTION_UPDATE
 
         def mocked_update(self, resource):
+            """ """
             context.object = 'did_update'
 
         with patch.object(FakeStorageController, 'update', autospec=True) as m:
@@ -522,6 +548,7 @@ class TestOperationsController(TestCase):
         context.request.action = GARequest.ACTION_DELETE
 
         def mocked_delete(self, resource, cascade):
+            """ """
             context.object = 'did_delete'
 
         with patch.object(FakeStorageController, 'delete', autospec=True) as m:
@@ -532,6 +559,7 @@ class TestOperationsController(TestCase):
         context.request.action = GARequest.ACTION_ASSIGN
 
         def mocked_assign(self, resource_name, resources, parent):
+            """ """
             context.object = 'did_assign'
 
         with patch.object(FakeStorageController, 'assign', autospec=True) as m:
@@ -607,12 +635,6 @@ class TestOperationsController(TestCase):
             operations_controller._populate_context_for_create_with_resource(resource=GAResource(name='enterprise', value=None))
             self.assertEquals(context.object.name, 'the_enterprise')
 
-        request.content = {'name': None}
-        with patch.object(FakeStorageController, 'instantiate', return_value=tstdk.GAEnterprise()):
-            operations_controller._populate_context_for_create_with_resource(resource=GAResource(name='enterprise', value=None))
-            self.assertEquals(len(context.errors), 1)
-            self.assertEquals(context.errors[0].type, GAError.TYPE_CONFLICT)
-
     def test_populate_context_for_update_with_resource(self):
         """
         """
@@ -635,12 +657,6 @@ class TestOperationsController(TestCase):
         with patch.object(FakeStorageController, 'get', return_value=tstdk.GAEnterprise()):
             operations_controller._populate_context_for_update_with_resource(resource=GAResource(name='enterprise', value=None))
             self.assertEquals(context.object.name, 'the_enterprise')
-
-        request.content = {'name': None}
-        with patch.object(FakeStorageController, 'get', return_value=tstdk.GAEnterprise()):
-            operations_controller._populate_context_for_update_with_resource(resource=GAResource(name='enterprise', value=None))
-            self.assertEquals(len(context.errors), 1)
-            self.assertEquals(context.errors[0].type, GAError.TYPE_CONFLICT)
 
     def test_populate_context_for_delete_with_resource(self):
         """
@@ -728,6 +744,7 @@ class TestOperationsController(TestCase):
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
         def mocked_create(self, resource):
+            """ """
             self.context.object = 'did_create'
 
         with patch.object(GAOperationsController, '_populate_context_for_create_with_resource', autospec=True) as m:
@@ -739,6 +756,7 @@ class TestOperationsController(TestCase):
             self.assertEquals(context.object, 'did_create')
 
         def mocked_update(self, resource):
+            """ """
             self.context.object = 'did_update'
 
         with patch.object(GAOperationsController, '_populate_context_for_update_with_resource', autospec=True) as m:
@@ -750,6 +768,7 @@ class TestOperationsController(TestCase):
             self.assertEquals(context.object, 'did_update')
 
         def mocked_delete(self, resource):
+            """ """
             self.context.object = 'did_delete'
 
         with patch.object(GAOperationsController, '_populate_context_for_delete_with_resource', autospec=True) as m:
@@ -761,6 +780,7 @@ class TestOperationsController(TestCase):
             self.assertEquals(context.object, 'did_delete')
 
         def mocked_assign(self, resource):
+            """ """
             self.context.object = 'did_assign'
 
         with patch.object(GAOperationsController, '_populate_context_for_assign_with_resource', autospec=True) as m:
@@ -805,7 +825,7 @@ class TestOperationsController(TestCase):
             operations_controller._perform_write_operation()
             self.assertEquals(context.performed_delegates, [])
 
-    def test_perform_write_operation_with_errors_in_the_middle(self):
+    def test_perform_write_operation_with_errors_in_the_middle1(self):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
@@ -818,6 +838,7 @@ class TestOperationsController(TestCase):
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
         def mocked_method(self, delegate, context):
+            """ """
             context.add_error('fake')
             context.performed_delegates.append(delegate)
 
@@ -827,6 +848,36 @@ class TestOperationsController(TestCase):
                 context.performed_delegates = []
                 operations_controller._perform_write_operation()
                 self.assertEquals(context.performed_delegates, ['will_perform_write', 'will_perform_create'])
+
+    def test_perform_write_operation_with_errors_in_the_middle2(self):
+        """
+        """
+        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        request = GARequest(action=GARequest.ACTION_CREATE)
+        request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
+
+        context = GAContext(session=session, request=request)
+        context.performed_delegates = []
+
+        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
+
+        def mocked_perform_method(self, delegate, context):
+            """ """
+            context.performed_delegates.append(delegate)
+
+        def mocked_store_method(self):
+            """ """
+            self.context.add_error('fake')
+
+        with patch.object(GAOperationsController, '_prepare_context_for_write_operation', return_value=None):
+            with patch.object(GAOperationsController, '_perform_store', autospec=True) as m:
+                m.side_effect = mocked_store_method
+
+                with patch.object(FakeLogicController, 'perform_delegate', autospec=True) as mm:
+                    mm.side_effect = mocked_perform_method
+                    context.performed_delegates = []
+                    operations_controller._perform_write_operation()
+                    self.assertEquals(context.performed_delegates, ['will_perform_write', 'will_perform_create'])
 
     def test_perform_update(self):
         """

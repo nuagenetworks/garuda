@@ -21,9 +21,9 @@ class GAOperationsController(object):
 
         if len(resources) == 2:
             parent_resource = resources[0]
-            self.context.parent_object = self.storage_controller.get(parent_resource.name, parent_resource.value)
+            self.context.parent_object = self.storage_controller.get(resource_name=parent_resource.name, identifier=parent_resource.value)
 
-            if self.context.parent_object is None:
+            if not self.context.parent_object:
                 self._report_resource_not_found(resource=parent_resource)
                 return
 
@@ -40,7 +40,7 @@ class GAOperationsController(object):
             self._perform_write_operation()
 
         else:
-            raise Exception('action %s does not exist.' % action)
+            raise Exception('Unknown action %s.' % action)
 
     # UTILITIES
 
@@ -88,7 +88,6 @@ class GAOperationsController(object):
     def _perform_read_operation(self):
         """
         """
-
         # the object may already be set in case of a read operation
         # triggered by a push notification. In that case, there is no
         # need to query the DB again.
@@ -106,6 +105,8 @@ class GAOperationsController(object):
             return
 
         self.logic_controller.perform_delegate(delegate='did_perform_read', context=self.context)
+
+    # READALL OPERATIONS
 
     def _prepare_context_for_readall_operation(self, count_only):
         """
@@ -151,7 +152,7 @@ class GAOperationsController(object):
         """
         self.context.object = self.storage_controller.instantiate(resource.name)
 
-        if self.context.object is None:
+        if not self.context.object:
             self._report_resource_not_found(resource=resource)
             return
 
@@ -162,7 +163,7 @@ class GAOperationsController(object):
         """
         self.context.object = self.storage_controller.get(resource.name, resource.value)
 
-        if self.context.object is None:
+        if not self.context.object:
             self._report_resource_not_found(resource=resource)
             return
 
@@ -173,7 +174,7 @@ class GAOperationsController(object):
         """
         self.context.object = self.storage_controller.get(resource.name, resource.value)
 
-        if self.context.object is None:
+        if not self.context.object:
             self._report_resource_not_found(resource=resource)
 
     def _populate_context_for_assign_with_resource(self, resource):

@@ -31,6 +31,9 @@ class TestLogicPlugin(TestCase):
         self.assertTrue(plugin.will_perform_readall(context=True))
         self.assertTrue(plugin.did_perform_readall(context=True))
 
+        self.assertTrue(plugin.will_perform_write(context=True))
+        self.assertTrue(plugin.did_perform_write(context=True))
+
         self.assertTrue(plugin.will_perform_create(context=True))
         self.assertTrue(plugin.did_perform_create(context=True))
 

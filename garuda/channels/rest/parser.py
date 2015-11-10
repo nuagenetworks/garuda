@@ -34,7 +34,7 @@ class GAPathParser(object):
             Args:
                 path: the path such as /enterprises/3/domains
 
-            Returs:
+            Returns:
                 Returns a list of GAResource.
 
             Example:
@@ -50,6 +50,9 @@ class GAPathParser(object):
         if path.startswith(url_prefix):
             path = path[len(url_prefix):]
 
+        if path.startswith('/'):
+            path = path[1:]
+
         index = path.find('/')
 
         if index > 0 and re.match('v[0-9]_[0-9]', path[:index]):
@@ -58,7 +61,7 @@ class GAPathParser(object):
 
         infos = path.split('/')
 
-        result = list()
+        result = []
         index = 0
 
         while index < len(infos):
