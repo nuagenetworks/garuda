@@ -5,7 +5,6 @@ from garuda.core.models import GARequest, GAError, GAPushEvent
 
 class GAOperationsController(object):
     """
-
     """
     def __init__(self, context, logic_controller, storage_controller):
         """
@@ -37,8 +36,11 @@ class GAOperationsController(object):
         elif action is GARequest.ACTION_READ:
             self._perform_read_operation()
 
-        else:
+        elif action in (GARequest.ACTION_CREATE, GARequest.ACTION_UPDATE, GARequest.ACTION_DELETE, GARequest.ACTION_ASSIGN):
             self._perform_write_operation()
+
+        else:
+            raise Exception('action %s does not exist.' % action)
 
     # UTILITIES
 
@@ -76,8 +78,7 @@ class GAOperationsController(object):
     def _prepare_context_for_read_operation(self):
         """
         """
-        resources = self.context.request.resources
-        resource = resources[-1]
+        resource = self.context.request.resources[-1]
 
         self.context.object = self.storage_controller.get(resource.name, resource.value)
 
@@ -87,7 +88,10 @@ class GAOperationsController(object):
     def _perform_read_operation(self):
         """
         """
-        # TODO ANTOINE: can the context be already set to something from here?
+
+        # the object may already be set in case of a read operation
+        # triggered by a push notification. In that case, there is no
+        # need to query the DB again.
         if self.context.object is None:
             self._prepare_context_for_read_operation()
 
@@ -96,20 +100,17 @@ class GAOperationsController(object):
 
         self._populate_parent_object_if_needed()
 
-        self.logic_controller.perform_delegate(delegate='begin_read_operation', context=self.context)
-        self.logic_controller.perform_delegate(delegate='check_perform_read', context=self.context)
+        self.logic_controller.perform_delegate(delegate='will_perform_read', context=self.context)
 
         if self.context.has_errors:
             return
 
-        self.logic_controller.perform_delegate(delegate='preprocess_read', context=self.context)
-        self.logic_controller.perform_delegate(delegate='end_read_operation', context=self.context)
+        self.logic_controller.perform_delegate(delegate='did_perform_read', context=self.context)
 
     def _prepare_context_for_readall_operation(self, count_only):
         """
         """
-        resources = self.context.request.resources
-        resource = resources[-1]
+        resource = self.context.request.resources[-1]
 
         if count_only:
             self.context.total_count = self.storage_controller.count(parent=self.context.parent_object,
@@ -136,14 +137,12 @@ class GAOperationsController(object):
 
         self._populate_parent_object_if_needed()
 
-        self.logic_controller.perform_delegate(delegate='begin_readall_operation', context=self.context)
-        self.logic_controller.perform_delegate(delegate='check_perform_readall', context=self.context)
+        self.logic_controller.perform_delegate(delegate='will_perform_readall', context=self.context)
 
         if self.context.has_errors:
             return
 
-        self.logic_controller.perform_delegate(delegate='preprocess_readall', context=self.context)
-        self.logic_controller.perform_delegate(delegate='end_readall_operation', context=self.context)
+        self.logic_controller.perform_delegate(delegate='did_perform_readall', context=self.context)
 
     # WRITE OPERATIONS
 
@@ -158,11 +157,6 @@ class GAOperationsController(object):
 
         self.context.object.from_dict(self.context.request.content)
 
-        self.context.object.validate()
-
-        if not self.context.object.is_valid():
-            self._report_validation_error(self.context.object)
-
     def _populate_context_for_update_with_resource(self, resource):
         """
         """
@@ -173,11 +167,6 @@ class GAOperationsController(object):
             return
 
         self.context.object.from_dict(self.context.request.content)
-
-        self.context.object.validate()
-
-        if not self.context.object.is_valid():
-            self._report_validation_error(self.context.object)
 
     def _populate_context_for_delete_with_resource(self, resource):
         """
@@ -203,8 +192,7 @@ class GAOperationsController(object):
         """
         """
         action = self.context.request.action
-        resources = self.context.request.resources
-        resource = resources[-1]
+        resource = self.context.request.resources[-1]
 
         if action != GARequest.ACTION_CREATE and action != GARequest.ACTION_ASSIGN and resource.value is None:
             self._report_method_not_allowed(action=self.context.request.action)
@@ -232,21 +220,21 @@ class GAOperationsController(object):
 
         self._populate_parent_object_if_needed()
 
-        self.logic_controller.perform_delegate(delegate='begin_write_operation', context=self.context)
-        self.logic_controller.perform_delegate(delegate='check_perform_write', context=self.context)
+        action_name = self.context.request.action.lower()
+
+        self.logic_controller.perform_delegate(delegate='will_perform_write', context=self.context)
+        self.logic_controller.perform_delegate(delegate='will_perform_%s' % action_name, context=self.context)
 
         if self.context.has_errors:
             return
-
-        self.logic_controller.perform_delegate(delegate='preprocess_write', context=self.context)
 
         self._perform_store()
 
         if self.context.has_errors:
             return
 
+        self.logic_controller.perform_delegate(delegate='did_perform_%s' % action_name, context=self.context)
         self.logic_controller.perform_delegate(delegate='did_perform_write', context=self.context)
-        self.logic_controller.perform_delegate(delegate='end_write_operation', context=self.context)
 
         self._perform_push()
 
@@ -254,19 +242,20 @@ class GAOperationsController(object):
         """
         """
         err = None
+        action = self.context.request.action
 
-        if self.context.request.action == GARequest.ACTION_CREATE:
+        if action == GARequest.ACTION_CREATE:
             err = self.storage_controller.create(resource=self.context.object,
                                                  parent=self.context.parent_object)
 
-        elif self.context.request.action == GARequest.ACTION_UPDATE:
+        elif action == GARequest.ACTION_UPDATE:
             err = self.storage_controller.update(resource=self.context.object)
 
-        elif self.context.request.action == GARequest.ACTION_DELETE:
+        elif action == GARequest.ACTION_DELETE:
             err = self.storage_controller.delete(resource=self.context.object,
                                                  cascade=True)
 
-        elif self.context.request.action == GARequest.ACTION_ASSIGN:
+        elif action == GARequest.ACTION_ASSIGN:
             err = self.storage_controller.assign(resource_name=self.context.request.resources[-1].name,
                                                  resources=self.context.objects,
                                                  parent=self.context.parent_object)

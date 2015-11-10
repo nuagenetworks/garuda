@@ -28,7 +28,7 @@ class GAPathParser(object):
         """
         return self._version
 
-    def parse(self, path, url_prefix='nuage/api/'):
+    def parse(self, path, url_prefix):
         """ Parse the path to retrieve information
 
             Args:
@@ -46,6 +46,9 @@ class GAPathParser(object):
 
         if path.startswith('/'):
             path = path[1:]
+
+        if path.startswith(url_prefix):
+            path = path[len(url_prefix):]
 
         index = path.find('/')
 
@@ -71,6 +74,7 @@ class GAPathParser(object):
                 if name == 'events':
                     result.append(GAResource('event', value))
                 else:
+                    print name
                     result.append(GAResource(NURESTModelController.get_first_model_with_resource_name(name).rest_name, value))
 
             index = index + 1
