@@ -84,6 +84,11 @@ class TestPermissionsController(TestCase):
         cls.core_controller.stop()
         cls.mongo_plugin.mongo.drop_database('permissions_test')
 
+    def setUp(self):
+        """
+        """
+        self.core_controller.redis.flushall()
+
     def _assertHasPermission(self, target, permission):
         """
         """
@@ -411,6 +416,9 @@ class TestPermissionsController(TestCase):
 
         ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='write')
         self.assertEquals(ids, {self.u3.id})
+
+        ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e2.id, children_type='user')
+        self.assertEquals(len(ids), 0)
 
         self.permissions_controller.remove_all_permissions_of_resource(resource=self.e0)
 
