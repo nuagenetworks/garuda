@@ -121,16 +121,16 @@ class TestPermissionsController(TestCase):
         parent.id = 'pid'
 
         key = self.permissions_controller._compute_permission_redis_key()
-        self.assertEquals(key, 'permission:*:*:*:(*:*;*:*):*')
+        self.assertEquals(key, 'permission:*:*:*:*:*:*:*:*')
 
         key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='E')
-        self.assertEquals(key, 'permission:pid:*:rid:(user:uid;enterprise:pid):E')
+        self.assertEquals(key, 'permission:pid:*:rid:user:uid:enterprise:pid:E')
 
         key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I')
-        self.assertEquals(key, 'permission:pid:*:rid:(user:uid;enterprise:pid):I')
+        self.assertEquals(key, 'permission:pid:*:rid:user:uid:enterprise:pid:I')
 
         key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I', parent_permission_id='ppid')
-        self.assertEquals(key, 'permission:pid:ppid:rid:(user:uid;enterprise:pid):I')
+        self.assertEquals(key, 'permission:pid:ppid:rid:user:uid:enterprise:pid:I')
 
     def test_root_level_permissions(self):
         """
@@ -172,6 +172,7 @@ class TestPermissionsController(TestCase):
     def test_remove_write_permission_at_object_level(self):
         """
         """
+        self._assertNoPermission()
 
         self.permissions_controller.create_permission(self.e0, self.a1, 'write')
         self.permissions_controller.remove_permission(self.e0, self.a1, 'write')
@@ -364,5 +365,53 @@ class TestPermissionsController(TestCase):
         self.permissions_controller.remove_permission(self.e0, self.e1, 'read')
 
         self._assertHasNotPermission(self.e1, 'read')
+
+        self._assertNoPermission()
+
+    def test_remove_all_permissions_of_resource(self):
+        """
+        """
+        self._assertNoPermission()
+
+        self.permissions_controller.create_permission(self.e0, self.e1, 'read')
+        self.permissions_controller.create_permission(self.e0, self.u1, 'read')
+        self.permissions_controller.create_permission(self.e0, self.u4, 'write')
+        self.permissions_controller.create_permission(self.e0, self.a3, 'use')
+
+        self.permissions_controller.remove_all_permissions_of_resource(resource=self.e0)
+
+        self._assertNoPermission()
+
+    def test_remove_all_permissions_for_target(self):
+        """
+        """
+        self._assertNoPermission()
+
+        self.permissions_controller.create_permission(self.u1, self.e2, 'read')
+        self.permissions_controller.create_permission(self.u2, self.e2, 'read')
+        self.permissions_controller.create_permission(self.u3, self.e2, 'write')
+        self.permissions_controller.create_permission(self.a1, self.e2, 'use')
+        self.permissions_controller.create_permission(self.e1, self.e2, 'use')
+
+        self.permissions_controller.remove_all_permissions_for_target(target=self.e2)
+
+        self._assertNoPermission()
+
+    def test_child_resource_ids_with_permission(self):
+        """
+        """
+        self._assertNoPermission()
+
+        self.permissions_controller.create_permission(resource=self.e0, target=self.u1, permission='read')
+        self.permissions_controller.create_permission(resource=self.e0, target=self.u2, permission='read')
+        self.permissions_controller.create_permission(resource=self.e0, target=self.u3, permission='write')
+
+        ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission=None)
+        self.assertEquals(ids, {self.u1.id, self.u2.id, self.u3.id})
+
+        ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='write')
+        self.assertEquals(ids, {self.u3.id})
+
+        self.permissions_controller.remove_all_permissions_of_resource(resource=self.e0)
 
         self._assertNoPermission()

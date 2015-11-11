@@ -72,8 +72,24 @@ class GAPermissionsController(GAPluginController):
 
         for key in self.redis.scan_iter(match=key_pattern):
             if self._permission_for_value(int(self.redis.get(key))) == permission:
-                self._remove_implicit_child_permission(parent_permission_id=self._permission_id_from_key(key))
+                self._remove_implicit_child_permission(parent_permission_id=self._extract_permission_id_from_key(key))
                 self.redis.delete(key)
+
+    def remove_all_permissions_of_resource(self, resource):
+        """
+        """
+        key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource)
+
+        for key in self.redis.scan_iter(match=key_pattern):
+            self.redis.delete(key)
+
+    def remove_all_permissions_for_target(self, target):
+        """
+        """
+        key_pattern = self._compute_permission_redis_key(target_id=target.id)
+
+        for key in self.redis.scan_iter(match=key_pattern):
+            self.redis.delete(key)
 
     def has_permission(self, resource, target, permission, explicit_only=False):
         """
@@ -97,6 +113,27 @@ class GAPermissionsController(GAPluginController):
 
         return self.has_permission(resource=resource, target=parent_object, permission=permission, explicit_only=True)
 
+    def child_resource_ids_with_permission(self, resource, parent_id, children_type, permission=None):
+        """
+        """
+        key_pattern = self._compute_permission_redis_key(resource_id=resource.id,
+                                                         target_type=children_type if children_type else '*',
+                                                         target_parent_id=parent_id if parent_id else '*')
+
+        permission_value = self._value_for_permission(permission) if permission else 0
+
+        ids = set()
+        for key in self.redis.scan_iter(match=key_pattern):
+
+            if permission_value == 0:  # in that case, no need to query redis for the value, any permission will do
+                ids.add(self._extract_target_from_key(key))
+                continue
+
+            if int(self.redis.get(key)) >= permission_value:
+                ids.add(self._extract_target_from_key(key))
+
+        return ids
+
     # Utilities
 
     def is_empty(self):
@@ -114,17 +151,22 @@ class GAPermissionsController(GAPluginController):
         """
         return self.PERMISSIONS[value]
 
-    def _permission_id_from_key(self, key):
+    def _extract_permission_id_from_key(self, key):
         """
         """
         return key.split(':')[1]
+
+    def _extract_target_from_key(self, key):
+        """
+        """
+        return key.split(':')[5]
 
     def _compute_permission_redis_key(self, permission_id='*', resource_id='*', target_type='*', target_id='*',
                                       target_parent_type='*', target_parent_id='*', scope='*',
                                       parent_permission_id='*'):
         """
         """
-        return 'permission:%s:%s:%s:(%s:%s;%s:%s):%s' % (permission_id, parent_permission_id,  # permissions id and hierarchy
+        return 'permission:%s:%s:%s:%s:%s:%s:%s:%s' % (permission_id, parent_permission_id,  # permissions id and hierarchy
                                                          resource_id,  # resource_id
                                                          target_type, target_id,  # target information
                                                          target_parent_type, target_parent_id,  # target parent information
@@ -136,5 +178,5 @@ class GAPermissionsController(GAPluginController):
         key_pattern = self._compute_permission_redis_key(parent_permission_id=parent_permission_id)
 
         for key in self.redis.scan_iter(match=key_pattern):
-            self._remove_implicit_child_permission(parent_permission_id=self._permission_id_from_key(key))
+            self._remove_implicit_child_permission(parent_permission_id=self._extract_permission_id_from_key(key))
             self.redis.delete(key)
