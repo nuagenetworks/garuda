@@ -3,109 +3,101 @@ import redis
 from uuid import uuid4
 from unittest import TestCase
 
-from garuda.core.controllers import GAPermissionsController
+from garuda.core.lib import GASDKLibrary
+from garuda.core.controllers import GAPermissionsController, GACoreController
 from garuda.core.plugins import GAPermissionsPlugin
+from garuda.plugins.storage import GAMongoStoragePlugin
+
+import tests.tstdk.v1_0 as tstdk
 
 
-class CustomObject(object):
-    """
-    """
-    def __init__(self, parent_object=None):
-        self.id = str(uuid4())
-        self.parent_object = parent_object
-
-    def __str__(self):
-        """
-        """
-        return "<CustomObject uuid=%s>" % self.id
-
-
-class FakeCoreController(object):
-
-    def __init__(self):
-        """
-        """
-        self.redis = redis.StrictRedis(host='127.0.0.1', port='6379', db=1)
-
-    @property
-    def uuid(self):
-        return 'GGGGG-AAAAA-RRRRR-UUUU-DDDDD-AAAA'
-
-
-class GAPermissionsControllerTestCase(TestCase):
+class TestPermissionsController(TestCase):
     """
     """
 
-    def __init__(self, name):
+    @classmethod
+    def setUpClass(cls):
         """
-        A - B - C - D - E
-                    |-  F - G
-        """
-        super(GAPermissionsControllerTestCase, self).__init__(name)
+        Model:
 
-        self.fake_core_controller = FakeCoreController()
-        self.permissions_controller = GAPermissionsController(plugins=[], core_controller=self.fake_core_controller)
-        self.permissions_controller.ready()
+        e1  --- u1  --- a1
+            +-- u2  --- a2
+            +-- u3
 
-        self.user = CustomObject()
+        e2  --- u4  --- a3
+            +-- u5  --- a4
+                    --- a5
 
-        self.objectA = CustomObject()
-        self.objectB = CustomObject(parent_object=self.objectA)
-        self.objectC = CustomObject(parent_object=self.objectB)
-        self.objectD = CustomObject(parent_object=self.objectC)
-        self.objectE = CustomObject(parent_object=self.objectD)
-        self.objectF = CustomObject(parent_object=self.objectD)
-        self.objectG = CustomObject(parent_object=self.objectF)
+        will be testing diverse permissions on that model for self.e0
+        """
+        GASDKLibrary().register_sdk('default', tstdk)
 
-    def _assertHasPermission(self, obj, permission, expected):
-        """
-        """
-        self.assertEquals(self.permissions_controller.has_permission(self.user, obj, permission), expected)
+        cls.mongo_plugin = GAMongoStoragePlugin(db_name='permissions_test', sdk_identifier='default')
+        cls.core_controller = GACoreController(garuda_uuid='test-garuda',
+                                               redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 7},
+                                               storage_plugins=[cls.mongo_plugin])
 
-    def assertCanRead(self, obj):
-        """
-        """
-        self._assertHasPermission(obj, 'read', True)
+        cls.storage_controller = cls.core_controller.storage_controller
 
-    def assertCanNotRead(self, obj):
-        """
-        """
-        self._assertHasPermission(obj, 'read', False)
+        cls.core_controller.redis.flushall()
 
-    def assertCanUse(self, obj):
-        """
-        """
-        self._assertHasPermission(obj, 'use', True)
+        cls.core_controller.start()
+        cls.permissions_controller = cls.core_controller.permissions_controller
 
-    def assertCanNotUse(self, obj):
-        """
-        """
-        self._assertHasPermission(obj, 'use', False)
+        cls.e0 = tstdk.GAEnterprise(username='e0')
+        cls.storage_controller.create(resource=cls.e0, parent=None)
 
-    def assertCanWrite(self, obj):
-        """
-        """
-        self._assertHasPermission(obj, 'write', True)
+        cls.e1 = tstdk.GAEnterprise(name='e1')
+        cls.e2 = tstdk.GAEnterprise(name='e2')
 
-    def assertCanNotWrite(self, obj):
-        """
-        """
-        self._assertHasPermission(obj, 'write', False)
+        cls.u1 = tstdk.GAUser(username='u1')
+        cls.u2 = tstdk.GAUser(username='u2')
+        cls.u3 = tstdk.GAUser(username='u3')
+        cls.u4 = tstdk.GAUser(username='u4')
+        cls.u5 = tstdk.GAUser(username='u5')
 
-    def assertNoSessionExists(self):
+        cls.a1 = tstdk.GAUser(street='a1')
+        cls.a2 = tstdk.GAUser(street='a2')
+        cls.a3 = tstdk.GAUser(street='a3')
+        cls.a4 = tstdk.GAUser(street='a4')
+        cls.a5 = tstdk.GAUser(street='a5')
+
+        cls.storage_controller.create(resource=cls.e1, parent=None)
+        cls.storage_controller.create(resource=cls.u1, parent=cls.e1)
+        cls.storage_controller.create(resource=cls.u2, parent=cls.e1)
+        cls.storage_controller.create(resource=cls.u3, parent=cls.e1)
+        cls.storage_controller.create(resource=cls.a1, parent=cls.u1)
+        cls.storage_controller.create(resource=cls.a2, parent=cls.u2)
+
+        cls.storage_controller.create(resource=cls.e2, parent=None)
+        cls.storage_controller.create(resource=cls.u4, parent=cls.e2)
+        cls.storage_controller.create(resource=cls.u5, parent=cls.e2)
+        cls.storage_controller.create(resource=cls.a3, parent=cls.u4)
+        cls.storage_controller.create(resource=cls.a4, parent=cls.u5)
+        cls.storage_controller.create(resource=cls.a5, parent=cls.u5)
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        """
+        cls.core_controller.redis.flushall()
+        cls.core_controller.stop()
+        cls.mongo_plugin.mongo.drop_database('permissions_test')
+
+    def _assertHasPermission(self, target, permission):
+        """
+        """
+        self.assertTrue(self.permissions_controller.has_permission(resource=self.e0, target=target, permission=permission))
+
+    def _assertHasNotPermission(self, target, permission):
+        """
+        """
+        self.assertFalse(self.permissions_controller.has_permission(resource=self.e0, target=target, permission=permission))
+
+    def _assertNoPermission(self):
         """
         """
         self.assertTrue(self.permissions_controller.is_empty())
-
-    def setUp(self):
-        """
-        """
-        pass
-
-    def tearDown(self):
-        """
-        """
-        pass
 
     def test_identifier(self):
         """
@@ -119,207 +111,258 @@ class GAPermissionsControllerTestCase(TestCase):
         self.assertEquals(self.permissions_controller.managed_plugin_type(), GAPermissionsPlugin)
         self.assertEquals(self.permissions_controller.__class__.managed_plugin_type(), GAPermissionsPlugin)
 
-    def test_remove_read_permission_at_root_level(self):
-        """ Remove READ permission at the object level leaves no trace
+    def test_compute_permission_redis_key(self):
         """
-        self.permissions_controller.create_permission(self.user, self.objectA, 'read')
-        self.assertCanRead(self.objectA)
-        self.permissions_controller.remove_permission(self.user, self.objectA, 'read')
+        """
+        target = tstdk.GAUser(username='test')
+        target.id = 'uid'
 
-        self.assertNoSessionExists()
+        parent = tstdk.GAEnterprise(name='ent')
+        parent.id = 'pid'
+
+        key = self.permissions_controller._compute_permission_redis_key()
+        self.assertEquals(key, 'permission:*:*:*:(*:*;*:*):*')
+
+        key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='E')
+        self.assertEquals(key, 'permission:pid:*:rid:(user:uid;enterprise:pid):E')
+
+        key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I')
+        self.assertEquals(key, 'permission:pid:*:rid:(user:uid;enterprise:pid):I')
+
+        key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I', parent_permission_id='ppid')
+        self.assertEquals(key, 'permission:pid:ppid:rid:(user:uid;enterprise:pid):I')
+
+    def test_root_level_permissions(self):
+        """
+        """
+        self._assertNoPermission()
+        self._assertHasNotPermission(target=self.e1, permission='read')
+
+        self.permissions_controller.create_permission(resource=self.e0, target=self.e1, permission='read')
+
+        self._assertHasPermission(target=self.e1, permission='read')
+
+        self.permissions_controller.remove_permission(resource=self.e0, target=self.e1, permission='read')
+
+        self._assertHasNotPermission(target=self.e1, permission='read')
+        self._assertNoPermission()
+
+    def test_second_level_permissions(self):
+        """
+        """
+        self._assertNoPermission()
+
+        self._assertHasNotPermission(target=self.e1, permission='read')
+        self._assertHasNotPermission(target=self.u1, permission='write')
+        self._assertHasNotPermission(target=self.u1, permission='read')
+
+        self.permissions_controller.create_permission(resource=self.e0, target=self.u1, permission='write')
+
+        self._assertHasPermission(target=self.e1, permission='read')
+        self._assertHasPermission(target=self.u1, permission='write')
+
+        self.permissions_controller.remove_permission(resource=self.e0, target=self.u1, permission='write')
+
+        self._assertHasNotPermission(target=self.e1, permission='read')
+        self._assertHasNotPermission(target=self.u1, permission='write')
+        self._assertHasNotPermission(target=self.u1, permission='read')
+
+        self._assertNoPermission()
 
     def test_remove_write_permission_at_object_level(self):
-        """ Remove WRITE permission at the object level leaves no trace
         """
-        self.permissions_controller.create_permission(self.user, self.objectC, 'write')
-        self.permissions_controller.remove_permission(self.user, self.objectC, 'write')
+        """
 
-        self.assertNoSessionExists()
+        self.permissions_controller.create_permission(self.e0, self.a1, 'write')
+        self.permissions_controller.remove_permission(self.e0, self.a1, 'write')
+
+        self._assertNoPermission()
 
     def test_remove_multiple_permissions(self):
-        """ Remove multiple permission leaves no trace
-
         """
-        self.permissions_controller.create_permission(self.user, self.objectC, 'write')
-        self.permissions_controller.create_permission(self.user, self.objectD, 'use')
-        self.permissions_controller.create_permission(self.user, self.objectE, 'all')
-        self.permissions_controller.create_permission(self.user, self.objectF, 'write')
-
-        self.permissions_controller.remove_permission(self.user, self.objectD, 'use')
-        self.permissions_controller.remove_permission(self.user, self.objectC, 'write')
-        self.permissions_controller.remove_permission(self.user, self.objectF, 'write')
-        self.permissions_controller.remove_permission(self.user, self.objectE, 'all')
-
-        self.assertNoSessionExists()
-
-    def test_create_read_permission_at_root_level(self):
-        """ Permission READ at the top level should be inherited
-
         """
-        self.permissions_controller.create_permission(self.user, self.objectA, 'read')
+        self._assertNoPermission()
 
-        # Read
-        self.assertCanRead(self.objectA)
-        self.assertCanRead(self.objectB)
-        self.assertCanRead(self.objectC)
-        self.assertCanRead(self.objectD)
-        self.assertCanRead(self.objectE)
-        self.assertCanRead(self.objectF)
-        self.assertCanRead(self.objectG)
+        self.permissions_controller.create_permission(self.e0, self.a1, 'write')
+        self.permissions_controller.create_permission(self.e0, self.a2, 'use')
+        self.permissions_controller.create_permission(self.e0, self.u1, 'all')
+        self.permissions_controller.create_permission(self.e0, self.e2, 'write')
 
-        # Use
-        self.assertCanNotUse(self.objectA)
-        self.assertCanNotUse(self.objectB)
-        self.assertCanNotUse(self.objectC)
-        self.assertCanNotUse(self.objectD)
-        self.assertCanNotUse(self.objectE)
-        self.assertCanNotUse(self.objectF)
-        self.assertCanNotUse(self.objectG)
+        self.permissions_controller.remove_permission(self.e0, self.a1, 'write')
+        self.permissions_controller.remove_permission(self.e0, self.a2, 'use')
+        self.permissions_controller.remove_permission(self.e0, self.u1, 'all')
+        self.permissions_controller.remove_permission(self.e0, self.e2, 'write')
 
-        self.permissions_controller.remove_permission(self.user, self.objectA, 'read')
+        self._assertNoPermission()
+
+    def test_permissions_bottom_computation(self):
+        """
+        """
+        self._assertNoPermission()
+
+        self.permissions_controller.create_permission(self.e0, self.e1, 'use')
+
+        self._assertHasPermission(self.u1, 'use')
+        self._assertHasPermission(self.u2, 'use')
+        self._assertHasPermission(self.u3, 'use')
+        self._assertHasPermission(self.a1, 'use')
+        self._assertHasPermission(self.a2, 'use')
+
+        self._assertHasPermission(self.u1, 'read')
+        self._assertHasPermission(self.u2, 'read')
+        self._assertHasPermission(self.u3, 'read')
+        self._assertHasPermission(self.a1, 'read')
+        self._assertHasPermission(self.a2, 'read')
+
+        self._assertHasNotPermission(self.u1, 'write')
+        self._assertHasNotPermission(self.u2, 'write')
+        self._assertHasNotPermission(self.u3, 'write')
+        self._assertHasNotPermission(self.a1, 'write')
+        self._assertHasNotPermission(self.a2, 'write')
+
+        self.permissions_controller.remove_permission(self.e0, self.e1, 'use')
+
+        self._assertNoPermission()
+
+    def test_permissions_top_propagation(self):
+        """
+        """
+        self._assertNoPermission()
+
+        self.permissions_controller.create_permission(self.e0, self.a1, 'use')
+
+        self._assertHasPermission(target=self.a1, permission='use')
+        self._assertHasPermission(target=self.u1, permission='read')
+        self._assertHasPermission(target=self.e1, permission='read')
+        self._assertHasNotPermission(target=self.e1, permission='use')
+        self._assertHasNotPermission(target=self.u1, permission='use')
+
+        self._assertHasNotPermission(target=self.u2, permission='read')
+        self._assertHasNotPermission(target=self.u3, permission='read')
+        self._assertHasNotPermission(target=self.a2, permission='read')
+
+        self.permissions_controller.remove_permission(self.e0, self.a1, 'use')
+
+        self._assertNoPermission()
 
     def test_create_read_permission_at_object_level(self):
-        """ Permission READ at the top level should be inherited and implicitely extended
-
         """
-        self.permissions_controller.create_permission(self.user, self.objectC, 'read')
-
-        # Read
-        self.assertCanRead(self.objectA)
-        self.assertCanRead(self.objectB)
-        self.assertCanRead(self.objectC)
-        self.assertCanRead(self.objectD)
-        self.assertCanRead(self.objectE)
-        self.assertCanRead(self.objectF)
-        self.assertCanRead(self.objectG)
-
-        # Use
-        self.assertCanNotUse(self.objectA)
-        self.assertCanNotUse(self.objectB)
-        self.assertCanNotUse(self.objectC)
-        self.assertCanNotUse(self.objectD)
-        self.assertCanNotUse(self.objectE)
-        self.assertCanNotUse(self.objectF)
-        self.assertCanNotUse(self.objectG)
-
-        self.permissions_controller.remove_permission(self.user, self.objectC, 'read')
-
-    def test_create_use_permission_at_root_level(self):
-        """ Permission USE at the top level should be inherited and implicitely extended
-
         """
+        self._assertNoPermission()
 
-        self.permissions_controller.create_permission(self.user, self.objectC, 'use')
+        self.permissions_controller.create_permission(self.e0, self.e1, 'read')
 
-        # Read
-        self.assertCanRead(self.objectA)
-        self.assertCanRead(self.objectB)
-        self.assertCanRead(self.objectC)
-        self.assertCanRead(self.objectD)
-        self.assertCanRead(self.objectE)
-        self.assertCanRead(self.objectF)
-        self.assertCanRead(self.objectG)
+        self._assertHasPermission(self.u1, 'read')
+        self._assertHasPermission(self.u2, 'read')
+        self._assertHasPermission(self.u3, 'read')
+        self._assertHasPermission(self.a1, 'read')
+        self._assertHasPermission(self.a2, 'read')
 
-        # Use
-        self.assertCanNotUse(self.objectA)
-        self.assertCanNotUse(self.objectB)
-        self.assertCanUse(self.objectC)
-        self.assertCanUse(self.objectD)
-        self.assertCanUse(self.objectE)
-        self.assertCanUse(self.objectF)
-        self.assertCanUse(self.objectG)
+        self.permissions_controller.create_permission(self.e0, self.e1, 'write')
 
-        # Write
-        self.assertCanNotWrite(self.objectA)
-        self.assertCanNotWrite(self.objectB)
-        self.assertCanNotWrite(self.objectC)
-        self.assertCanNotWrite(self.objectD)
-        self.assertCanNotWrite(self.objectE)
-        self.assertCanNotWrite(self.objectF)
-        self.assertCanNotWrite(self.objectG)
+        self._assertHasPermission(self.u1, 'write')
+        self._assertHasPermission(self.u2, 'write')
+        self._assertHasPermission(self.u3, 'write')
+        self._assertHasPermission(self.a1, 'write')
+        self._assertHasPermission(self.a2, 'write')
+        self._assertHasPermission(self.u1, 'use')
+        self._assertHasPermission(self.u2, 'use')
+        self._assertHasPermission(self.u3, 'use')
+        self._assertHasPermission(self.a1, 'use')
+        self._assertHasPermission(self.a2, 'use')
 
-        self.permissions_controller.remove_permission(self.user, self.objectC, 'use')
+        self.permissions_controller.remove_permission(self.e0, self.e1, 'write')
+
+        self._assertHasPermission(self.u1, 'read')
+        self._assertHasPermission(self.u2, 'read')
+        self._assertHasPermission(self.u3, 'read')
+        self._assertHasPermission(self.a1, 'read')
+        self._assertHasPermission(self.a2, 'read')
+
+        self._assertHasNotPermission(self.u1, 'write')
+        self._assertHasNotPermission(self.u2, 'write')
+        self._assertHasNotPermission(self.u3, 'write')
+        self._assertHasNotPermission(self.a1, 'write')
+        self._assertHasNotPermission(self.a2, 'write')
+        self._assertHasNotPermission(self.u1, 'use')
+        self._assertHasNotPermission(self.u2, 'use')
+        self._assertHasNotPermission(self.u3, 'use')
+        self._assertHasNotPermission(self.a1, 'use')
+        self._assertHasNotPermission(self.a2, 'use')
+
+        self.permissions_controller.remove_permission(self.e0, self.e1, 'read')
+
+        self._assertHasNotPermission(self.u1, 'read')
+        self._assertHasNotPermission(self.u2, 'read')
+        self._assertHasNotPermission(self.u3, 'read')
+        self._assertHasNotPermission(self.a1, 'read')
+        self._assertHasNotPermission(self.a2, 'read')
+
+        self._assertNoPermission()
 
     def test_override_write_permission_before_object(self):
-        """ Permission WRITE before an existing USE permission should override it
         """
-        self.permissions_controller.create_permission(self.user, self.objectC, 'use')
-        self.permissions_controller.create_permission(self.user, self.objectB, 'write')
+        """
+        self._assertNoPermission()
 
-        # Read
-        self.assertCanRead(self.objectA)
-        self.assertCanRead(self.objectB)
-        self.assertCanRead(self.objectC)
-        self.assertCanRead(self.objectD)
-        self.assertCanRead(self.objectE)
-        self.assertCanRead(self.objectF)
-        self.assertCanRead(self.objectG)
+        self.permissions_controller.create_permission(self.e0, self.a1, 'use')
+        self.permissions_controller.create_permission(self.e0, self.u1, 'write')
 
-        # Use
-        self.assertCanNotUse(self.objectA)
-        self.assertCanUse(self.objectB)
-        self.assertCanUse(self.objectC)
-        self.assertCanUse(self.objectD)
-        self.assertCanUse(self.objectE)
-        self.assertCanUse(self.objectF)
-        self.assertCanUse(self.objectG)
+        self._assertHasPermission(self.u1, 'write')
+        self._assertHasPermission(self.a1, 'write')
+        self._assertHasNotPermission(self.e1, 'write')
+        self._assertHasPermission(self.e1, 'read')
 
-        # Write
-        self.assertCanNotWrite(self.objectA)
-        self.assertCanWrite(self.objectB)
-        self.assertCanWrite(self.objectC)
-        self.assertCanWrite(self.objectD)
-        self.assertCanWrite(self.objectE)
-        self.assertCanWrite(self.objectF)
-        self.assertCanWrite(self.objectG)
+        self.permissions_controller.remove_permission(self.e0, self.a1, 'use')
+        self.permissions_controller.remove_permission(self.e0, self.u1, 'write')
 
-        self.permissions_controller.remove_permission(self.user, self.objectB, 'write')
-        self.permissions_controller.remove_permission(self.user, self.objectC, 'use')
+        self._assertNoPermission()
 
     def test_override_write_permission_after_object(self):
-        """ Permission WRITE after an existing USE permission should override it
         """
-        self.permissions_controller.create_permission(self.user, self.objectC, 'use')
-        self.permissions_controller.create_permission(self.user, self.objectF, 'write')
+        """
+        self._assertNoPermission()
 
-        # Read
-        self.assertCanRead(self.objectA)
-        self.assertCanRead(self.objectB)
-        self.assertCanRead(self.objectC)
-        self.assertCanRead(self.objectD)
-        self.assertCanRead(self.objectE)
-        self.assertCanRead(self.objectF)
-        self.assertCanRead(self.objectG)
+        self.permissions_controller.create_permission(self.e0, self.e1, 'use')
+        self.permissions_controller.create_permission(self.e0, self.u1, 'write')
 
-        # Use
-        self.assertCanNotUse(self.objectA)
-        self.assertCanNotUse(self.objectB)
-        self.assertCanUse(self.objectC)
-        self.assertCanUse(self.objectD)
-        self.assertCanUse(self.objectE)
-        self.assertCanUse(self.objectF)
-        self.assertCanUse(self.objectG)
+        self._assertHasPermission(self.e1, 'read')
+        self._assertHasPermission(self.e1, 'use')
+        self._assertHasNotPermission(self.e1, 'write')
 
-        # Write
-        self.assertCanNotWrite(self.objectA)
-        self.assertCanNotWrite(self.objectB)
-        self.assertCanNotWrite(self.objectC)
-        self.assertCanNotWrite(self.objectD)
-        self.assertCanNotWrite(self.objectE)
-        self.assertCanWrite(self.objectF)
-        self.assertCanWrite(self.objectG)
+        self._assertHasPermission(self.u2, 'read')
+        self._assertHasPermission(self.u2, 'use')
+        self._assertHasNotPermission(self.u2, 'write')
 
-        self.permissions_controller.remove_permission(self.user, self.objectF, 'write')
-        self.permissions_controller.remove_permission(self.user, self.objectC, 'use')
+        self._assertHasPermission(self.u1, 'read')
+        self._assertHasPermission(self.u1, 'use')
+        self._assertHasPermission(self.u1, 'write')
+
+        self._assertHasPermission(self.a1, 'read')
+        self._assertHasPermission(self.a1, 'use')
+        self._assertHasPermission(self.a1, 'write')
+
+        self._assertHasPermission(self.a2, 'read')
+        self._assertHasPermission(self.a2, 'use')
+        self._assertHasNotPermission(self.a2, 'write')
+
+        self.permissions_controller.remove_permission(self.e0, self.e1, 'use')
+        self.permissions_controller.remove_permission(self.e0, self.u1, 'write')
+
+        self._assertNoPermission()
 
     def test_create_same_permission_twice(self):
         """
         """
-        self.permissions_controller.create_permission(self.user, self.objectA, 'read')
-        self.permissions_controller.create_permission(self.user, self.objectA, 'read')
+        self._assertNoPermission()
 
-        self.assertCanRead(self.objectA)
+        self.permissions_controller.create_permission(self.e0, self.e1, 'read')
+        self.permissions_controller.create_permission(self.e0, self.e1, 'read')
 
-        self.permissions_controller.remove_permission(self.user, self.objectA, 'read')
+        self._assertHasPermission(self.e1, 'read')
 
-        self.assertCanNotRead(self.objectA)
+        self.permissions_controller.remove_permission(self.e0, self.e1, 'read')
+
+        self._assertHasNotPermission(self.e1, 'read')
+
+        self._assertNoPermission()
