@@ -86,13 +86,13 @@ class TestStorageController(TestCase):
         """
         """
         with patch.object(FakeStoragePlugin, 'get', return_value=tstdk.GAEnterprise(name='enterprise')):
-            self.assertEquals(self.storage_controller.get(resource_name='test', identifier='id').name, 'enterprise')
+            self.assertEquals(self.storage_controller.get(user_identifier='owner_identifier', resource_name='test', identifier='id').name, 'enterprise')
 
     def test_get_all(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'get_all', return_value=[tstdk.GAEnterprise(name='enterprise1'), tstdk.GAEnterprise(name='enterprise2')]):
-            result = self.storage_controller.get_all(parent='parent', resource_name='test')
+            result = self.storage_controller.get_all(user_identifier='owner_identifier', parent='parent', resource_name='test')
             self.assertEquals(len(result), 2)
             self.assertEquals(result[0].name, 'enterprise1')
             self.assertEquals(result[1].name, 'enterprise2')
@@ -101,34 +101,34 @@ class TestStorageController(TestCase):
         """
         """
         with patch.object(FakeStoragePlugin, 'create', return_value='ok'):
-            self.assertEquals(self.storage_controller.create(parent=tstdk.GAEnterprise(name='enterprise1'), resource=tstdk.GAEnterprise(name='enterprise2')), 'ok')
+            self.assertEquals(self.storage_controller.create(user_identifier='owner_identifier', parent=tstdk.GAEnterprise(name='enterprise1'), resource=tstdk.GAEnterprise(name='enterprise2')), 'ok')
 
     def test_update(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'update', return_value='ok'):
-            self.assertEquals(self.storage_controller.update(resource=tstdk.GAEnterprise(name='enterprise1')), 'ok')
+            self.assertEquals(self.storage_controller.update(user_identifier='owner_identifier', resource=tstdk.GAEnterprise(name='enterprise1')), 'ok')
 
     def test_delete(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'delete', return_value='ok'):
-            self.assertEquals(self.storage_controller.delete(resource=tstdk.GAEnterprise(name='enterprise1'), cascade=True), 'ok')
+            self.assertEquals(self.storage_controller.delete(user_identifier='owner_identifier', resource=tstdk.GAEnterprise(name='enterprise1'), cascade=True), 'ok')
 
     def test_delete_multiple(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'delete_multiple', return_value='ok'):
-            self.assertEquals(self.storage_controller.delete_multiple(resources=[tstdk.GAEnterprise(name='enterprise1')], cascade=True), 'ok')
+            self.assertEquals(self.storage_controller.delete_multiple(user_identifier='owner_identifier', resources=[tstdk.GAEnterprise(name='enterprise1')], cascade=True), 'ok')
 
     def test_assign(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'assign', return_value='ok'):
-            self.assertEquals(self.storage_controller.assign(resource_name=tstdk.GAEnterprise(name='enterprise1'), resources=[tstdk.GAEnterprise(name='enterprise2')], parent='parent'), 'ok')
+            self.assertEquals(self.storage_controller.assign(user_identifier='owner_identifier', resource_name=tstdk.GAEnterprise(name='enterprise1'), resources=[tstdk.GAEnterprise(name='enterprise2')], parent='parent'), 'ok')
 
     def test_count(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'count', return_value='ok'):
-            self.assertEquals(self.storage_controller.count(parent='parent', resource_name='test'), 'ok')
+            self.assertEquals(self.storage_controller.count(user_identifier='owner_identifier', parent='parent', resource_name='test'), 'ok')

@@ -24,7 +24,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         self.db = self.mongo[db_name]
         self.sdk = None
         self.sdk_identifier = sdk_identifier
-
+        self._permissions_controller = None
         self.db_initialization_function = db_initialization_function
 
     @classmethod
@@ -32,6 +32,15 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         """
         return GAPluginManifest(name='mongodb', version=1.0, identifier="garuda.plugins.storage.mongodb")
+
+    @property
+    def permissions_controller(self):
+        """
+        """
+        if not self._permissions_controller:
+            self._permissions_controller = self.core_controller.permissions_controller
+
+        return self._permissions_controller
 
     def did_register(self):
         """
@@ -52,13 +61,13 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         klass = NURESTModelController.get_first_model_with_rest_name(resource_name)
         return klass()
 
-    def count(self, parent, resource_name, filter=None):
+    def count(self, user_identifier, parent, resource_name, filter=None):
         """
         """
-        data, count = self._get_children_data(parent=parent, resource_name=resource_name, filter=filter, grand_total=False)
+        data, count = self._get_children_data(user_identifier=user_identifier, parent=parent, resource_name=resource_name, filter=filter, grand_total=False)
         return count
 
-    def get(self, resource_name, identifier=None, filter=None):
+    def get(self, user_identifier, resource_name, identifier=None, filter=None):
         """
         """
         if identifier and not ObjectId.is_valid(identifier):
@@ -79,9 +88,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         obj = self.instantiate(resource_name)
         obj.from_dict(self._convert_from_dbid(data))
 
+        if not self.permissions_controller.has_permission(resource=user_identifier, target=obj, permission='read'):
+            return None
+
         return obj
 
-    def get_all(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
+    def get_all(self, user_identifier, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
         """
         """
         objects = []
@@ -90,7 +102,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         # TODO: this is for the demo :)
         order_by = [('type', pymongo.ASCENDING), ('name', pymongo.ASCENDING), ('title', pymongo.ASCENDING), ('creationDate', pymongo.ASCENDING)]
 
-        data, count = self._get_children_data(parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by, grand_total=True)
+        data, count = self._get_children_data(user_identifier=user_identifier, parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by, grand_total=True)
 
         for d in data:
             obj = self.instantiate(resource_name)
@@ -99,7 +111,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return (objects, count)
 
-    def create(self, resource, parent=None, user_identifier=None):
+    def create(self, user_identifier, resource, parent=None):
         """
         """
         resource.creation_date = time.time()
@@ -116,6 +128,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
+        self.permissions_controller.create_permission(resource=user_identifier, target=resource, permission='all')
+
         if parent:
             data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)})
             children_key = '_%s' % resource.rest_name
@@ -124,9 +138,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
             self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {children_key: children}})
 
-    def update(self, resource, user_identifier=None):
+    def update(self, user_identifier, resource):
         """
         """
+        if not self.permissions_controller.has_permission(resource=user_identifier, target=resource, permission='write'):
+            return [GAError(type=GAError.TYPE_UNAUTHORIZED, title='Permission Denied', description='You do not have permission to update this object')]
+
         resource.last_updated_date = time.time()
 
         validation = self._validate(resource)
@@ -136,9 +153,13 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         self.db[resource.rest_name].update({'_id': {'$eq': ObjectId(resource.id)}}, {'$set': self._convert_to_dbid(resource.to_dict())})
 
-    def delete(self, resource, cascade=True, user_identifier=None):
+    def delete(self, user_identifier, resource, cascade=True):
         """
         """
+
+        if not self.permissions_controller.has_permission(resource=user_identifier, target=resource, permission='write'):
+            return [GAError(type=GAError.TYPE_UNAUTHORIZED, title='Permission Denied', description='You do not have permission to delete this object')]
+
         if resource.parent_id and resource.parent_type:
             children_key = '_%s' % resource.rest_name
             data = self.db[resource.parent_type].find_one({'_id': ObjectId(resource.parent_id)}, {children_key: 1})
@@ -146,9 +167,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data[children_key].remove(resource.id)
                 self.db[resource.parent_type].update({'_id': {'$eq': ObjectId(resource.parent_id)}}, {'$set': data})
 
-        self.delete_multiple(resources=[resource], cascade=cascade, user_identifier=user_identifier)
+        self.delete_multiple(user_identifier=user_identifier, resources=[resource], cascade=cascade)
 
-    def delete_multiple(self, resources, cascade=True, user_identifier=None):
+    def delete_multiple(self, user_identifier, resources, cascade=True):
         """
         """
         for resource in resources:
@@ -173,18 +194,19 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                     child_resources = [klass(id=identifier) for identifier in data[children_key]]
 
                     # recursively delete children
-                    self.delete_multiple(child_resources, cascade=True, user_identifier=user_identifier)
+                    self.delete_multiple(user_identifier=user_identifier, resources=child_resources, cascade=True)
 
         self.db[resources[0].rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
+        self.permissions_controller.remove_all_permissions_for_target(target=resource)
 
-    def assign(self, resource_name, resources, parent, user_identifier=None):
+    def assign(self, user_identifier, resource_name, resources, parent):
         """
         """
         self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
 
     # UTILITIES
 
-    def _get_children_data(self, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, grand_total=True):
+    def _get_children_data(self, user_identifier, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, grand_total=True):
         """
         """
         skip = 0
@@ -201,21 +223,25 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if filter:
             query_filter = self._parse_filter(filter)
 
-        if parent:
-            if parent.fetcher_for_rest_name(resource_name).relationship == "child":
-                data = self.db[resource_name].find({'$and': [{'parentID': parent.id}, query_filter]})
-            else:
-                association_key = '_rel_%s' % resource_name
-                association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
+        if parent and parent.fetcher_for_rest_name(resource_name).relationship == 'member':
 
-                if not association_data or association_key not in association_data:
-                    return ([], 0)
+            association_key = '_rel_%s' % resource_name
+            association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
 
-                identifiers = [ObjectId(identifier) for identifier in association_data[association_key]]
+            if not association_data or association_key not in association_data:
+                return ([], 0)
 
-                data = self.db[resource_name].find({'$and': [{'_id': {'$in': identifiers}}, query_filter]})
+            data = self.db[resource_name].find({'$and': [{'_id': {'$in': [ObjectId(identifier) for identifier in association_data[association_key]]}}, query_filter]})
+
         else:
-            data = self.db[resource_name].find(query_filter)
+            parent_id = parent.id if parent and parent.id else 'none'
+
+            identifiers = self.permissions_controller.child_ids_with_permission(resource=user_identifier,
+                                                                                parent_id=parent_id,
+                                                                                children_type=resource_name,
+                                                                                permission='read')
+
+            data = self.db[resource_name].find({'$and': [{'_id': {'$in': [ObjectId(i) for i in identifiers]}}, query_filter]})
 
         if not data.count():
             return ([], 0)

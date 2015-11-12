@@ -42,7 +42,7 @@ class GAPermissionsController(GAPluginController):
         target_parent = None
 
         if target.parent_type and target.parent_id:
-            target_parent = self.storage_controller.get(resource_name=target.parent_type, identifier=target.parent_id)
+            target_parent = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
 
         permission_id = str(uuid4())
         key = self._compute_permission_redis_key(permission_id=permission_id,
@@ -94,6 +94,9 @@ class GAPermissionsController(GAPluginController):
     def has_permission(self, resource, target, permission, explicit_only=False):
         """
         """
+        if resource == 'system':
+            return True
+
         key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource,
                                                          target_type=target.rest_name,
                                                          target_id=target.id,
@@ -109,14 +112,14 @@ class GAPermissionsController(GAPluginController):
         if not target.parent_type or not target.parent_id:
             return False
 
-        parent_object = self.storage_controller.get(resource_name=target.parent_type, identifier=target.parent_id)
+        target_parent = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
 
-        return self.has_permission(resource=resource, target=parent_object, permission=permission, explicit_only=True)
+        return self.has_permission(resource=resource, target=target_parent, permission=permission, explicit_only=True)
 
-    def child_resource_ids_with_permission(self, resource, parent_id, children_type, permission=None):
+    def child_ids_with_permission(self, resource, parent_id, children_type, permission=None):
         """
         """
-        key_pattern = self._compute_permission_redis_key(resource_id=resource.id,
+        key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource,
                                                          target_type=children_type if children_type else '*',
                                                          target_parent_id=parent_id if parent_id else '*')
 
@@ -161,16 +164,15 @@ class GAPermissionsController(GAPluginController):
         """
         return key.split(':')[5]
 
-    def _compute_permission_redis_key(self, permission_id='*', resource_id='*', target_type='*', target_id='*',
-                                      target_parent_type='*', target_parent_id='*', scope='*',
-                                      parent_permission_id='*'):
+    def _compute_permission_redis_key(self, permission_id='*', parent_permission_id='*', resource_id='*', target_type='*',
+                                      target_id='*', target_parent_type='*', target_parent_id='*', scope='*'):
         """
         """
         return 'permission:%s:%s:%s:%s:%s:%s:%s:%s' % (permission_id, parent_permission_id,  # permissions id and hierarchy
-                                                         resource_id,  # resource_id
-                                                         target_type, target_id,  # target information
-                                                         target_parent_type, target_parent_id,  # target parent information
-                                                         scope)  # explicit/implicit
+                                                       resource_id,  # resource_id
+                                                       target_type, target_id,  # target information
+                                                       target_parent_type, target_parent_id,  # target parent information
+                                                       scope)  # explicit/implicit
 
     def _remove_implicit_child_permission(self, parent_permission_id):
         """

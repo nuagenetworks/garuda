@@ -45,7 +45,7 @@ class TestPermissionsController(TestCase):
         cls.permissions_controller = cls.core_controller.permissions_controller
 
         cls.e0 = tstdk.GAEnterprise(username='e0')
-        cls.storage_controller.create(resource=cls.e0, parent=None)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.e0, parent=None)
 
         cls.e1 = tstdk.GAEnterprise(name='e1')
         cls.e2 = tstdk.GAEnterprise(name='e2')
@@ -62,19 +62,20 @@ class TestPermissionsController(TestCase):
         cls.a4 = tstdk.GAUser(street='a4')
         cls.a5 = tstdk.GAUser(street='a5')
 
-        cls.storage_controller.create(resource=cls.e1, parent=None)
-        cls.storage_controller.create(resource=cls.u1, parent=cls.e1)
-        cls.storage_controller.create(resource=cls.u2, parent=cls.e1)
-        cls.storage_controller.create(resource=cls.u3, parent=cls.e1)
-        cls.storage_controller.create(resource=cls.a1, parent=cls.u1)
-        cls.storage_controller.create(resource=cls.a2, parent=cls.u2)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.e1, parent=None)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.u1, parent=cls.e1)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.u2, parent=cls.e1)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.u3, parent=cls.e1)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.a1, parent=cls.u1)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.a2, parent=cls.u2)
 
-        cls.storage_controller.create(resource=cls.e2, parent=None)
-        cls.storage_controller.create(resource=cls.u4, parent=cls.e2)
-        cls.storage_controller.create(resource=cls.u5, parent=cls.e2)
-        cls.storage_controller.create(resource=cls.a3, parent=cls.u4)
-        cls.storage_controller.create(resource=cls.a4, parent=cls.u5)
-        cls.storage_controller.create(resource=cls.a5, parent=cls.u5)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.e2, parent=None)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.u4, parent=cls.e2)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.u5, parent=cls.e2)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.a3, parent=cls.u4)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.a4, parent=cls.u5)
+        cls.storage_controller.create(user_identifier='fake', resource=cls.a5, parent=cls.u5)
+
 
     @classmethod
     def tearDownClass(cls):
@@ -402,7 +403,7 @@ class TestPermissionsController(TestCase):
 
         self._assertNoPermission()
 
-    def test_child_resource_ids_with_permission(self):
+    def test_child_ids_with_permission(self):
         """
         """
         self._assertNoPermission()
@@ -411,13 +412,13 @@ class TestPermissionsController(TestCase):
         self.permissions_controller.create_permission(resource=self.e0, target=self.u2, permission='read')
         self.permissions_controller.create_permission(resource=self.e0, target=self.u3, permission='write')
 
-        ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission=None)
+        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='read')
         self.assertEquals(ids, {self.u1.id, self.u2.id, self.u3.id})
 
-        ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='write')
+        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='write')
         self.assertEquals(ids, {self.u3.id})
 
-        ids = self.permissions_controller.child_resource_ids_with_permission(resource=self.e0, parent_id=self.e2.id, children_type='user')
+        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent_id=self.e2.id, children_type='user')
         self.assertEquals(len(ids), 0)
 
         self.permissions_controller.remove_all_permissions_of_resource(resource=self.e0)

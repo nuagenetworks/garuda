@@ -24,53 +24,53 @@ class TestStoragePlugin(TestCase):
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.count(parent='fake', resource_name='fake', filter='fake')
+            plugin.count(user_identifier='owner_identifier', parent='fake', resource_name='fake', filter='fake')
 
     def test_get_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.get(resource_name='fake', identifier='fake', filter='fake')
+            plugin.get(user_identifier='owner_identifier', resource_name='fake', identifier='fake', filter='fake')
 
     def test_get_all_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.get_all(parent='fake', resource_name='fake', page=1, page_size=1, filter='fake', order_by='fake')
+            plugin.get_all(user_identifier='owner_identifier', parent='fake', resource_name='fake', page=1, page_size=1, filter='fake', order_by='fake')
 
     def test_create_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.create(resource='fake', parent='fake', user_identifier='fake')
+            plugin.create(user_identifier='owner_identifier', resource='fake', parent='fake')
 
     def test_update_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.update(resource='fake', user_identifier='fake')
+            plugin.update(user_identifier='owner_identifier', resource='fake')
 
     def test_delete_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.delete(resource='fake', cascade=True, user_identifier='fake')
+            plugin.delete(user_identifier='owner_identifier', resource='fake', cascade=True)
 
     def test_delete_multiple_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.delete_multiple(resources=['fake'], cascade=True, user_identifier='fake')
+            plugin.delete_multiple(user_identifier='owner_identifier', resources=['fake'], cascade=True)
 
     def test_assign_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.assign(resource_name='fake', resources=['fake'], parent='fake', user_identifier='fake')
+            plugin.assign(user_identifier='owner_identifier', resource_name='fake', resources=['fake'], parent='fake')

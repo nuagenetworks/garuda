@@ -12,6 +12,7 @@ class GAOperationsController(object):
         self.context = context
         self.storage_controller = storage_controller
         self.logic_controller = logic_controller
+        self.user_identifier = None
 
     def run(self):
         """
@@ -19,9 +20,13 @@ class GAOperationsController(object):
         action = self.context.request.action
         resources = self.context.request.resources
 
+        self.user_identifier = self.context.session.root_object.id if self.context.session.root_object else 'system'
+
         if len(resources) == 2:
             parent_resource = resources[0]
-            self.context.parent_object = self.storage_controller.get(resource_name=parent_resource.name, identifier=parent_resource.value)
+            self.context.parent_object = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                                     resource_name=parent_resource.name,
+                                                                     identifier=parent_resource.value)
 
             if not self.context.parent_object:
                 self._report_resource_not_found(resource=parent_resource)
@@ -71,7 +76,9 @@ class GAOperationsController(object):
         """
         """
         if not self.context.parent_object and (self.context.object and self.context.object.parent_type and self.context.object.parent_id):
-            self.context.parent_object = self.storage_controller.get(self.context.object.parent_type, self.context.object.parent_id)
+            self.context.parent_object = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                                     resource_name=self.context.object.parent_type,
+                                                                     identifier=self.context.object.parent_id)
 
     # READ OPERATIONS
 
@@ -80,7 +87,9 @@ class GAOperationsController(object):
         """
         resource = self.context.request.resources[-1]
 
-        self.context.object = self.storage_controller.get(resource.name, resource.value)
+        self.context.object = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                          resource_name=resource.name,
+                                                          identifier=resource.value)
 
         if self.context.object is None:
             self._report_resource_not_found(resource=resource)
@@ -114,11 +123,13 @@ class GAOperationsController(object):
         resource = self.context.request.resources[-1]
 
         if count_only:
-            self.context.total_count = self.storage_controller.count(parent=self.context.parent_object,
+            self.context.total_count = self.storage_controller.count(user_identifier='todo',
+                                                                     parent=self.context.parent_object,
                                                                      resource_name=resource.name,
                                                                      filter=self.context.request.filter)
         else:
-            self.context.objects, self.context.total_count = self.storage_controller.get_all(parent=self.context.parent_object,
+            self.context.objects, self.context.total_count = self.storage_controller.get_all(user_identifier=self.user_identifier,
+                                                                                             parent=self.context.parent_object,
                                                                                              resource_name=resource.name,
                                                                                              page=self.context.request.page,
                                                                                              page_size=self.context.request.page_size,
@@ -150,7 +161,7 @@ class GAOperationsController(object):
     def _populate_context_for_create_with_resource(self, resource):
         """
         """
-        self.context.object = self.storage_controller.instantiate(resource.name)
+        self.context.object = self.storage_controller.instantiate(resource_name=resource.name)
 
         if not self.context.object:
             self._report_resource_not_found(resource=resource)
@@ -161,7 +172,9 @@ class GAOperationsController(object):
     def _populate_context_for_update_with_resource(self, resource):
         """
         """
-        self.context.object = self.storage_controller.get(resource.name, resource.value)
+        self.context.object = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                          resource_name=resource.name,
+                                                          identifier=resource.value)
 
         if not self.context.object:
             self._report_resource_not_found(resource=resource)
@@ -172,7 +185,9 @@ class GAOperationsController(object):
     def _populate_context_for_delete_with_resource(self, resource):
         """
         """
-        self.context.object = self.storage_controller.get(resource.name, resource.value)
+        self.context.object = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                          resource_name=resource.name,
+                                                          identifier=resource.value)
 
         if not self.context.object:
             self._report_resource_not_found(resource=resource)
@@ -181,7 +196,9 @@ class GAOperationsController(object):
         """
         """
         for object_id in self.context.request.content:
-            assigned_object = self.storage_controller.get(resource.name, object_id)
+            assigned_object = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                          resource_name=resource.name,
+                                                          identifier=object_id)
 
             if not assigned_object:
                 self._report_resource_not_found(resource=resource)
@@ -246,18 +263,22 @@ class GAOperationsController(object):
         action = self.context.request.action
 
         if action == GARequest.ACTION_CREATE:
-            err = self.storage_controller.create(resource=self.context.object,
+            err = self.storage_controller.create(user_identifier=self.user_identifier,
+                                                 resource=self.context.object,
                                                  parent=self.context.parent_object)
 
         elif action == GARequest.ACTION_UPDATE:
-            err = self.storage_controller.update(resource=self.context.object)
+            err = self.storage_controller.update(user_identifier=self.user_identifier,
+                                                 resource=self.context.object)
 
         elif action == GARequest.ACTION_DELETE:
-            err = self.storage_controller.delete(resource=self.context.object,
+            err = self.storage_controller.delete(user_identifier=self.user_identifier,
+                                                 resource=self.context.object,
                                                  cascade=True)
 
         elif action == GARequest.ACTION_ASSIGN:
-            err = self.storage_controller.assign(resource_name=self.context.request.resources[-1].name,
+            err = self.storage_controller.assign(user_identifier=self.user_identifier,
+                                                 resource_name=self.context.request.resources[-1].name,
                                                  resources=self.context.objects,
                                                  parent=self.context.parent_object)
 

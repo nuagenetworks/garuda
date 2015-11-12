@@ -26,37 +26,37 @@ class FakeStorageController(object):
         """
         pass
 
-    def get(self, resource_name, identifier):
+    def get(self, user_identifier, resource_name, identifier):
         """
         """
         pass
 
-    def get_all(self, parent, resource_name, page, page_size, filter, order_by):
+    def get_all(self, user_identifier, parent, resource_name, page, page_size, filter, order_by):
         """
         """
         pass
 
-    def count(self):
+    def count(self, user_identifier, parent, resource_name, page, page_size, filter, order_by):
         """
         """
         pass
 
-    def create(self, resource, parent):
+    def create(self, user_identifier, resource, parent):
         """
         """
         pass
 
-    def update(self, resource):
+    def update(self, user_identifier, resource):
         """
         """
         pass
 
-    def delete(self, resource, cascade):
+    def delete(self, user_identifier, resource, cascade):
         """
         """
         pass
 
-    def assign(self, resource_name, resources, parent):
+    def assign(self, user_identifier, resource_name, resources, parent):
         """
         """
         pass
@@ -525,7 +525,7 @@ class TestOperationsController(TestCase):
 
         context.request.action = GARequest.ACTION_CREATE
 
-        def mocked_create(self, resource, parent):
+        def mocked_create(self, user_identifier, resource, parent):
             """ """
             context.object = 'did_create'
 
@@ -536,7 +536,7 @@ class TestOperationsController(TestCase):
 
         context.request.action = GARequest.ACTION_UPDATE
 
-        def mocked_update(self, resource):
+        def mocked_update(self, user_identifier, resource):
             """ """
             context.object = 'did_update'
 
@@ -547,7 +547,7 @@ class TestOperationsController(TestCase):
 
         context.request.action = GARequest.ACTION_DELETE
 
-        def mocked_delete(self, resource, cascade):
+        def mocked_delete(self, user_identifier, resource, cascade):
             """ """
             context.object = 'did_delete'
 
@@ -558,7 +558,7 @@ class TestOperationsController(TestCase):
 
         context.request.action = GARequest.ACTION_ASSIGN
 
-        def mocked_assign(self, resource_name, resources, parent):
+        def mocked_assign(self, user_identifier, resource_name, resources, parent):
             """ """
             context.object = 'did_assign'
 
