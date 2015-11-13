@@ -3,7 +3,7 @@ from unittest import TestCase
 from mock import patch
 
 from garuda.core.controllers import GAOperationsController
-from garuda.core.models import GAContext, GASession, GARequest, GAResource, GAError
+from garuda.core.models import GAContext, GASession, GARequest, GAResource, GAError, GAStoragePluginQueryResponse
 
 import tests.tstdk.v1_0 as tstdk
 
@@ -29,37 +29,37 @@ class FakeStorageController(object):
     def get(self, user_identifier, resource_name, identifier):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
     def get_all(self, user_identifier, parent, resource_name, page, page_size, filter, order_by):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
-    def count(self, user_identifier, parent, resource_name, page, page_size, filter, order_by):
+    def count(self, user_identifier, parent, resource_name, filter):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
     def create(self, user_identifier, resource, parent):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
     def update(self, user_identifier, resource):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
     def delete(self, user_identifier, resource, cascade):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
     def assign(self, user_identifier, resource_name, resources, parent):
         """
         """
-        pass
+        return GAStoragePluginQueryResponse()
 
 
 class TestOperationsController(TestCase):
@@ -86,49 +86,6 @@ class TestOperationsController(TestCase):
         self.assertEquals(operations_controller.logic_controller, self.fake_logic_controller)
         self.assertEquals(operations_controller.storage_controller, self.fake_storage_controller)
 
-    def test_report_resource_not_found(self):
-        """
-        """
-        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
-        request = GARequest(action=GARequest.ACTION_UPDATE)
-        context = GAContext(session=session, request=request)
-
-        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
-
-        operations_controller._report_resource_not_found(resource=GAResource(name='toto', value='value'))
-        self.assertEquals(len(context.errors), 1)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
-
-    def test_report_validation_error(self):
-        """
-        """
-        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
-        request = GARequest(action=GARequest.ACTION_UPDATE)
-        context = GAContext(session=session, request=request)
-
-        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
-
-        enterprise1 = tstdk.GAEnterprise(name=None)
-        context.object = enterprise1
-        enterprise1.validate()
-
-        operations_controller._report_validation_error(resource=enterprise1)
-        self.assertEquals(len(context.errors), 1)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_CONFLICT)
-
-    def test_report_method_not_allowed(self):
-        """
-        """
-        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
-        request = GARequest(action=GARequest.ACTION_UPDATE)
-        context = GAContext(session=session, request=request)
-
-        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
-
-        operations_controller._report_method_not_allowed(action=GARequest.ACTION_UPDATE)
-        self.assertEquals(len(context.errors), 1)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_NOTALLOWED)
-
     def test_populate_parent_object_if_needed(self):
         """
         """
@@ -143,11 +100,29 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAUser(username='test')):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAUser(username='test'))):
             operations_controller._populate_parent_object_if_needed()
 
         self.assertEquals(context.parent_object.username, 'test')
         self.assertEquals(context.parent_object.rest_name, 'user')
+
+    def test_populate_parent_object_if_needed_with_error(self):
+        """
+        """
+        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        request = GARequest(action=GARequest.ACTION_UPDATE)
+        context = GAContext(session=session, request=request)
+
+        enterprise1 = tstdk.GAEnterprise(name='enterprise1')
+        enterprise1.parent_type = 'fake'
+        enterprise1.parent_id = 'fake'
+        context.object = enterprise1
+
+        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
+
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_error(error_type='error', title='', description='')):
+            operations_controller._populate_parent_object_if_needed()
+            self.assertEquals(len(context.errors), 1)
 
     def test_run_with_unknown_parent(self):
         """
@@ -160,7 +135,7 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=None):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_NOTFOUND, title='', description='')):
             operations_controller.run()
             self.assertEquals(len(context.errors), 1)
             self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
@@ -191,7 +166,7 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAEnterprise(name='enterprise1'))):
 
             def mocked_method(self, count_only):
                 """ """
@@ -215,17 +190,17 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAEnterprise(name='enterprise1'))):
 
             def mocked_method(self, count_only):
                 """ """
                 assert count_only
                 assert self.context.request.action == GARequest.ACTION_COUNT
                 self.context.object = 'did_read_all_with_count'
+                return GAStoragePluginQueryResponse()
 
             with patch.object(GAOperationsController, '_perform_readall_operation', autospec=True) as m:
                 m.side_effect = mocked_method
-
                 operations_controller.run()
                 self.assertEquals(context.object, 'did_read_all_with_count')
 
@@ -360,13 +335,12 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAUser(name='user1')):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAUser(name='user1'))):
 
             operations_controller._prepare_context_for_read_operation()
             self.assertEquals(len(context.errors), 0)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=None):
-
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_error(error_type='', title='', description='')):
             operations_controller._prepare_context_for_read_operation()
             self.assertEquals(len(context.errors), 1)
 
@@ -382,7 +356,7 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAUser(name='user1')):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAUser(name='user1'))):
             operations_controller._perform_read_operation()
             self.assertEquals(context.performed_delegates, ['will_perform_read', 'did_perform_read'])
 
@@ -395,6 +369,7 @@ class TestOperationsController(TestCase):
 
         context = GAContext(session=session, request=request)
         context.performed_delegates = []
+        context.object = 'obj'
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
@@ -420,7 +395,7 @@ class TestOperationsController(TestCase):
             context.add_error('fake')
             context.performed_delegates.append(delegate)
 
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAUser(name='user1')):
+        with patch.object(self.fake_storage_controller, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAUser(name='user1'))):
             with patch.object(FakeLogicController, 'perform_delegate', autospec=True) as m:
                 m.side_effect = mocked_method
                 context.performed_delegates = []
@@ -438,19 +413,24 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(FakeStorageController, 'count', return_value=42):
+        with patch.object(FakeStorageController, 'count', return_value=GAStoragePluginQueryResponse.init_with_data(data=None, count=42)):
             operations_controller._prepare_context_for_readall_operation(count_only=True)
             self.assertEquals(len(context.errors), 0)
             self.assertEquals(context.total_count, 42)
 
-        with patch.object(FakeStorageController, 'get_all', return_value=([tstdk.GAUser(name='user1'), tstdk.GAUser(name='user2')], 2)):
+        with patch.object(FakeStorageController, 'get_all', return_value=GAStoragePluginQueryResponse.init_with_data(data=[tstdk.GAUser(name='user1'), tstdk.GAUser(name='user2')], count=2)):
             operations_controller._prepare_context_for_readall_operation(count_only=False)
             self.assertEquals(len(context.errors), 0)
             self.assertEquals(len(context.objects), 2)
             self.assertEquals(context.total_count, 2)
 
-        with patch.object(FakeStorageController, 'get_all', return_value=(None, 0)):
+        with patch.object(FakeStorageController, 'get_all', return_value=GAStoragePluginQueryResponse.init_with_error(error_type='', title='', description='')):
             operations_controller._prepare_context_for_readall_operation(count_only=False)
+            self.assertEquals(len(context.errors), 1)
+
+        context.clear_errors()
+        with patch.object(FakeStorageController, 'count', return_value=GAStoragePluginQueryResponse.init_with_error(error_type='', title='', description='')):
+            operations_controller._prepare_context_for_readall_operation(count_only=True)
             self.assertEquals(len(context.errors), 1)
 
     def test_perform_readall_operation(self):
@@ -465,7 +445,7 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get_all', return_value=([tstdk.GAUser(name='user1')], 1)):
+        with patch.object(self.fake_storage_controller, 'get_all', return_value=GAStoragePluginQueryResponse.init_with_data(data=[tstdk.GAUser(name='user1')], count=1)):
             operations_controller._perform_readall_operation(count_only=False)
             self.assertEquals(context.performed_delegates, ['will_perform_readall', 'did_perform_readall'])
 
@@ -481,13 +461,13 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(self.fake_storage_controller, 'get_all', return_value=([tstdk.GAUser(name='user1')], 1)):
+        with patch.object(self.fake_storage_controller, 'get_all', return_value=GAStoragePluginQueryResponse.init_with_data(data=[tstdk.GAUser(name='user1')], count=1)):
             context.performed_delegates = []
             context.add_error('fake')
             operations_controller._perform_readall_operation(count_only=False)
             self.assertEquals(context.performed_delegates, [])
 
-    def test_perform_readall_operation_with_errors_in_the_middle(self):
+    def test_perform_readall_operation_with_errors_in_the_middle1(self):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
@@ -504,7 +484,7 @@ class TestOperationsController(TestCase):
             context.add_error('fake')
             context.performed_delegates.append(delegate)
 
-        with patch.object(self.fake_storage_controller, 'get_all', return_value=([tstdk.GAUser(name='user1')], 1)):
+        with patch.object(self.fake_storage_controller, 'get_all', return_value=GAStoragePluginQueryResponse.init_with_data(data=[tstdk.GAUser(name='user1')], count=1)):
             with patch.object(FakeLogicController, 'perform_delegate', autospec=True) as m:
                 m.side_effect = mocked_method
                 context.performed_delegates = []
@@ -528,6 +508,7 @@ class TestOperationsController(TestCase):
         def mocked_create(self, user_identifier, resource, parent):
             """ """
             context.object = 'did_create'
+            return GAStoragePluginQueryResponse()
 
         with patch.object(FakeStorageController, 'create', autospec=True) as m:
             m.side_effect = mocked_create
@@ -539,6 +520,7 @@ class TestOperationsController(TestCase):
         def mocked_update(self, user_identifier, resource):
             """ """
             context.object = 'did_update'
+            return GAStoragePluginQueryResponse()
 
         with patch.object(FakeStorageController, 'update', autospec=True) as m:
             m.side_effect = mocked_update
@@ -550,6 +532,7 @@ class TestOperationsController(TestCase):
         def mocked_delete(self, user_identifier, resource, cascade):
             """ """
             context.object = 'did_delete'
+            return GAStoragePluginQueryResponse()
 
         with patch.object(FakeStorageController, 'delete', autospec=True) as m:
             m.side_effect = mocked_delete
@@ -561,17 +544,18 @@ class TestOperationsController(TestCase):
         def mocked_assign(self, user_identifier, resource_name, resources, parent):
             """ """
             context.object = 'did_assign'
+            return GAStoragePluginQueryResponse()
 
         with patch.object(FakeStorageController, 'assign', autospec=True) as m:
             m.side_effect = mocked_assign
             operations_controller._perform_store()
             self.assertEquals(context.object, 'did_assign')
 
-        with patch.object(FakeStorageController, 'assign', return_value='fake'):
+        with patch.object(FakeStorageController, 'assign', return_value=GAStoragePluginQueryResponse.init_with_error(error_type='fake', title='fake', description='fake')):
             operations_controller._perform_store()
             self.assertEquals(len(context.errors), 1)
 
-        with patch.object(FakeStorageController, 'assign', return_value=['fake', 'fake']):
+        with patch.object(FakeStorageController, 'assign', return_value=GAStoragePluginQueryResponse.init_with_errors(['fake', 'fake'])):
             operations_controller._perform_store()
             self.assertEquals(len(context.errors), 3)
 
@@ -627,7 +611,7 @@ class TestOperationsController(TestCase):
 
         operations_controller._populate_context_for_create_with_resource(resource=GAResource(name='fake', value=None))
         self.assertEquals(len(context.errors), 1)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
+        self.assertEquals(context.errors[0].type, GAError.TYPE_INVALID)
         context.clear_errors()
 
         request.content = {'name': 'the_enterprise'}
@@ -648,13 +632,14 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        operations_controller._populate_context_for_update_with_resource(resource=GAResource(name='fake', value=None))
-        self.assertEquals(len(context.errors), 1)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
-        context.clear_errors()
+        with patch.object(FakeStorageController, 'get', return_value=GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_NOTFOUND, title='', description='')):
+            operations_controller._populate_context_for_update_with_resource(resource=GAResource(name='fake', value=None))
+            self.assertEquals(len(context.errors), 1)
+            self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
+            context.clear_errors()
 
         request.content = {'name': 'the_enterprise'}
-        with patch.object(FakeStorageController, 'get', return_value=tstdk.GAEnterprise()):
+        with patch.object(FakeStorageController, 'get', return_value=GAStoragePluginQueryResponse(data=tstdk.GAEnterprise())):
             operations_controller._populate_context_for_update_with_resource(resource=GAResource(name='enterprise', value=None))
             self.assertEquals(context.object.name, 'the_enterprise')
 
@@ -671,12 +656,13 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        operations_controller._populate_context_for_delete_with_resource(resource=GAResource(name='fake', value=None))
-        self.assertEquals(len(context.errors), 1)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
-        context.clear_errors()
+        with patch.object(FakeStorageController, 'get', return_value=GAStoragePluginQueryResponse.init_with_errors([GAError(type=GAError.TYPE_NOTFOUND, title='', description='')])):
+            operations_controller._populate_context_for_delete_with_resource(resource=GAResource(name='fake', value=None))
+            self.assertEquals(len(context.errors), 1)
+            self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
+            context.clear_errors()
 
-        with patch.object(FakeStorageController, 'get', return_value=tstdk.GAEnterprise()):
+        with patch.object(FakeStorageController, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAEnterprise())):
             operations_controller._populate_context_for_delete_with_resource(resource=GAResource(name='enterprise', value=None))
             self.assertEquals(len(context.errors), 0)
 
@@ -695,15 +681,17 @@ class TestOperationsController(TestCase):
 
         context.request.content = ['1', '2', '3']
 
-        operations_controller._populate_context_for_assign_with_resource(resource=GAResource(name='enterprise', value=None))
-        self.assertEquals(len(context.errors), 3)
-        self.assertEquals(len(context.objects), 0)
-        self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
-        self.assertEquals(context.errors[1].type, GAError.TYPE_NOTFOUND)
-        self.assertEquals(context.errors[2].type, GAError.TYPE_NOTFOUND)
+        context.clear_errors()
+        with patch.object(FakeStorageController, 'get', return_value=GAStoragePluginQueryResponse.init_with_errors([GAError(type=GAError.TYPE_NOTFOUND, title='', description='', property_name='')])):
+            operations_controller._populate_context_for_assign_with_resource(resource=GAResource(name='enterprise', value=None))
+            self.assertEquals(len(context.errors), 3)
+            self.assertEquals(len(context.objects), 0)
+            self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
+            self.assertEquals(context.errors[1].type, GAError.TYPE_NOTFOUND)
+            self.assertEquals(context.errors[2].type, GAError.TYPE_NOTFOUND)
 
         context.clear_errors()
-        with patch.object(FakeStorageController, 'get', return_value=tstdk.GAEnterprise(name='test')):
+        with patch.object(FakeStorageController, 'get', return_value=GAStoragePluginQueryResponse.init_with_data(data=tstdk.GAEnterprise(name='test'))):
             operations_controller._populate_context_for_assign_with_resource(resource=GAResource(name='enterprise', value=None))
             self.assertEquals(len(context.errors), 0)
             self.assertEquals(len(context.objects), 3)
@@ -907,7 +895,7 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(GAOperationsController, '_prepare_context_for_write_operation', return_value=None):
+        with patch.object(GAOperationsController, '_prepare_context_for_write_operation', return_value=GAStoragePluginQueryResponse()):
             operations_controller._perform_write_operation()
             self.assertEquals(context.performed_delegates, ['will_perform_write', 'will_perform_delete', 'did_perform_delete', 'did_perform_write'])
 
@@ -923,6 +911,21 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with patch.object(GAOperationsController, '_prepare_context_for_write_operation', return_value=None):
+        with patch.object(GAOperationsController, '_prepare_context_for_write_operation', return_value=GAStoragePluginQueryResponse()):
             operations_controller._perform_write_operation()
             self.assertEquals(context.performed_delegates, ['will_perform_write', 'will_perform_assign', 'did_perform_assign', 'did_perform_write'])
+
+    def test_run_with_unknown_action(self):
+        """
+        """
+        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        request = GARequest(action='UKNOWN')
+        request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
+
+        context = GAContext(session=session, request=request)
+        context.performed_delegates = []
+
+        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
+
+        with self.assertRaises(Exception):
+            operations_controller.run()

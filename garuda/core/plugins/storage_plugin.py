@@ -2,7 +2,6 @@
 
 from garuda.core.models import GAPlugin
 
-
 class GAStoragePlugin(GAPlugin):
     """
     """

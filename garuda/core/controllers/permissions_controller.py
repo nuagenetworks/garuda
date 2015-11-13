@@ -42,7 +42,8 @@ class GAPermissionsController(GAPluginController):
         target_parent = None
 
         if target.parent_type and target.parent_id:
-            target_parent = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
+            response = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
+            target_parent = response.data
 
         permission_id = str(uuid4())
         key = self._compute_permission_redis_key(permission_id=permission_id,
@@ -112,7 +113,8 @@ class GAPermissionsController(GAPluginController):
         if not target.parent_type or not target.parent_id:
             return False
 
-        target_parent = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
+        response = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
+        target_parent = response.data
 
         return self.has_permission(resource=resource, target=target_parent, permission=permission, explicit_only=True)
 

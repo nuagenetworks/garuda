@@ -6,10 +6,9 @@ import calendar
 import time
 from bson import ObjectId
 
-from garuda.core.models import GAError, GAPluginManifest
+from garuda.core.models import GAError, GAPluginManifest, GAStoragePluginQueryResponse
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import GASDKLibrary
-
 
 class GAMongoStoragePlugin(GAStoragePlugin):
     """
@@ -64,14 +63,16 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def count(self, user_identifier, parent, resource_name, filter=None):
         """
         """
-        data, count = self._get_children_data(user_identifier=user_identifier, parent=parent, resource_name=resource_name, filter=filter, grand_total=False)
-        return count
+        ret = self._get_children_raw_data(user_identifier=user_identifier, parent=parent, resource_name=resource_name, filter=filter, grand_total=False)
+        return GAStoragePluginQueryResponse.init_with_data(data=None, count=ret.count)
 
     def get(self, user_identifier, resource_name, identifier=None, filter=None):
         """
         """
         if identifier and not ObjectId.is_valid(identifier):
-            return None
+            return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_NOTFOUND,
+                                                                title='Resource not found',
+                                                                description='Could not find resource')
 
         query_filter = {}
         if filter:
@@ -83,37 +84,46 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             data = self.db[resource_name].find_one(query_filter)
 
         if not data:
-            return None
+            return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_NOTFOUND,
+                                                                title='Resource not found',
+                                                                description='Could not find resource')
 
         obj = self.instantiate(resource_name)
         obj.from_dict(self._convert_from_dbid(data))
 
         if not self.permissions_controller.has_permission(resource=user_identifier, target=obj, permission='read'):
-            return None
+            return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_UNAUTHORIZED,
+                                                                title='Permission Denied',
+                                                                description='You do not have permission to access this object')
 
-        return obj
+        return GAStoragePluginQueryResponse.init_with_data(data=obj)
 
     def get_all(self, user_identifier, parent, resource_name, page=None, page_size=None, filter=None, order_by=None):
         """
         """
         objects = []
-        data = []
 
         # TODO: this is for the demo :)
         order_by = [('type', pymongo.ASCENDING), ('name', pymongo.ASCENDING), ('title', pymongo.ASCENDING), ('creationDate', pymongo.ASCENDING)]
 
-        data, count = self._get_children_data(user_identifier=user_identifier, parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by, grand_total=True)
+        response = self._get_children_raw_data(user_identifier=user_identifier, parent=parent, resource_name=resource_name, page=page, page_size=page_size, filter=filter, order_by=order_by, grand_total=True)
 
-        for d in data:
-            obj = self.instantiate(resource_name)
-            obj.from_dict(self._convert_from_dbid(d))
-            objects.append(obj)
+        if response.data:
+            for d in response.data:
+                obj = self.instantiate(resource_name)
+                obj.from_dict(self._convert_from_dbid(d))
+                objects.append(obj)
 
-        return (objects, count)
+        return GAStoragePluginQueryResponse.init_with_data(data=objects, count=response.count)
 
     def create(self, user_identifier, resource, parent=None):
         """
         """
+        # if parent and not self.permissions_controller.has_permission(resource=user_identifier, target=parent, permission='write'):
+        #     return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_UNAUTHORIZED,
+        #                                                         title='Permission Denied',
+        #                                                         description='You do not have permission to create this object')
+
         resource.creation_date = time.time()
         resource.last_updated_date = resource.creation_date
         resource.owner = resource.owner if resource.owner else user_identifier
@@ -121,10 +131,9 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         resource.parent_id = parent.id if parent else None
         resource.id = str(ObjectId())
 
-        validation = self._validate(resource)
-
-        if validation:
-            return validation
+        validation_errors = self._validate(resource)
+        if validation_errors:
+            return GAStoragePluginQueryResponse.init_with_errors(errors=validation_errors)
 
         self.db[resource.rest_name].insert_one(self._convert_to_dbid(resource.to_dict()))
 
@@ -138,27 +147,34 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
             self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {children_key: children}})
 
+        return GAStoragePluginQueryResponse.init_with_data(data=resource)
+
     def update(self, user_identifier, resource):
         """
         """
         if not self.permissions_controller.has_permission(resource=user_identifier, target=resource, permission='write'):
-            return [GAError(type=GAError.TYPE_UNAUTHORIZED, title='Permission Denied', description='You do not have permission to update this object')]
+            return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_UNAUTHORIZED,
+                                                                title='Permission Denied',
+                                                                description='You do not have permission to update this object')
 
         resource.last_updated_date = time.time()
 
-        validation = self._validate(resource)
-
-        if validation:
-            return validation
+        validation_errors = self._validate(resource)
+        if validation_errors:
+            return GAStoragePluginQueryResponse.init_with_errors(errors=validation_errors)
 
         self.db[resource.rest_name].update({'_id': {'$eq': ObjectId(resource.id)}}, {'$set': self._convert_to_dbid(resource.to_dict())})
+
+        return GAStoragePluginQueryResponse.init_with_data(data=resource)
 
     def delete(self, user_identifier, resource, cascade=True):
         """
         """
 
         if not self.permissions_controller.has_permission(resource=user_identifier, target=resource, permission='write'):
-            return [GAError(type=GAError.TYPE_UNAUTHORIZED, title='Permission Denied', description='You do not have permission to delete this object')]
+            return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_UNAUTHORIZED,
+                                                                title='Permission Denied',
+                                                                description='You do not have permission to delete this object')
 
         if resource.parent_id and resource.parent_type:
             children_key = '_%s' % resource.rest_name
@@ -168,6 +184,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 self.db[resource.parent_type].update({'_id': {'$eq': ObjectId(resource.parent_id)}}, {'$set': data})
 
         self.delete_multiple(user_identifier=user_identifier, resources=[resource], cascade=cascade)
+
+        return GAStoragePluginQueryResponse(data=resource)
 
     def delete_multiple(self, user_identifier, resources, cascade=True):
         """
@@ -206,7 +224,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
     # UTILITIES
 
-    def _get_children_data(self, user_identifier, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, grand_total=True):
+    def _get_children_raw_data(self, user_identifier, parent, resource_name, page=None, page_size=None, filter=None, order_by=None, grand_total=True):
         """
         """
         skip = 0
@@ -229,7 +247,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             association_data = self.db[parent.rest_name].find_one({'_id': ObjectId(parent.id)}, {association_key: 1})
 
             if not association_data or association_key not in association_data:
-                return ([], 0)
+                return GAStoragePluginQueryResponse(data=[], count=0)
 
             data = self.db[resource_name].find({'$and': [{'_id': {'$in': [ObjectId(identifier) for identifier in association_data[association_key]]}}, query_filter]})
 
@@ -244,7 +262,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             data = self.db[resource_name].find({'$and': [{'_id': {'$in': [ObjectId(i) for i in identifiers]}}, query_filter]})
 
         if not data.count():
-            return ([], 0)
+            return GAStoragePluginQueryResponse(data=[], count=0)
 
         if order_by:
             data = data.sort(order_by)
@@ -256,7 +274,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             data = data.skip(skip).limit(page_size)
             total_count = data.count()
 
-        return (data, total_count)
+        return GAStoragePluginQueryResponse(data=data, count=total_count)
 
     def _validate(self, resource):
         """

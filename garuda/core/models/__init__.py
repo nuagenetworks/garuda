@@ -13,7 +13,8 @@ __all__ = ['GAContext',
            'GASession',
            'GAController',
            'GAPluginController',
-           'GASerializable']
+           'GASerializable',
+           'GAStoragePluginQueryResponse']
 
 from collections import namedtuple
 GAResource = namedtuple('GAResource', ['name', 'value'])
@@ -30,3 +31,4 @@ from .request import GARequest
 from .response import GAResponseFailure, GAResponseSuccess
 from .session import GASession
 from .serializable import GASerializable
+from .storage_query_response import GAStoragePluginQueryResponse

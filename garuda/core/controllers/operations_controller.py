@@ -24,13 +24,15 @@ class GAOperationsController(object):
 
         if len(resources) == 2:
             parent_resource = resources[0]
-            self.context.parent_object = self.storage_controller.get(user_identifier=self.user_identifier,
-                                                                     resource_name=parent_resource.name,
-                                                                     identifier=parent_resource.value)
+            response = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                   resource_name=parent_resource.name,
+                                                   identifier=parent_resource.value)
 
-            if not self.context.parent_object:
-                self._report_resource_not_found(resource=parent_resource)
+            if response.has_errors:
+                self.context.add_errors(response.errors)
                 return
+
+            self.context.parent_object = response.data
 
         if action is GARequest.ACTION_READALL:
             self._perform_readall_operation(count_only=False)
@@ -49,36 +51,20 @@ class GAOperationsController(object):
 
     # UTILITIES
 
-    def _report_resource_not_found(self, resource):
-        """
-        """
-        self.context.add_error(GAError(type=GAError.TYPE_NOTFOUND,
-                                       title='%s not found' % resource.name,
-                                       description='Cannot find %s with ID %s' % (resource.name, resource.value)))
-
-    def _report_validation_error(self, resource):
-        """
-        """
-        for property_name, description in resource.errors.iteritems():
-            self.context.add_error(GAError(type=GAError.TYPE_CONFLICT,
-                                           title='Invalid %s' % property_name,
-                                           description=description,
-                                           property_name=property_name))
-
-    def _report_method_not_allowed(self, action):
-        """
-        """
-        self.context.add_error(GAError(type=GAError.TYPE_NOTALLOWED,
-                                       title='Action not allowed',
-                                       description='Unable to %s a resource without its identifier' % action))
-
     def _populate_parent_object_if_needed(self):
         """
         """
         if not self.context.parent_object and (self.context.object and self.context.object.parent_type and self.context.object.parent_id):
-            self.context.parent_object = self.storage_controller.get(user_identifier=self.user_identifier,
-                                                                     resource_name=self.context.object.parent_type,
-                                                                     identifier=self.context.object.parent_id)
+
+            response = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                   resource_name=self.context.object.parent_type,
+                                                   identifier=self.context.object.parent_id)
+
+            if response.has_errors:
+                self.context.add_errors(response.errors)
+                return
+
+            self.context.parent_object = response.data
 
     # READ OPERATIONS
 
@@ -87,19 +73,19 @@ class GAOperationsController(object):
         """
         resource = self.context.request.resources[-1]
 
-        self.context.object = self.storage_controller.get(user_identifier=self.user_identifier,
-                                                          resource_name=resource.name,
-                                                          identifier=resource.value)
+        response = self.storage_controller.get(user_identifier=self.user_identifier,
+                                               resource_name=resource.name,
+                                               identifier=resource.value)
 
-        if self.context.object is None:
-            self._report_resource_not_found(resource=resource)
+        if response.has_errors:
+            self.context.add_errors(response.errors)
+            return
+
+        self.context.object = response.data
 
     def _perform_read_operation(self):
         """
         """
-        # the object may already be set in case of a read operation
-        # triggered by a push notification. In that case, there is no
-        # need to query the DB again.
         if self.context.object is None:
             self._prepare_context_for_read_operation()
 
@@ -123,21 +109,31 @@ class GAOperationsController(object):
         resource = self.context.request.resources[-1]
 
         if count_only:
-            self.context.total_count = self.storage_controller.count(user_identifier='todo',
-                                                                     parent=self.context.parent_object,
-                                                                     resource_name=resource.name,
-                                                                     filter=self.context.request.filter)
-        else:
-            self.context.objects, self.context.total_count = self.storage_controller.get_all(user_identifier=self.user_identifier,
-                                                                                             parent=self.context.parent_object,
-                                                                                             resource_name=resource.name,
-                                                                                             page=self.context.request.page,
-                                                                                             page_size=self.context.request.page_size,
-                                                                                             filter=self.context.request.filter,
-                                                                                             order_by=self.context.request.order_by)
+            response = self.storage_controller.count(user_identifier=self.user_identifier,
+                                                     parent=self.context.parent_object,
+                                                     resource_name=resource.name,
+                                                     filter=self.context.request.filter)
 
-        if self.context.objects is None:
-            self._report_resource_not_found(resource=resource)
+            if response.has_errors:
+                self.context.add_errors(response.errors)
+                return
+
+            self.context.total_count = response.count
+        else:
+             response = self.storage_controller.get_all(user_identifier=self.user_identifier,
+                                                        parent=self.context.parent_object,
+                                                        resource_name=resource.name,
+                                                        page=self.context.request.page,
+                                                        page_size=self.context.request.page_size,
+                                                        filter=self.context.request.filter,
+                                                        order_by=self.context.request.order_by)
+
+             if response.has_errors:
+                 self.context.add_errors(response.errors)
+                 return
+
+             self.context.objects = response.data
+             self.context.total_count = response.count
 
     def _perform_readall_operation(self, count_only):
         """
@@ -164,7 +160,9 @@ class GAOperationsController(object):
         self.context.object = self.storage_controller.instantiate(resource_name=resource.name)
 
         if not self.context.object:
-            self._report_resource_not_found(resource=resource)
+            self.context.add_error(GAError(type=GAError.TYPE_INVALID,
+                                           title='Bad request',
+                                           description='Could not find object of type %s in the models' % resource.name))
             return
 
         self.context.object.from_dict(self.context.request.content)
@@ -172,39 +170,43 @@ class GAOperationsController(object):
     def _populate_context_for_update_with_resource(self, resource):
         """
         """
-        self.context.object = self.storage_controller.get(user_identifier=self.user_identifier,
-                                                          resource_name=resource.name,
-                                                          identifier=resource.value)
+        response = self.storage_controller.get(user_identifier=self.user_identifier,
+                                               resource_name=resource.name,
+                                               identifier=resource.value)
 
-        if not self.context.object:
-            self._report_resource_not_found(resource=resource)
+        if response.has_errors:
+            self.context.add_errors(response.errors)
             return
 
+        self.context.object = response.data
         self.context.object.from_dict(self.context.request.content)
 
     def _populate_context_for_delete_with_resource(self, resource):
         """
         """
-        self.context.object = self.storage_controller.get(user_identifier=self.user_identifier,
-                                                          resource_name=resource.name,
-                                                          identifier=resource.value)
+        response = self.storage_controller.get(user_identifier=self.user_identifier,
+                                               resource_name=resource.name,
+                                               identifier=resource.value)
 
-        if not self.context.object:
-            self._report_resource_not_found(resource=resource)
+        if response.has_errors:
+            self.context.add_errors(response.errors)
+            return
+
+        self.context.object = response.data
 
     def _populate_context_for_assign_with_resource(self, resource):
         """
         """
         for object_id in self.context.request.content:
-            assigned_object = self.storage_controller.get(user_identifier=self.user_identifier,
-                                                          resource_name=resource.name,
-                                                          identifier=object_id)
 
-            if not assigned_object:
-                self._report_resource_not_found(resource=resource)
+            response = self.storage_controller.get(user_identifier=self.user_identifier,
+                                                   resource_name=resource.name,
+                                                   identifier=object_id)
+            if response.has_errors:
+                self.context.add_errors(response.errors)
                 continue
 
-            self.context.objects.append(assigned_object)
+            self.context.objects.append(response.data)
 
     def _prepare_context_for_write_operation(self):
         """
@@ -213,7 +215,9 @@ class GAOperationsController(object):
         resource = self.context.request.resources[-1]
 
         if action != GARequest.ACTION_CREATE and action != GARequest.ACTION_ASSIGN and resource.value is None:
-            self._report_method_not_allowed(action=self.context.request.action)
+            self.context.add_error(GAError(type=GAError.TYPE_NOTALLOWED,
+                                           title='Action not allowed',
+                                           description='Unable to %s a resource without its identifier' % action))
             return
 
         if action == GARequest.ACTION_CREATE:
@@ -259,34 +263,30 @@ class GAOperationsController(object):
     def _perform_store(self):
         """
         """
-        err = None
         action = self.context.request.action
 
         if action == GARequest.ACTION_CREATE:
-            err = self.storage_controller.create(user_identifier=self.user_identifier,
-                                                 resource=self.context.object,
-                                                 parent=self.context.parent_object)
+            response = self.storage_controller.create(user_identifier=self.user_identifier,
+                                                      resource=self.context.object,
+                                                      parent=self.context.parent_object)
 
         elif action == GARequest.ACTION_UPDATE:
-            err = self.storage_controller.update(user_identifier=self.user_identifier,
-                                                 resource=self.context.object)
+            response = self.storage_controller.update(user_identifier=self.user_identifier,
+                                                      resource=self.context.object)
 
         elif action == GARequest.ACTION_DELETE:
-            err = self.storage_controller.delete(user_identifier=self.user_identifier,
-                                                 resource=self.context.object,
-                                                 cascade=True)
+            response = self.storage_controller.delete(user_identifier=self.user_identifier,
+                                                      resource=self.context.object,
+                                                      cascade=True)
 
         elif action == GARequest.ACTION_ASSIGN:
-            err = self.storage_controller.assign(user_identifier=self.user_identifier,
-                                                 resource_name=self.context.request.resources[-1].name,
-                                                 resources=self.context.objects,
-                                                 parent=self.context.parent_object)
+            response = self.storage_controller.assign(user_identifier=self.user_identifier,
+                                                      resource_name=self.context.request.resources[-1].name,
+                                                      resources=self.context.objects,
+                                                      parent=self.context.parent_object)
 
-        if err:
-            if isinstance(err, list):
-                self.context.add_errors(err)
-            else:
-                self.context.add_error(err)
+        if response.has_errors:
+            self.context.add_errors(response.errors)
 
     def _perform_push(self):
         """

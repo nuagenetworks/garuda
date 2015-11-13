@@ -85,17 +85,14 @@ class TestStorageController(TestCase):
     def test_get(self):
         """
         """
-        with patch.object(FakeStoragePlugin, 'get', return_value=tstdk.GAEnterprise(name='enterprise')):
-            self.assertEquals(self.storage_controller.get(user_identifier='owner_identifier', resource_name='test', identifier='id').name, 'enterprise')
+        with patch.object(FakeStoragePlugin, 'get', return_value='ok'):
+            self.assertEquals(self.storage_controller.get(user_identifier='owner_identifier', resource_name='test', identifier='id'), 'ok')
 
     def test_get_all(self):
         """
         """
-        with patch.object(FakeStoragePlugin, 'get_all', return_value=[tstdk.GAEnterprise(name='enterprise1'), tstdk.GAEnterprise(name='enterprise2')]):
-            result = self.storage_controller.get_all(user_identifier='owner_identifier', parent='parent', resource_name='test')
-            self.assertEquals(len(result), 2)
-            self.assertEquals(result[0].name, 'enterprise1')
-            self.assertEquals(result[1].name, 'enterprise2')
+        with patch.object(FakeStoragePlugin, 'get_all', return_value='ok'):
+            self.assertEquals(self.storage_controller.get_all(user_identifier='owner_identifier', parent='parent', resource_name='test'), 'ok')
 
     def test_create(self):
         """
