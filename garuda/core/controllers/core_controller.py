@@ -165,7 +165,7 @@ class GACoreController(object):
     def execute_model_request(self, request):
         """
         """
-        session_uuid = self.sessions_controller.get_session_identifier(request=request)
+        session_uuid = self.sessions_controller.extract_session_identifier(request=request)
         session = None
 
         logger.debug("finding session: %s" % session_uuid)

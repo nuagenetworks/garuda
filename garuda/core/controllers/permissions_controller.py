@@ -9,10 +9,11 @@ from garuda.core.plugins import GAPermissionsPlugin
 logger = logging.getLogger('garuda.controller.authentication')
 
 
+
 class GAPermissionsController(GAPluginController):
     """
     """
-
+    SYSTEM_PERMISSION = 'garuda-system-permission'
     DEFAULT_PERMISSION = 'read'
     PERMISSIONS = ['read', 'use', 'extend', 'write', 'all']
 
@@ -42,7 +43,7 @@ class GAPermissionsController(GAPluginController):
         target_parent = None
 
         if target.parent_type and target.parent_id:
-            response = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
+            response = self.storage_controller.get(user_identifier=self.SYSTEM_PERMISSION, resource_name=target.parent_type, identifier=target.parent_id)
             target_parent = response.data
 
         permission_id = str(uuid4())
@@ -95,7 +96,7 @@ class GAPermissionsController(GAPluginController):
     def has_permission(self, resource, target, permission, explicit_only=False):
         """
         """
-        if resource == 'system':
+        if resource == self.SYSTEM_PERMISSION:
             return True
 
         key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource,
@@ -113,7 +114,7 @@ class GAPermissionsController(GAPluginController):
         if not target.parent_type or not target.parent_id:
             return False
 
-        response = self.storage_controller.get(user_identifier='system', resource_name=target.parent_type, identifier=target.parent_id)
+        response = self.storage_controller.get(user_identifier=self.SYSTEM_PERMISSION, resource_name=target.parent_type, identifier=target.parent_id)
         target_parent = response.data
 
         return self.has_permission(resource=resource, target=target_parent, permission=permission, explicit_only=True)

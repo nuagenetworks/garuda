@@ -2,12 +2,15 @@
 
 from unittest import TestCase
 from mock import patch
+from bambou import NURESTRootObject
 
 from garuda.core.lib import GASDKLibrary
 from garuda.core.controllers import GACoreController
 from garuda.core.models import GASession, GARequest, GAController, GAResource, GAError, GAResponseFailure, GAResponseSuccess
 
 import tests.tstdk.v1_0 as tstdk
+
+from tests.helpers import FakeAuthPlugin
 
 
 class AdditionalController(GAController):
@@ -35,7 +38,6 @@ class AdditionalController(GAController):
         """
         return 'test.controller.additional'
 
-
 class TestCoreController(TestCase):
     """
     """
@@ -43,14 +45,14 @@ class TestCoreController(TestCase):
     def test_identifiers(self):
         """
         """
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, authentication_plugins=[FakeAuthPlugin()])
         self.assertIsNotNone(core_controller.uuid)
         self.assertEquals(core_controller.garuda_uuid, 'test-garuda')
 
     def test_redis_information(self):
         """
         """
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, authentication_plugins=[FakeAuthPlugin()])
         self.assertIsNotNone(core_controller.redis)
         self.assertEquals(core_controller.redis_host, '127.0.0.1')
         self.assertEquals(core_controller.redis_port, 6379)
@@ -59,7 +61,7 @@ class TestCoreController(TestCase):
     def test_controllers(self):
         """
         """
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, authentication_plugins=[FakeAuthPlugin()])
         self.assertIsNotNone(core_controller.storage_controller)
         self.assertIsNotNone(core_controller.logic_controller)
         self.assertIsNotNone(core_controller.push_controller)
@@ -69,20 +71,22 @@ class TestCoreController(TestCase):
     def test_additonal_controllers(self):
         """
         """
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6})
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, authentication_plugins=[FakeAuthPlugin()])
 
         with self.assertRaises(KeyError):
             core_controller.additional_controller(identifier='nope')
 
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
-                                           additional_controller_classes=[AdditionalController])
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
 
         self.assertIsNotNone(core_controller.additional_controller(identifier='test.controller.additional'))
 
     def test_lifecycle(self):
         """
         """
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+
         additional = core_controller.additional_controller('test.controller.additional')
 
         self.assertTrue(additional.is_ready)
@@ -105,21 +109,26 @@ class TestCoreController(TestCase):
         """
         """
         GASDKLibrary().register_sdk('default', tstdk)
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
 
         with patch.object(core_controller.sessions_controller, 'get_session', return_value=None):
             with patch.object(core_controller.sessions_controller, 'get_session', return_value=None):
-                result = core_controller.execute_model_request(request)
-                self.assertEquals(result.__class__, GAResponseFailure)
-                self.assertEquals(result.content[0].type, GAError.TYPE_UNAUTHORIZED)
+                with patch.object(FakeAuthPlugin, 'authenticate', return_value=None):
+                    result = core_controller.execute_model_request(request)
+                    self.assertEquals(result.__class__, GAResponseFailure)
+                    self.assertEquals(result.content[0].type, GAError.TYPE_UNAUTHORIZED)
 
     def test_execute_model_request_with_create_session(self):
         """
         """
         GASDKLibrary().register_sdk('default', tstdk)
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='root', value=None)]
 
@@ -133,20 +142,22 @@ class TestCoreController(TestCase):
         """
         """
         GASDKLibrary().register_sdk('default', tstdk)
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
 
-        with patch.object(core_controller.sessions_controller, 'get_session_identifier', return_value='token'):
-            with patch.object(core_controller.sessions_controller, 'get_session', return_value=GASession(garuda_uuid='test-garuda', root_object=tstdk.GARoot())):
-                result = core_controller.execute_model_request(request)
-                self.assertEquals(result.__class__, GAResponseFailure)  # nothing exists that's fine
+        result = core_controller.execute_model_request(request)
+        self.assertEquals(result.__class__, GAResponseSuccess)  # nothing exists that's fine
 
     def test_execute_event_request_with_invalid_session(self):
         """
         """
         GASDKLibrary().register_sdk('default', tstdk)
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
 
@@ -161,11 +172,17 @@ class TestCoreController(TestCase):
         """
         """
         GASDKLibrary().register_sdk('default', tstdk)
-        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6}, additional_controller_classes=[AdditionalController])
+        core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
+                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
 
-        with patch.object(core_controller.sessions_controller, 'get_session', return_value=GASession(garuda_uuid='test-garuda')):
+        session = GASession(garuda_uuid='test-garuda')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'toto'
+
+        with patch.object(core_controller.sessions_controller, 'get_session', return_value=session):
             result = core_controller.execute_events_request(request)
             self.assertEquals(result[0].__class__, GASession)
             self.assertEquals(result[1], None)

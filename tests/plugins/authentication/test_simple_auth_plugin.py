@@ -32,7 +32,7 @@ class TestSimpleAuthPlugin(TestCase):
         auth_plugin = GASimpleAuthenticationPlugin()
         self.assertTrue(auth_plugin.should_manage(request='fake'))
 
-    def test_get_session_identifier(self):
+    def test_extract_session_identifier(self):
         """
         """
         request = GARequest(action=GARequest.ACTION_READ)
@@ -40,7 +40,7 @@ class TestSimpleAuthPlugin(TestCase):
 
         auth_plugin = GASimpleAuthenticationPlugin()
 
-        self.assertEquals(auth_plugin.get_session_identifier(request=request), 'token')
+        self.assertEquals(auth_plugin.extract_session_identifier(request=request), 'token')
 
     def test_authenticate_without_auth_function(self):
         """

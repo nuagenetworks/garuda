@@ -30,7 +30,7 @@ class GASimpleAuthenticationPlugin(GAAuthenticationPlugin):
         """
         return True
 
-    def get_session_identifier(self, request):
+    def extract_session_identifier(self, request):
         """
         """
         return request.token

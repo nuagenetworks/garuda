@@ -6,28 +6,9 @@ from mock import patch
 from unittest import TestCase
 
 from garuda.core.controllers import GACoreController
-from garuda.core.plugins import GAAuthenticationPlugin
 from garuda.core.models import GAPluginManifest, GASession, GARequest
 
-
-class FakeAuthPlugin(GAAuthenticationPlugin):
-
-    @classmethod
-    def manifest(self):
-        return GAPluginManifest(name='test.fake.auth', version=1.0, identifier="test.fake.auth")
-
-    def authenticate(self, request=None, session=None):
-        root = NURESTRootObject()
-        root.id = str(uuid4())
-        root.api_key = str(uuid4())
-        root.user_name = "Test"
-        return root
-
-    def should_manage(self, request):
-        return True
-
-    def get_session_identifier(self, request):
-        return request.token
+from tests.helpers import FakeAuthPlugin
 
 
 class GASessionsControllerTestCase(TestCase):
@@ -65,12 +46,12 @@ class GASessionsControllerTestCase(TestCase):
         self.assertEquals(self.sessions_controller.identifier(), 'garuda.controller.sessions')
         self.assertEquals(self.sessions_controller.__class__.identifier(), 'garuda.controller.sessions')
 
-    def test_get_session_identifier(self):
+    def test_extract_session_identifier(self):
         """
         """
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.token = 'token'
-        identifier = self.sessions_controller.get_session_identifier(request=request)
+        identifier = self.sessions_controller.extract_session_identifier(request=request)
         self.assertEquals(identifier, 'token')
 
     def test_create_session(self):

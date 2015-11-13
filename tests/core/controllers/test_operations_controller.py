@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 from mock import patch
+from bambou import NURESTRootObject
 
 from garuda.core.controllers import GAOperationsController
 from garuda.core.models import GAContext, GASession, GARequest, GAResource, GAError, GAStoragePluginQueryResponse
@@ -128,6 +129,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action='not-good')
         request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
 
@@ -159,6 +162,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_READALL)
         request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
 
@@ -183,6 +188,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_COUNT)
         request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
 
@@ -208,6 +215,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_READ)
         request.resources = [GAResource(name='enterprise', value='id')]
 
@@ -232,6 +241,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value='id')]
 
@@ -256,6 +267,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_UPDATE)
         request.resources = [GAResource(name='enterprise', value='id')]
 
@@ -280,6 +293,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_DELETE)
         request.resources = [GAResource(name='enterprise', value='id')]
 
@@ -304,6 +319,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action=GARequest.ACTION_ASSIGN)
         request.resources = [GAResource(name='enterprise', value='id')]
 

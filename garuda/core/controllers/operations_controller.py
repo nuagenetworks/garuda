@@ -20,7 +20,10 @@ class GAOperationsController(object):
         action = self.context.request.action
         resources = self.context.request.resources
 
-        self.user_identifier = self.context.session.root_object.id if self.context.session.root_object else 'system'
+        self.user_identifier = self.context.session.root_object.id
+
+        if not self.user_identifier:
+            raise Exception('Session must contain an id for the root-object')
 
         if len(resources) == 2:
             parent_resource = resources[0]

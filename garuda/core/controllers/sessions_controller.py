@@ -39,11 +39,11 @@ class GASessionsController(GAPluginController):
         """
         return GAAuthenticationPlugin
 
-    def get_session_identifier(self, request):
+    def extract_session_identifier(self, request):
         """
         """
         plugin = self._plugin_for_request(request)
-        return plugin.get_session_identifier(request) if plugin else None
+        return plugin.extract_session_identifier(request) if plugin else None
 
     @property
     def local_sessions_redis_key(self):

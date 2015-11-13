@@ -15,9 +15,9 @@ class GAAuthenticationPlugin(GAPlugin):
     def extract_session_identifier(self, request):
         """
         """
-        return
+        raise NotImplementedError("%s must implement extract_session_identifier method" % self)
 
     def authenticate(self, request):
         """
         """
-        raise NotImplementedError("%s should implement authenticate method" % self)
+        raise NotImplementedError("%s must implement authenticate method" % self)

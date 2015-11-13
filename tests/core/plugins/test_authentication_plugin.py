@@ -11,12 +11,9 @@ class TestAuthenticationPlugin(TestCase):
         """
         plugin = GAAuthenticationPlugin()
         self.assertTrue(plugin.should_manage(request='fake'))
-        self.assertIsNone(plugin.extract_session_identifier(request='fake'))
 
-    def test_auth_required(self):
-        """
-        """
-        plugin = GAAuthenticationPlugin()
+        with self.assertRaises(NotImplementedError):
+            self.assertIsNone(plugin.extract_session_identifier(request='fake'))
 
         with self.assertRaises(NotImplementedError):
             plugin.authenticate(request='request')
