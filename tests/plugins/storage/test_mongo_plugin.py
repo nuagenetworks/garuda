@@ -44,12 +44,12 @@ class TestMongoPlugin(TestCase):
         """
         """
         self.mongo_plugin.mongo.drop_database('unit_test')
-        self.core_controller.redis.flushall()
+        self.core_controller.redis.flushdb()
 
     def tearDown(self):
         """
         """
-        self.core_controller.redis.flushall()
+        self.core_controller.redis.flushdb()
         self.mongo_plugin.mongo.drop_database('unit_test')
 
     def test_db_init_function(self):

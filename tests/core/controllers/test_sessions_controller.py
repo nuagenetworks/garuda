@@ -32,12 +32,12 @@ class GASessionsControllerTestCase(TestCase):
         """
         """
         self.core_controller.start()
-        self.sessions_controller.redis.flushall()
+        self.sessions_controller.redis.flushdb()
 
     def tearDown(self):
         """
         """
-        self.sessions_controller.redis.flushall()
+        self.sessions_controller.redis.flushdb()
         self.core_controller.stop()
 
     def test_identifier(self):

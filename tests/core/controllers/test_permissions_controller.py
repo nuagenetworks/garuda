@@ -39,7 +39,7 @@ class TestPermissionsController(TestCase):
 
         cls.storage_controller = cls.core_controller.storage_controller
 
-        cls.core_controller.redis.flushall()
+        cls.core_controller.redis.flushdb()
 
         cls.core_controller.start()
         cls.permissions_controller = cls.core_controller.permissions_controller
@@ -81,14 +81,14 @@ class TestPermissionsController(TestCase):
     def tearDownClass(cls):
         """
         """
-        cls.core_controller.redis.flushall()
+        cls.core_controller.redis.flushdb()
         cls.core_controller.stop()
         cls.mongo_plugin.mongo.drop_database('permissions_test')
 
     def setUp(self):
         """
         """
-        self.core_controller.redis.flushall()
+        self.core_controller.redis.flushdb()
 
     def _assertHasPermission(self, target, permission):
         """
