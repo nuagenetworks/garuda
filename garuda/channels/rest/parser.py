@@ -77,7 +77,6 @@ class GAPathParser(object):
                 if name == 'events':
                     result.append(GAResource('event', value))
                 else:
-                    print name
                     result.append(GAResource(NURESTModelController.get_first_model_with_resource_name(name).rest_name, value))
 
             index = index + 1

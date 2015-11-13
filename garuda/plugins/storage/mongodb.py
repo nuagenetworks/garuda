@@ -119,10 +119,10 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def create(self, user_identifier, resource, parent=None):
         """
         """
-        # if parent and not self.permissions_controller.has_permission(resource=user_identifier, target=parent, permission='write'):
-        #     return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_UNAUTHORIZED,
-        #                                                         title='Permission Denied',
-        #                                                         description='You do not have permission to create this object')
+        if parent and not self.permissions_controller.has_permission(resource=user_identifier, target=parent, permission='write'):
+            return GAStoragePluginQueryResponse.init_with_error(error_type=GAError.TYPE_UNAUTHORIZED,
+                                                                title='Permission Denied',
+                                                                description='You do not have permission to create this object')
 
         resource.creation_date = time.time()
         resource.last_updated_date = resource.creation_date
@@ -221,6 +221,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         """
         self.db[parent.rest_name].update({'_id': {'$eq': ObjectId(parent.id)}}, {'$set': {'_rel_%s' % resource_name: [r.id for r in resources]}})
+        return GAStoragePluginQueryResponse.init_with_data(data=resources)
 
     # UTILITIES
 

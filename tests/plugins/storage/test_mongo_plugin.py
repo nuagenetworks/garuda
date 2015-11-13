@@ -733,22 +733,22 @@ class TestMongoPlugin(TestCase):
         self.assertEquals(len(ret.errors), 1)
         self.assertEquals(ret.errors[0].type, GAError.TYPE_UNAUTHORIZED)
 
-    # def test_create_chidren_without_permission(self):
-    #     """
-    #     """
-    #     r1 = tstdk.GAEnterprise(name='r1', description='the enterprise 1')
-    #     r2 = tstdk.GAEnterprise(name='r2', description='the enterprise 1')
-    #
-    #     e1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
-    #     u1 = tstdk.GAUser(username='primalmotion1', full_name='A')
-    #
-    #     self.storage_controller.create(user_identifier='system', resource=r1, parent=None)
-    #     self.storage_controller.create(user_identifier='system', resource=r2, parent=None)
-    #
-    #     self.storage_controller.create(user_identifier=r1.id, resource=e1, parent=None)
-    #
-    #     ret = self.storage_controller.create(user_identifier=r2.id, resource=u1, parent=e1)
-    #
-    #     self.assertEquals(len(ret.errors), 1)
-    #     self.assertEquals(ret.errors[0].type, GAError.TYPE_UNAUTHORIZED)
+    def test_create_chidren_without_permission(self):
+        """
+        """
+        r1 = tstdk.GAEnterprise(name='r1', description='the enterprise 1')
+        r2 = tstdk.GAEnterprise(name='r2', description='the enterprise 1')
+
+        e1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        u1 = tstdk.GAUser(username='primalmotion1', full_name='A')
+
+        self.storage_controller.create(user_identifier='system', resource=r1, parent=None)
+        self.storage_controller.create(user_identifier='system', resource=r2, parent=None)
+
+        self.storage_controller.create(user_identifier=r1.id, resource=e1, parent=None)
+
+        ret = self.storage_controller.create(user_identifier=r2.id, resource=u1, parent=e1)
+
+        self.assertEquals(len(ret.errors), 1)
+        self.assertEquals(ret.errors[0].type, GAError.TYPE_UNAUTHORIZED)
 
