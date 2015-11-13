@@ -20,10 +20,13 @@ class GAOperationsController(object):
         action = self.context.request.action
         resources = self.context.request.resources
 
-        self.user_identifier = self.context.session.root_object.id
+        if not self.context.session.root_object or not self.context.session.root_object.id:
+            self.context.add_error(GAError(type=GAError.TYPE_AUTHENTICATIONFAILURE,
+                                           title='Not authenticated',
+                                           description='You must be authenticated to perform this request.'))
+            return
 
-        if not self.user_identifier:
-            raise Exception('Session must contain an id for the root-object')
+        self.user_identifier = self.context.session.root_object.id
 
         if len(resources) == 2:
             parent_resource = resources[0]
@@ -50,7 +53,9 @@ class GAOperationsController(object):
             self._perform_write_operation()
 
         else:
-            raise Exception('Unknown action %s.' % action)
+            self.context.add_error(GAError(type=GAError.TYPE_INVALID,
+                                           title='Bad request',
+                                           description='Unknown action.'))
 
     # UTILITIES
 

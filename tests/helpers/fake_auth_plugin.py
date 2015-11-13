@@ -13,15 +13,15 @@ class FakeAuthPlugin(GAAuthenticationPlugin):
     def manifest(self):
         """
         """
-        return GAPluginManifest(name='test.fake.auth', version=1.0, identifier="test.fake.auth")
+        return GAPluginManifest(name='test.fake.auth', version=1.0, identifier='test.fake.auth')
 
     def authenticate(self, request=None, session=None):
         """
         """
         root = NURESTRootObject()
-        root.id = str(uuid4())
-        root.api_key = str(uuid4())
-        root.user_name = "Test"
+        root.id = 'id'
+        root.api_key = 'token'
+        root.user_name = 'username'
         return root
 
     def should_manage(self, request):

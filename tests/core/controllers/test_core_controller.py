@@ -110,7 +110,7 @@ class TestCoreController(TestCase):
         """
         GASDKLibrary().register_sdk('default', tstdk)
         core_controller = GACoreController(garuda_uuid='test-garuda', redis_info={'host': '127.0.0.1', 'port': 6379, 'db': 6},
-                                           additional_controller_classes=[AdditionalController], authentication_plugins=[FakeAuthPlugin()])
+                                           additional_controller_classes=[AdditionalController])
 
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
@@ -147,9 +147,11 @@ class TestCoreController(TestCase):
 
         request = GARequest(action=GARequest.ACTION_CREATE)
         request.resources = [GAResource(name='enterprise', value=None)]
+        request.token = 'toto'
 
-        result = core_controller.execute_model_request(request)
-        self.assertEquals(result.__class__, GAResponseSuccess)  # nothing exists that's fine
+        with patch.object(core_controller.sessions_controller, 'get_session', return_value=GASession(garuda_uuid='test-garuda', root_object=tstdk.GARoot())):
+            result = core_controller.execute_model_request(request)
+            self.assertEquals(result.__class__, GAResponseFailure)  # nothing exists that's fine
 
     def test_execute_event_request_with_invalid_session(self):
         """

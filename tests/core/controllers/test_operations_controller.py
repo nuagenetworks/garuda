@@ -143,21 +143,6 @@ class TestOperationsController(TestCase):
             self.assertEquals(len(context.errors), 1)
             self.assertEquals(context.errors[0].type, GAError.TYPE_NOTFOUND)
 
-    def test_run_with_unknown_action(self):
-        """
-        """
-        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
-        request = GARequest(action='not-good')
-        request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
-
-        context = GAContext(session=session, request=request)
-
-        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
-
-        with patch.object(self.fake_storage_controller, 'get', return_value=tstdk.GAEnterprise(name='enterprise1')):
-            with self.assertRaises(Exception):
-                operations_controller.run()
-
     def test_run_readall(self):
         """
         """
@@ -936,6 +921,8 @@ class TestOperationsController(TestCase):
         """
         """
         session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        session.root_object = NURESTRootObject()
+        session.root_object.id = 'test'
         request = GARequest(action='UKNOWN')
         request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
 
@@ -944,5 +931,22 @@ class TestOperationsController(TestCase):
 
         operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
 
-        with self.assertRaises(Exception):
-            operations_controller.run()
+        operations_controller.run()
+        self.assertEquals(len(context.errors), 1)
+        self.assertEquals(context.errors[0].type, GAError.TYPE_INVALID)
+
+    def test_run_without_authenticated_session(self):
+        """
+        """
+        session = GASession(garuda_uuid='xxx-xxx-xxx-xxx')
+        request = GARequest(action='UKNOWN')
+        request.resources = [GAResource(name='enterprise', value='id'), GAResource(name='user', value=None)]
+
+        context = GAContext(session=session, request=request)
+        context.performed_delegates = []
+
+        operations_controller = GAOperationsController(context=context, logic_controller=self.fake_logic_controller, storage_controller=self.fake_storage_controller)
+
+        operations_controller.run()
+        self.assertEquals(len(context.errors), 1)
+        self.assertEquals(context.errors[0].type, GAError.TYPE_AUTHENTICATIONFAILURE)
