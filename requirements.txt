@@ -7,4 +7,4 @@ pymongo
 redis
 setproctitle
 # Use my PR for now, later change this to `pypred`
--e git+git@github.com:t00f/pypred.git#egg=pypred
+-e git+https://github.com/t00f/pypred.git#egg=pypred
