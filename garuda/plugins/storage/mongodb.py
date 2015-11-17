@@ -9,6 +9,8 @@ from bson import ObjectId
 from garuda.core.models import GAError, GAPluginManifest, GAStoragePluginQueryResponse
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import GASDKLibrary
+from garuda.core.lib.predicate import MongoDBPredicateConverter
+
 
 class GAMongoStoragePlugin(GAStoragePlugin):
     """
@@ -25,6 +27,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         self.sdk_identifier = sdk_identifier
         self._permissions_controller = None
         self.db_initialization_function = db_initialization_function
+        self._predicate_converter = MongoDBPredicateConverter()
 
     @classmethod
     def manifest(cls):
@@ -76,7 +79,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         query_filter = {}
         if filter:
-            query_filter = self._parse_filter(filter)
+            query_filter = self._predicate_converter.convert(filter)
 
         if identifier:
             data = self.db[resource_name].find_one({'$and': [{'_id': ObjectId(identifier)}, query_filter]})
@@ -240,7 +243,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             skip = page * page_size
 
         if filter:
-            query_filter = self._parse_filter(filter)
+            query_filter = self._predicate_converter.convert(filter)
 
         if parent and parent.fetcher_for_rest_name(resource_name).relationship == 'member':
 
@@ -317,42 +320,3 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             data['lastUpdatedDate'] = float(calendar.timegm(data['lastUpdatedDate'].timetuple()))
 
         return data
-
-    def _parse_filter(self, filter):  # pragma: no cover
-        """
-        """
-        # @TODO: this is a very stupid predicate parsing implementation
-
-        try:
-            components = filter.split(' ')
-            attribute = components[0]
-            operator = components[1].lower()
-            value = components[2]
-
-            # if operator == 'contains': operator = '$in'
-            if operator == 'equals':
-                operator = '$eq'
-            elif operator == 'in':
-                operator = '$in'
-            elif operator == 'not in':
-                operator = '$nin'
-            elif operator == '==':
-                operator = '$eq'
-            elif operator == '!=':
-                operator = '$neq'
-            elif operator == '>':
-                operator = '$gt'
-            elif operator == '>=':
-                operator = '$gte'
-            elif operator == '<':
-                operator = '$lt'
-            elif operator == '<=':
-                operator = '$lte'
-
-            if attribute == 'ID':
-                attribute = '_id'
-                value = ObjectId(value)
-
-            return {attribute: {operator: value}}
-        except:
-            return {'$text': {'$search': filter}}
