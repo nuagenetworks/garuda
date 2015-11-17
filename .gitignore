@@ -37,4 +37,6 @@ nosetests.xml
 .project
 .pydevproject
 .tmp
-Garuda.sublime-workspace
+
+# generated files
+parsetab.py
