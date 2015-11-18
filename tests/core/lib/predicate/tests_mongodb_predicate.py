@@ -123,3 +123,6 @@ class TestGAMongoPredicateConverter(TestCase):
         """
         with self.assertRaises(GAPredicateConversionError):
             self.converter.convert('Nothing')
+
+        with self.assertRaises(GAPredicateConversionError):
+            self.converter.convert('Nothing to convert')

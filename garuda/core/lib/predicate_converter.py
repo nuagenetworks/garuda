@@ -22,14 +22,17 @@ class GAPredicateConverter(object):
     def convert(self, source):
         """
         """
-
-        ast = self._parser.parse(source, self._lexer)
+        ast = None
+        try:
+            ast = self._parser.parse(source, self._lexer)
+        except AttributeError as error:
+            raise GAPredicateConversionError("Could not convert predicate %s" % source)
 
         if self._parser.errors or self._lexer.errors:
             raise GAPredicateConversionError("Could not convert due to the following errors %s" % (self._parser.errors + self._lexer.errors))
 
         if type(ast) == Literal:
-            raise GAPredicateConversionError("Invalid predicate %s" % ast)
+            raise GAPredicateConversionError("Invalid predicate %s" % source)
 
         return self._convert_tree(ast)
 
