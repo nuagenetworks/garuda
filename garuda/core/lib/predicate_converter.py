@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from pypred import parser as pypred_parser
+from pypred.ast import Literal
 
 
 class GAPredicateConversionError(Exception):
@@ -26,6 +27,9 @@ class GAPredicateConverter(object):
 
         if self._parser.errors or self._lexer.errors:
             raise GAPredicateConversionError("Could not convert due to the following errors %s" % (self._parser.errors + self._lexer.errors))
+
+        if type(ast) == Literal:
+            raise GAPredicateConversionError("Invalid predicate %s" % ast)
 
         return self._convert_tree(ast)
 

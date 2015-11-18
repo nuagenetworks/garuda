@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 
 from unittest import TestCase
-from garuda.core.lib import GAMongoPredicateConverter
-
+from garuda.plugins.storage import GAMongoPredicateConverter
+from garuda.core.lib import GAPredicateConversionError
 
 class TestGAMongoPredicateConverter(TestCase):
     """
@@ -117,3 +117,9 @@ class TestGAMongoPredicateConverter(TestCase):
         """
         self.assertConvertEquals('ID == "abcd-1234-efgh"',
                 {'_id': {'$eq': '"abcd-1234-efgh"'}})
+
+    def test_invalid_predicate(self):
+        """
+        """
+        with self.assertRaises(GAPredicateConversionError):
+            self.converter.convert('Nothing')
