@@ -2,7 +2,6 @@
 
 from unittest import TestCase
 from garuda.plugins.storage import GAMongoPredicateConverter
-from garuda.core.lib import GAPredicateConversionError
 
 class TestGAMongoPredicateConverter(TestCase):
     """
@@ -124,8 +123,8 @@ class TestGAMongoPredicateConverter(TestCase):
     def test_invalid_predicate(self):
         """
         """
-        with self.assertRaises(GAPredicateConversionError):
+        with self.assertRaises(SyntaxError):
             self.converter.convert('Nothing')
 
-        with self.assertRaises(GAPredicateConversionError):
+        with self.assertRaises(SyntaxError):
             self.converter.convert('Nothing to convert')

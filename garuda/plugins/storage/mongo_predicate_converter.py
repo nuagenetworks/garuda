@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from garuda.core.lib import GAPredicateConverter, GAPredicateConversionError
+from garuda.core.lib import GAPredicateConverter
 
 from pypred.ast import LogicalOperator, CompareOperator, Literal, Number, Constant, Empty
 
@@ -58,4 +58,4 @@ class GAMongoPredicateConverter(GAPredicateConverter):
         if ast_type == LogicalOperator:
             return {self._operators[ast.type]: [self._convert_tree(ast.left), self._convert_tree(ast.right)]}
 
-        raise GAPredicateConversionError("%s not supported yet" % ast_type)
+        raise SyntaxError("%s not supported yet" % ast_type)

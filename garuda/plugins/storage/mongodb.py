@@ -9,7 +9,6 @@ from bson import ObjectId
 from garuda.core.models import GAError, GAPluginManifest, GAStoragePluginQueryResponse
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import GASDKLibrary
-from garuda.core.lib import GAPredicateConversionError
 from .mongo_predicate_converter import GAMongoPredicateConverter
 
 
@@ -82,9 +81,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if filter:
             try:
                 query_filter = self._predicate_converter.convert(filter)
-            except GAPredicateConversionError:
-                pass
-        print query_filter
+            except SyntaxError:
+                return GAStoragePluginQueryResponse(data=[], count=0)
 
         if identifier:
             data = self.db[resource_name].find_one({'$and': [{'_id': ObjectId(identifier)}, query_filter]})
@@ -250,10 +248,8 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if filter:
             try:
                 query_filter = self._predicate_converter.convert(filter)
-            except GAPredicateConversionError:
-                pass
-
-        print query_filter
+            except SyntaxError as ex:
+                return GAStoragePluginQueryResponse(data=[], count=0)
 
         if parent and parent.fetcher_for_rest_name(resource_name).relationship == 'member':
 
