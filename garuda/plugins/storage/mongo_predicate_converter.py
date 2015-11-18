@@ -42,12 +42,15 @@ class GAMongoPredicateConverter(GAPredicateConverter):
         if ast_type == Empty:
             return ''
 
-        if ast_type == Literal or ast_type == Number:
+        if ast_type == Number:
+            return ast.value
+
+        if ast_type == Literal:
 
             if ast.value in self._keywords:
                 return self._keywords[ast.value]
 
-            return ast.value
+            return ast.value.strip("'\"")
 
         if ast_type == CompareOperator:
             return {self._convert_tree(ast.left): {self._operators[ast.type]: self._convert_tree(ast.right)}}
