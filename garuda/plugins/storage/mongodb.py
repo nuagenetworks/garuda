@@ -196,32 +196,33 @@ class GAMongoStoragePlugin(GAStoragePlugin):
     def delete_multiple(self, user_identifier, resources, cascade=True):
         """
         """
+        ids = []
+
         for resource in resources:
 
-            if cascade:
+            ids.append(ObjectId(resource.id))
 
-                data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)})  # this could be optimized by only getting the children keys
+            self.permissions_controller.remove_all_permissions_for_target(target=resource)
 
-                if not data:
-                    return
+            data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)})  # this could be optimized by only getting the children keys
 
-                for children_rest_name in resource.children_rest_names:
+            if not data:
+                return
 
-                    children_key = '_%s' % children_rest_name
+            for children_rest_name in resource.children_rest_names:
 
-                    if children_key not in data or not len(data[children_key]):  # pragma: no cover
-                        # there is a feature with the python optimizer that makes coverage unable to mark this as covered
-                        # I tried manually, its fine
-                        continue
+                children_key = '_%s' % children_rest_name
 
-                    klass = NURESTModelController.get_first_model_with_rest_name(children_rest_name)
-                    child_resources = [klass(id=identifier) for identifier in data[children_key]]
+                if children_key not in data or not len(data[children_key]):  # pragma: no cover
+                    continue
 
-                    # recursively delete children
-                    self.delete_multiple(user_identifier=user_identifier, resources=child_resources, cascade=True)
+                klass = NURESTModelController.get_first_model_with_rest_name(children_rest_name)
+                child_resources = [klass(id=identifier) for identifier in data[children_key]]
 
-        self.db[resources[0].rest_name].remove({'_id': {'$in': [ObjectId(resource.id) for resource in resources]}})
-        self.permissions_controller.remove_all_permissions_for_target(target=resource)
+                # recursively delete children
+                self.delete_multiple(user_identifier=user_identifier, resources=child_resources, cascade=True)
+
+        self.db[resources[0].rest_name].remove({'_id': {'$in': ids}})
 
     def assign(self, user_identifier, resource_name, resources, parent):
         """
@@ -248,7 +249,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         if filter:
             try:
                 query_filter = self._predicate_converter.convert(filter)
-            except SyntaxError as ex:
+            except SyntaxError:
                 return GAStoragePluginQueryResponse(data=[], count=0)
 
         if parent and parent.fetcher_for_rest_name(resource_name).relationship == 'member':
