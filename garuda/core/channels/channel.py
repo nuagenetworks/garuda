@@ -17,7 +17,7 @@ class GAChannel(object):
     def manifest(cls):  # pragma: no cover
         """
         """
-        raise NotImplementedError("manifest method must be implemented")
+        raise NotImplementedError('manifest method must be implemented')
 
     @property
     def core_controller(self):  # pragma: no cover

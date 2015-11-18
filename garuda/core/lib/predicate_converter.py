@@ -18,17 +18,17 @@ class GAPredicateConverter(object):
         try:
             ast = parser.parse(source, lexer)
         except AttributeError:
-            raise SyntaxError("Could not convert predicate %s" % source)
+            raise SyntaxError('Could not convert predicate %s' % source)
 
         if parser.errors or lexer.errors:
-            raise SyntaxError("Could not convert due to the following errors %s" % (parser.errors + lexer.errors))
+            raise SyntaxError('Could not convert due to the following errors %s' % (parser.errors + lexer.errors))
 
         if type(ast) == Literal:
-            raise SyntaxError("Invalid predicate %s" % source)
+            raise SyntaxError('Invalid predicate %s' % source)
 
-        return self._convert_tree(ast)
+        return self.convert_tree(ast)  # pragma: no cover
 
-    def _convert_tree(self, ast):
+    def convert_tree(self, ast):
         """
         """
-        raise NotImplemented('%s should override _convert_tree method.')
+        raise NotImplementedError('convert_tree must be implemented.')

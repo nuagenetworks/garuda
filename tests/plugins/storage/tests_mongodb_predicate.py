@@ -72,6 +72,9 @@ class TestGAMongoPredicateConverter(TestCase):
         self.assertConvertEquals('defaultValue is null',
                     {'defaultValue': {'$eq': 'null'}})
 
+        self.assertConvertEquals('defaultValue is undefined',
+                    {'defaultValue': {'$eq': 'null'}})
+
         self.assertConvertEquals('defaultValue is empty',
                     {'defaultValue': {'$eq': ''}})
 

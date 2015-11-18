@@ -130,6 +130,16 @@ class TestMongoPlugin(TestCase):
         """
         self.assertIsNone(self.storage_controller.get(user_identifier='owner_identifier', resource_name=tstdk.GAEnterprise.rest_name, filter='name == notgood').data)
 
+    def test_get_enterprise_with_wrong_filter(self):
+        """
+        """
+        enterprise = tstdk.GAEnterprise(name='enterprise1', description='the enterprise 1')
+        self.storage_controller.create(user_identifier='owner_identifier', resource=enterprise, parent=None)
+
+        ret = self.storage_controller.get(user_identifier='owner_identifier', resource_name=tstdk.GAEnterprise.rest_name, filter='name == ')
+
+        self.assertEquals(ret.count, 0)
+
     def test_count_enterprises(self):
         """
         """
@@ -189,6 +199,21 @@ class TestMongoPlugin(TestCase):
         self.assertEquals(ret.data[0].id, enterprise2.id)
         self.assertEquals(ret.data[0].name, enterprise2.name)
         self.assertEquals(ret.data[0].description, enterprise2.description)
+
+    def test_get_all_enterprises_with_bad_filter(self):
+        """
+        """
+        enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        enterprise2 = tstdk.GAEnterprise(name='enterprise', description='the enterprise')
+        enterprise3 = tstdk.GAEnterprise(name='enterprise 3', description='the enterprise 3')
+
+        self.storage_controller.create(user_identifier='owner_identifier', resource=enterprise1, parent=None)
+        self.storage_controller.create(user_identifier='owner_identifier', resource=enterprise2, parent=None)
+        self.storage_controller.create(user_identifier='owner_identifier', resource=enterprise3, parent=None)
+
+        ret = self.storage_controller.get_all(user_identifier='owner_identifier', resource_name=tstdk.GAEnterprise.rest_name, parent=None, filter='name == ')
+        self.assertEquals(ret.count, 0)
+        self.assertEquals(len(ret.data), 0)
 
     def test_update_enterprise(self):
         """
