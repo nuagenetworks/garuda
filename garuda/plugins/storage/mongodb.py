@@ -9,7 +9,8 @@ from bson import ObjectId
 from garuda.core.models import GAError, GAPluginManifest, GAStoragePluginQueryResponse
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import GASDKLibrary
-from garuda.core.lib import GAMongoPredicateConverter, GAPredicateConversionError
+from garuda.core.lib import GAPredicateConversionError
+from .mongo_predicate_converter import GAMongoPredicateConverter
 
 
 class GAMongoStoragePlugin(GAStoragePlugin):

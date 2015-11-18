@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from .predicate_converter import GAPredicateConverter, GAPredicateConversionError
+from garuda.core.lib import GAPredicateConverter, GAPredicateConversionError
 
 from pypred.ast import LogicalOperator, CompareOperator, Literal, Number, Constant, Empty
 
