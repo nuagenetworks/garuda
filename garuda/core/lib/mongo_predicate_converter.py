@@ -1,15 +1,15 @@
 # -*- coding:utf-8 -*-
 
-from .abstract_converter import AbstractPredicateConverter
+from .predicate_converter import GAPredicateConverter, GAPredicateConversionError
 
 from pypred.ast import LogicalOperator, CompareOperator, Literal, Number, Constant, Empty
 
-class MongoDBPredicateConverter(AbstractPredicateConverter):
+class GAMongoPredicateConverter(GAPredicateConverter):
     """
     """
 
     def __init__(self):
-        super(MongoDBPredicateConverter, self).__init__()
+        super(GAMongoPredicateConverter, self).__init__()
 
         self._operators = {
             'and': '$and',
@@ -55,4 +55,4 @@ class MongoDBPredicateConverter(AbstractPredicateConverter):
         if ast_type == LogicalOperator:
             return {self._operators[ast.type]: [self._convert_tree(ast.left), self._convert_tree(ast.right)]}
 
-        raise Exception("%s not supported yet" % ast_type)
+        raise GAPredicateConversionError("%s not supported yet" % ast_type)

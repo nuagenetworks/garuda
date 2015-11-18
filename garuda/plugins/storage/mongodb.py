@@ -9,7 +9,7 @@ from bson import ObjectId
 from garuda.core.models import GAError, GAPluginManifest, GAStoragePluginQueryResponse
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import GASDKLibrary
-from garuda.core.lib.predicate import MongoDBPredicateConverter
+from garuda.core.lib import GAMongoPredicateConverter, GAPredicateConversionError
 
 
 class GAMongoStoragePlugin(GAStoragePlugin):
@@ -27,7 +27,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         self.sdk_identifier = sdk_identifier
         self._permissions_controller = None
         self.db_initialization_function = db_initialization_function
-        self._predicate_converter = MongoDBPredicateConverter()
+        self._predicate_converter = GAMongoPredicateConverter()
 
     @classmethod
     def manifest(cls):
@@ -79,7 +79,11 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         query_filter = {}
         if filter:
-            query_filter = self._predicate_converter.convert(filter)
+            try:
+                query_filter = self._predicate_converter.convert(filter)
+            except GAPredicateConversionError:
+                pass
+        print query_filter
 
         if identifier:
             data = self.db[resource_name].find_one({'$and': [{'_id': ObjectId(identifier)}, query_filter]})
@@ -243,7 +247,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             skip = page * page_size
 
         if filter:
-            query_filter = self._predicate_converter.convert(filter)
+            try:
+                query_filter = self._predicate_converter.convert(filter)
+            except GAPredicateConversionError:
+                pass
+
+        print query_filter
 
         if parent and parent.fetcher_for_rest_name(resource_name).relationship == 'member':
 

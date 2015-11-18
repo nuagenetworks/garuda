@@ -1,17 +1,17 @@
 # -*- coding:utf-8 -*-
 
 from unittest import TestCase
-from garuda.core.lib.predicate import MongoDBPredicateConverter
+from garuda.core.lib import GAMongoPredicateConverter
 
 
-class TestMongoDBPredicateConverter(TestCase):
+class TestGAMongoPredicateConverter(TestCase):
     """
     """
 
     def setUp(self):
         """
         """
-        self.converter = MongoDBPredicateConverter()
+        self.converter = GAMongoPredicateConverter()
 
     def assertConvertEquals(self, source, expected_result):
         """
