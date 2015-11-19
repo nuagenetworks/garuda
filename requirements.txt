@@ -1,4 +1,3 @@
-bambou
 falcon
 gevent>=1.1b6
 gunicorn
@@ -6,5 +5,6 @@ msgpack-python
 pymongo
 redis
 setproctitle
+-e git+https://github.com/nuagenetworks/bambou.git#egg=bambou
 # Use my PR for now, later change this to `pypred`
 -e git+https://github.com/t00f/pypred.git#egg=pypred

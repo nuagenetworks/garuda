@@ -2,6 +2,7 @@
 
 import os
 from setuptools  import setup
+import pip
 
 setup(
     name='garuda',
@@ -23,7 +24,7 @@ setup(
     author_email='christophe.serafin@nuagenetworks.net, antoine@nuagenetworks.net',
     description='Garuda is the future. No more. No less.',
     long_description=open('README.md').read(),
-    install_requires=[line for line in open('requirements.txt')],
+    install_requires=[str(ir.req) for ir in pip.req.parse_requirements('requirements.txt', session=pip.download.PipSession())],
     license='TODO',
     url='TODO'
 )
