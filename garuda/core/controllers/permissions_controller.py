@@ -81,7 +81,7 @@ class GAPermissionsController(GAPluginController):
         """
         """
         key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource)
-        keys = self.redis.keys(key_pattern)
+        keys = list(self.redis.scan_iter(match=key_pattern))
         self.redis.delete(*keys)
 
     def remove_all_permissions_for_target_ids(self, target_ids):
@@ -89,8 +89,9 @@ class GAPermissionsController(GAPluginController):
         """
         keys = []
 
-        for target_id in target_ids:
-            keys += self.redis.keys('permission:*:%s:*' % target_id)
+        for key in self.redis.scan_iter(match='permission:*'):
+            if key.split(":")[5] in target_ids:
+                keys.append(key)
 
         if len(keys):
             self.redis.delete(*keys)
@@ -188,7 +189,7 @@ class GAPermissionsController(GAPluginController):
 
         pipeline = self.redis.pipeline()
         pipeline.multi()
-        for key in self.redis.keys(key_pattern):
+        for key in self.redis.scan_iter(match=key_pattern):
             self._remove_implicit_child_permission(parent_permission_id=self._extract_permission_id_from_key(key))
             pipeline.delete(key)
         pipeline.execute()
