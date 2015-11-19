@@ -11,6 +11,4 @@ ADD . /install
 
 RUN cd /install && \
     pip install -r requirements.txt && \
-    python setup.py install && \
-    rm -rf /install && \
-    rm -rf /root/.cache/pip
+    python setup.py install
