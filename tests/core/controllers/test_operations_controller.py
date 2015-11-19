@@ -52,7 +52,7 @@ class FakeStorageController(object):
         """
         return GAStoragePluginQueryResponse()
 
-    def delete(self, user_identifier, resource, cascade):
+    def delete(self, user_identifier, resource):
         """
         """
         return GAStoragePluginQueryResponse()
@@ -531,7 +531,7 @@ class TestOperationsController(TestCase):
 
         context.request.action = GARequest.ACTION_DELETE
 
-        def mocked_delete(self, user_identifier, resource, cascade):
+        def mocked_delete(self, user_identifier, resource):
             """ """
             context.object = 'did_delete'
             return GAStoragePluginQueryResponse()

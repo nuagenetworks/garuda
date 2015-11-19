@@ -273,7 +273,7 @@ class TestMongoPlugin(TestCase):
         """
         """
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
-        self.storage_controller.delete_multiple(resources=[enterprise1], cascade=True, user_identifier=None)
+        self.storage_controller.delete_multiple(resources=[enterprise1], user_identifier=None)
 
     def test_delete_multiple_enterprises_with_no_child(self):
         """
@@ -281,7 +281,7 @@ class TestMongoPlugin(TestCase):
         enterprise1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
         self.storage_controller.create(user_identifier='owner_identifier', resource=enterprise1, parent=None)
 
-        self.storage_controller.delete_multiple(resources=[enterprise1], cascade=True, user_identifier=None)
+        self.storage_controller.delete_multiple(resources=[enterprise1], user_identifier=None)
 
         ret = self.storage_controller.count(user_identifier='owner_identifier', resource_name=tstdk.GAEnterprise.rest_name, parent=None)
         self.assertEquals(ret.count, 0)

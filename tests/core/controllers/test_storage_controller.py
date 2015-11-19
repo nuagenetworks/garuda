@@ -110,13 +110,13 @@ class TestStorageController(TestCase):
         """
         """
         with patch.object(FakeStoragePlugin, 'delete', return_value='ok'):
-            self.assertEquals(self.storage_controller.delete(user_identifier='owner_identifier', resource=tstdk.GAEnterprise(name='enterprise1'), cascade=True), 'ok')
+            self.assertEquals(self.storage_controller.delete(user_identifier='owner_identifier', resource=tstdk.GAEnterprise(name='enterprise1')), 'ok')
 
     def test_delete_multiple(self):
         """
         """
         with patch.object(FakeStoragePlugin, 'delete_multiple', return_value='ok'):
-            self.assertEquals(self.storage_controller.delete_multiple(user_identifier='owner_identifier', resources=[tstdk.GAEnterprise(name='enterprise1')], cascade=True), 'ok')
+            self.assertEquals(self.storage_controller.delete_multiple(user_identifier='owner_identifier', resources=[tstdk.GAEnterprise(name='enterprise1')]), 'ok')
 
     def test_assign(self):
         """

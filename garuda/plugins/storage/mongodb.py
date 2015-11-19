@@ -9,6 +9,7 @@ from bson import ObjectId
 from garuda.core.models import GAError, GAPluginManifest, GAStoragePluginQueryResponse
 from garuda.core.plugins import GAStoragePlugin
 from garuda.core.lib import GASDKLibrary
+from garuda.core.lib import GAThreadManager
 from .mongo_predicate_converter import GAMongoPredicateConverter
 
 
@@ -173,7 +174,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
 
         return GAStoragePluginQueryResponse.init_with_data(data=resource)
 
-    def delete(self, user_identifier, resource, cascade=True):
+    def delete(self, user_identifier, resource):
         """
         """
 
@@ -189,25 +190,32 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 data[children_key].remove(resource.id)
                 self.db[resource.parent_type].update({'_id': {'$eq': ObjectId(resource.parent_id)}}, {'$set': data})
 
-        self.delete_multiple(user_identifier=user_identifier, resources=[resource], cascade=cascade)
+        self.delete_multiple(user_identifier=user_identifier, resources=[resource])
 
         return GAStoragePluginQueryResponse(data=resource)
 
-    def delete_multiple(self, user_identifier, resources, cascade=True):
+    def delete_multiple(self, user_identifier, resources):
         """
         """
+        deleted_object_ids = self._perform_delete_multiple(user_identifier=user_identifier, resources=resources)
+
+        GAThreadManager.start_thread(self.permissions_controller.remove_all_permissions_for_target_ids, target_ids=deleted_object_ids)
+
+    def _perform_delete_multiple(self, user_identifier, resources):
+        """
+        """
+        oids = []
         ids = []
 
         for resource in resources:
 
-            ids.append(ObjectId(resource.id))
+            oids.append(ObjectId(resource.id))
+            ids.append(resource.id)
 
-            self.permissions_controller.remove_all_permissions_for_target(target=resource)
-
-            data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)})  # this could be optimized by only getting the children keys
+            data = self.db[resource.rest_name].find_one({'_id': ObjectId(resource.id)})
 
             if not data:
-                return
+                return ids
 
             for children_rest_name in resource.children_rest_names:
 
@@ -220,9 +228,12 @@ class GAMongoStoragePlugin(GAStoragePlugin):
                 child_resources = [klass(id=identifier) for identifier in data[children_key]]
 
                 # recursively delete children
-                self.delete_multiple(user_identifier=user_identifier, resources=child_resources, cascade=True)
+                ids += self._perform_delete_multiple(user_identifier=user_identifier, resources=child_resources)
 
-        self.db[resources[0].rest_name].remove({'_id': {'$in': ids}})
+        self.db[resources[0].rest_name].remove({'_id': {'$in': oids}})
+
+        return ids
+
 
     def assign(self, user_identifier, resource_name, resources, parent):
         """

@@ -76,17 +76,17 @@ class GAStorageController(GAPluginController):
         plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
         return plugin.update(user_identifier=user_identifier, resource=resource) if plugin else None
 
-    def delete(self, user_identifier, resource, cascade=True):
+    def delete(self, user_identifier, resource):
         """
         """
         plugin = self._managing_plugin(resource_name=resource.rest_name, identifier=resource.id)
-        return plugin.delete(user_identifier=user_identifier, resource=resource, cascade=cascade) if plugin else None
+        return plugin.delete(user_identifier=user_identifier, resource=resource) if plugin else None
 
-    def delete_multiple(self, user_identifier, resources, cascade=True):
+    def delete_multiple(self, user_identifier, resources):
         """
         """
         plugin = self._managing_plugin(resource_name=resources[0].rest_name)
-        return plugin.delete_multiple(user_identifier=user_identifier, resources=resources, cascade=cascade) if plugin else None
+        return plugin.delete_multiple(user_identifier=user_identifier, resources=resources) if plugin else None
 
     def assign(self, user_identifier, resource_name, resources, parent):
         """

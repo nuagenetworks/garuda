@@ -284,8 +284,7 @@ class GAOperationsController(object):
 
         elif action == GARequest.ACTION_DELETE:
             response = self.storage_controller.delete(user_identifier=self.user_identifier,
-                                                      resource=self.context.object,
-                                                      cascade=True)
+                                                      resource=self.context.object)
 
         elif action == GARequest.ACTION_ASSIGN:
             response = self.storage_controller.assign(user_identifier=self.user_identifier,

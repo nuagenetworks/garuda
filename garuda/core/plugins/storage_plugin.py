@@ -41,12 +41,12 @@ class GAStoragePlugin(GAPlugin):
         """
         raise NotImplementedError("%s must implement update method" % self)
 
-    def delete(self, user_identifier, resource, cascade=True):
+    def delete(self, user_identifier, resource):
         """
         """
         raise NotImplementedError("%s must implement delete method" % self)
 
-    def delete_multiple(self, user_identifier, resources, cascade=True):
+    def delete_multiple(self, user_identifier, resources):
         """
         """
         raise NotImplementedError("%s must implement delete_multiple method" % self)

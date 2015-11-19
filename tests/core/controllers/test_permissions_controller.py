@@ -388,7 +388,7 @@ class TestPermissionsController(TestCase):
 
         self._assertNoPermission()
 
-    def test_remove_all_permissions_for_target(self):
+    def test_remove_all_permissions_for_target_ids(self):
         """
         """
         self._assertNoPermission()
@@ -399,7 +399,7 @@ class TestPermissionsController(TestCase):
         self.permissions_controller.create_permission(self.a1, self.e2, 'use')
         self.permissions_controller.create_permission(self.e1, self.e2, 'use')
 
-        self.permissions_controller.remove_all_permissions_for_target(target=self.e2)
+        self.permissions_controller.remove_all_permissions_for_target_ids(target_ids=[self.e2.id])
 
         self._assertNoPermission()
 

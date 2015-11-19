@@ -59,14 +59,14 @@ class TestStoragePlugin(TestCase):
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.delete(user_identifier='owner_identifier', resource='fake', cascade=True)
+            plugin.delete(user_identifier='owner_identifier', resource='fake')
 
     def test_delete_multiple_required(self):
         """
         """
         plugin = GAStoragePlugin()
         with self.assertRaises(NotImplementedError):
-            plugin.delete_multiple(user_identifier='owner_identifier', resources=['fake'], cascade=True)
+            plugin.delete_multiple(user_identifier='owner_identifier', resources=['fake'])
 
     def test_assign_required(self):
         """

@@ -81,17 +81,19 @@ class GAPermissionsController(GAPluginController):
         """
         """
         key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource)
+        keys = self.redis.keys(key_pattern)
+        self.redis.delete(*keys)
 
-        for key in self.redis.scan_iter(match=key_pattern):
-            self.redis.delete(key)
-
-    def remove_all_permissions_for_target(self, target):
+    def remove_all_permissions_for_target_ids(self, target_ids):
         """
         """
-        key_pattern = self._compute_permission_redis_key(target_id=target.id)
+        keys = []
 
-        for key in self.redis.scan_iter(match=key_pattern):
-            self.redis.delete(key)
+        for target_id in target_ids:
+            keys += self.redis.keys('permission:*:%s:*' % target_id)
+
+        if len(keys):
+            self.redis.delete(*keys)
 
     def has_permission(self, resource, target, permission, explicit_only=False):
         """
@@ -171,6 +173,8 @@ class GAPermissionsController(GAPluginController):
                                       target_id='*', target_parent_type='*', target_parent_id='*', scope='*'):
         """
         """
+        # permission:pid:ppid:rid:ttype:tid:tptype:tpid:s
+
         return 'permission:%s:%s:%s:%s:%s:%s:%s:%s' % (permission_id, parent_permission_id,  # permissions id and hierarchy
                                                        resource_id,  # resource_id
                                                        target_type, target_id,  # target information
@@ -182,6 +186,9 @@ class GAPermissionsController(GAPluginController):
         """
         key_pattern = self._compute_permission_redis_key(parent_permission_id=parent_permission_id)
 
-        for key in self.redis.scan_iter(match=key_pattern):
+        pipeline = self.redis.pipeline()
+        pipeline.multi()
+        for key in self.redis.keys(key_pattern):
             self._remove_implicit_child_permission(parent_permission_id=self._extract_permission_id_from_key(key))
-            self.redis.delete(key)
+            pipeline.delete(key)
+        pipeline.execute()
