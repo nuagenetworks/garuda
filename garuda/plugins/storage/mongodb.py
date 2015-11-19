@@ -198,7 +198,7 @@ class GAMongoStoragePlugin(GAStoragePlugin):
         """
         """
         deleted_object_ids = self._perform_delete_multiple(user_identifier=user_identifier, resources=resources)
-        self.permissions_controller.remove_all_permissions_for_target_ids(target_ids=deleted_object_ids)
+        GAThreadManager.start_thread(self.permissions_controller.remove_all_permissions_for_target_ids, target_ids=deleted_object_ids)
 
         return GAStoragePluginQueryResponse(data=resources)
 
