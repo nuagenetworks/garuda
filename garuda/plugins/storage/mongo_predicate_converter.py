@@ -1,8 +1,9 @@
 # -*- coding:utf-8 -*-
 
 from garuda.core.lib import GAPredicateConverter
+from bson import ObjectId
+from pypred.ast import CompareOperator, Constant, ContainsOperator, Empty, Literal, LogicalOperator, Number, Undefined
 
-from pypred.ast import LogicalOperator, CompareOperator, Literal, Number, Constant, Empty, Undefined
 
 class GAMongoPredicateConverter(GAPredicateConverter):
     """
@@ -50,12 +51,22 @@ class GAMongoPredicateConverter(GAPredicateConverter):
 
         if ast_type == Literal:
 
+            if type(ast.value) == ObjectId:
+                return ast.value
+
             if ast.value in self._keywords:
                 return self._keywords[ast.value]
 
             return ast.value.strip("'\"")
 
+        if ast_type == ContainsOperator:
+            return {self.convert_tree(ast.left): {'$regex': self.convert_tree(ast.right), '$options': 'i'}}
+
         if ast_type == CompareOperator:
+
+            if type(ast.left) == Literal and ast.left.value == 'ID':
+                ast.right.value = ObjectId(ast.right.value.strip("'\""))
+
             return {self.convert_tree(ast.left): {self._operators[ast.type]: self.convert_tree(ast.right)}}
 
         if ast_type == LogicalOperator:

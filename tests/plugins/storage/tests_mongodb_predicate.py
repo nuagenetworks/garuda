@@ -2,6 +2,8 @@
 
 from unittest import TestCase
 from garuda.plugins.storage import GAMongoPredicateConverter
+from bson import ObjectId
+
 
 class TestGAMongoPredicateConverter(TestCase):
     """
@@ -120,8 +122,14 @@ class TestGAMongoPredicateConverter(TestCase):
     def test_search_id(self):
         """
         """
-        self.assertConvertEquals('ID == "abcd-1234-efgh"',
-                {'_id': {'$eq': 'abcd-1234-efgh'}})
+        self.assertConvertEquals('ID == "564d10af7ddf1f99955884ae"',
+                {'_id': {'$eq': ObjectId('564d10af7ddf1f99955884ae')}})
+
+    def test_search_contains(self):
+        """
+        """
+        self.assertConvertEquals('name contains Chris',
+                {'name': {'$regex': 'Chris', '$options': 'i'}})
 
     def test_invalid_predicate(self):
         """
