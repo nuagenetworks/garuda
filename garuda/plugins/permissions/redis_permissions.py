@@ -18,12 +18,6 @@ class GARedisPermissionsPlugin(GAPermissionsPlugin):
     PERMISSIONS = ['read', 'use', 'extend', 'write', 'all']
 
     @classmethod
-    def identifier(cls):
-        """
-        """
-        return 'garuda.controller.permissions.redis'
-
-    @classmethod
     def manifest(cls):
         """
         """
