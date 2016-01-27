@@ -7,6 +7,7 @@ from garuda.core.lib import GASDKLibrary
 from garuda.core.controllers import GAPermissionsController, GACoreController
 from garuda.core.plugins import GAPermissionsPlugin
 from garuda.plugins.storage import GAMongoStoragePlugin
+from garuda.plugins.permissions import GARedisPermissionsPlugin
 
 import tests.tstdk.v1_0 as tstdk
 
@@ -33,9 +34,12 @@ class TestPermissionsController(TestCase):
         GASDKLibrary().register_sdk('default', tstdk)
 
         cls.mongo_plugin = GAMongoStoragePlugin(db_name='permissions_test', sdk_identifier='default')
+        cls.redis_permissions_plugin = GARedisPermissionsPlugin()
+
         cls.core_controller = GACoreController(garuda_uuid='test-garuda',
                                                redis_info={'host': '127.0.0.1', 'port': '6379', 'db': 7},
-                                               storage_plugins=[cls.mongo_plugin])
+                                               storage_plugins=[cls.mongo_plugin],
+                                               permission_plugins=[cls.redis_permissions_plugin])
 
         cls.storage_controller = cls.core_controller.storage_controller
 
@@ -126,16 +130,16 @@ class TestPermissionsController(TestCase):
         parent = tstdk.GAEnterprise(name='ent')
         parent.id = 'pid'
 
-        key = self.permissions_controller._compute_permission_redis_key()
+        key = self.redis_permissions_plugin._compute_permission_redis_key()
         self.assertEquals(key, 'permission:*:*:*:*:*:*:*:*')
 
-        key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='E')
+        key = self.redis_permissions_plugin._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='E')
         self.assertEquals(key, 'permission:pid:*:rid:user:uid:enterprise:pid:E')
 
-        key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I')
+        key = self.redis_permissions_plugin._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I')
         self.assertEquals(key, 'permission:pid:*:rid:user:uid:enterprise:pid:I')
 
-        key = self.permissions_controller._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I', parent_permission_id='ppid')
+        key = self.redis_permissions_plugin._compute_permission_redis_key(permission_id='pid', resource_id='rid', target_type=target.rest_name, target_id=target.id, target_parent_type=parent.rest_name, target_parent_id=parent.id, scope='I', parent_permission_id='ppid')
         self.assertEquals(key, 'permission:pid:ppid:rid:user:uid:enterprise:pid:I')
 
     def test_root_level_permissions(self):
