@@ -58,7 +58,7 @@ class TestPermissionsPlugin(TestCase):
         plugin = GAPermissionsPlugin()
 
         with self.assertRaises(NotImplementedError):
-            plugin.child_ids_with_permission(resource='fake', parent_id='fake', children_type='fake', permission='fake')
+            plugin.child_ids_with_permission(resource='fake', parent=None, children_type='fake', permission='fake')
 
     def test_is_empty_required(self):
         """

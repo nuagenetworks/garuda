@@ -129,9 +129,11 @@ class GARedisPermissionsPlugin(GAPermissionsPlugin):
 
         return self.has_permission(resource=resource, target=target_parent, permission=permission, explicit_only=True)
 
-    def child_ids_with_permission(self, resource, parent_id, children_type, permission=None):
+    def child_ids_with_permission(self, resource, parent, children_type, permission=None):
         """
         """
+        parent_id = parent.id if parent and parent.id else 'none'
+
         key_pattern = self._compute_permission_redis_key(resource_id=resource.id if hasattr(resource, 'id') else resource,
                                                          target_type=children_type if children_type else '*',
                                                          target_parent_id=parent_id if parent_id else '*')

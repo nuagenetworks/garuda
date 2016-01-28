@@ -37,7 +37,7 @@ class GAPermissionsPlugin(GAPlugin):
         """
         raise NotImplementedError("%s must implement has_permission method" % self)
 
-    def child_ids_with_permission(self, resource, parent_id, children_type, permission=None):
+    def child_ids_with_permission(self, resource, parent, children_type, permission=None):
         """
         """
         raise NotImplementedError("%s must implement child_ids_with_permission method" % self)

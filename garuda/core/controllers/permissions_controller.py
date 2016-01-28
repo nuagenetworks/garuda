@@ -74,11 +74,11 @@ class GAPermissionsController(GAPluginController):
         plugin = self._managing_plugin()
         return plugin.has_permission(resource=resource, target=target, permission=permission, explicit_only=explicit_only) if plugin else None
 
-    def child_ids_with_permission(self, resource, parent_id, children_type, permission=None):
+    def child_ids_with_permission(self, resource, parent, children_type, permission=None):
         """
         """
         plugin = self._managing_plugin()
-        return plugin.child_ids_with_permission(resource=resource, parent_id=parent_id, children_type=children_type, permission=permission) if plugin else None
+        return plugin.child_ids_with_permission(resource=resource, parent=parent, children_type=children_type, permission=permission) if plugin else None
 
     def is_empty(self):
         """

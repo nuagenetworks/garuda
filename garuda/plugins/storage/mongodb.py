@@ -275,14 +275,25 @@ class GAMongoStoragePlugin(GAStoragePlugin):
             data = self.db[resource_name].find({'$and': [{'_id': {'$in': [ObjectId(identifier) for identifier in association_data[association_key]]}}, query_filter]})
 
         else:
-            parent_id = parent.id if parent and parent.id else 'none'
-
             identifiers = self.permissions_controller.child_ids_with_permission(resource=user_identifier,
-                                                                                parent_id=parent_id,
+                                                                                parent=parent,
                                                                                 children_type=resource_name,
                                                                                 permission='read')
+            clause = []
 
-            data = self.db[resource_name].find({'$and': [{'_id': {'$in': [ObjectId(i) for i in identifiers]}}, query_filter]})
+            if type(identifiers) is str:
+
+                if parent:
+                    clause.append({'parentID': parent.id})
+
+                if identifiers == '__OWNER_ONLY__':
+                    clause.append({'owner': user_identifier})
+
+            else:
+                clause.append({'_id': {'$in': [ObjectId(i) for i in identifiers]}})
+
+            clause.append(query_filter)
+            data = self.db[resource_name].find({'$and': clause})
 
         if not data.count():
             return GAStoragePluginQueryResponse(data=[], count=0)

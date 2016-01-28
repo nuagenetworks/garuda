@@ -416,13 +416,13 @@ class TestPermissionsController(TestCase):
         self.permissions_controller.create_permission(resource=self.e0, target=self.u2, permission='read')
         self.permissions_controller.create_permission(resource=self.e0, target=self.u3, permission='write')
 
-        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='read')
+        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent=self.e1, children_type='user', permission='read')
         self.assertEquals(ids, {self.u1.id, self.u2.id, self.u3.id})
 
-        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent_id=self.e1.id, children_type='user', permission='write')
+        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent=self.e1, children_type='user', permission='write')
         self.assertEquals(ids, {self.u3.id})
 
-        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent_id=self.e2.id, children_type='user')
+        ids = self.permissions_controller.child_ids_with_permission(resource=self.e0, parent=self.e2, children_type='user')
         self.assertEquals(len(ids), 0)
 
         self.permissions_controller.remove_all_permissions_of_resource(resource=self.e0)
