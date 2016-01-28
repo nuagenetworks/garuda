@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from unittest2 import TestCase
+from mock import patch
 
 from garuda.core.lib import GASDKLibrary
 from garuda.core.models import GAError
@@ -781,3 +782,39 @@ class TestMongoPlugin(TestCase):
         self.assertEquals(len(ret.errors), 1)
         self.assertEquals(ret.errors[0].type, GAError.TYPE_UNAUTHORIZED)
 
+    def test_get_children_using_owner_based_permissions(self):
+        """
+        """
+        r1 = tstdk.GAEnterprise(name='r1', description='the enterprise 1')
+        r2 = tstdk.GAEnterprise(name='r2', description='the enterprise 1')
+
+        e1 = tstdk.GAEnterprise(name='enterprise 1', description='the enterprise 1')
+        e2 = tstdk.GAEnterprise(name='enterprise 2', description='the enterprise 1')
+
+        u1 = tstdk.GAUser(username='primalmotion1', full_name='A')
+        u2 = tstdk.GAUser(username='primalmotion2', full_name='A')
+        u3 = tstdk.GAUser(username='primalmotion3', full_name='A')
+        u4 = tstdk.GAUser(username='primalmotion4', full_name='A')
+
+        self.storage_controller.create(user_identifier='system', resource=r1, parent=None)
+        self.storage_controller.create(user_identifier='system', resource=r2, parent=None)
+
+        self.storage_controller.create(user_identifier=r1.id, resource=e2, parent=None)
+        self.storage_controller.create(user_identifier=r1.id, resource=e1, parent=None)
+        self.storage_controller.create(user_identifier=r1.id, resource=u1, parent=e1)
+        self.storage_controller.create(user_identifier=r1.id, resource=u2, parent=e1)
+        self.storage_controller.create(user_identifier=r1.id, resource=u3, parent=e1)
+        self.storage_controller.create(user_identifier=r1.id, resource=u4, parent=e1)
+
+        with patch.object(self.core_controller.permissions_controller, 'child_ids_with_permission', return_value='__OWNER_ONLY__'):
+            ret = self.storage_controller.get_all(user_identifier=r2.id, resource_name='user', parent=e1)
+            self.assertEquals(ret.count, 0)
+            ret = self.storage_controller.get_all(user_identifier=r2.id, resource_name='enterprise', parent=None)
+            self.assertEquals(ret.count, 0)
+
+            ret = self.storage_controller.get_all(user_identifier=r1.id, resource_name='user', parent=e1)
+            self.assertEquals(ret.count, 4)
+            ret = self.storage_controller.get_all(user_identifier=r1.id, resource_name='enterprise', parent=None)
+            self.assertEquals(ret.count, 2)
+
+            self.assertIsNone(self.storage_controller.get(user_identifier=r2.id, resource_name='enterprise', identifier=e2.id).data)
