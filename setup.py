@@ -12,6 +12,7 @@ setup(
                 'garuda.plugins',
                 'garuda.plugins.authentication',
                 'garuda.plugins.storage',
+                'garuda.plugins.permissions',
                 'garuda.channels',
                 'garuda.channels.rest',
                 'garuda.core',
