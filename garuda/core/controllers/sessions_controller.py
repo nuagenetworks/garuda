@@ -99,11 +99,6 @@ class GASessionsController(GAPluginController):
 
         return [self._get_session_from_key(key) for key in session_keys]
 
-    def get_all_session_keys(self):
-        """
-        """
-        return self._get_all_session_keys(local_only=False)
-
     def get_session(self, session_uuid):
         """
         """

@@ -23,15 +23,28 @@ class GAPushController(GAController):
     def push_events(self, events):
         """
         """
-        packs = [msgpack.packb(event.to_dict()) for event in events]
-
         pipeline = self.redis.pipeline()
 
-        for session_key in self.core_controller.sessions_controller.get_all_session_keys():
-            event_queue_key = 'eventqueue:%s' % session_key
-            logger.debug('Adding %d event pack(s) to the session event queue: %s' % (len(events), event_queue_key))
-            pipeline.lpush(event_queue_key, *packs)
+        # we loop on every system wide sessions
+        for session in self.core_controller.sessions_controller.get_all_sessions():
 
+            session_events = []
+
+            # for every objects in the events, we check that the session's user has a permission
+            # and if so, we add the permitted objects to the session_events list
+            for event in events:
+                if self.core_controller.permissions_controller.has_permission(resource=session.root_object.id, target=event.entity, permission='read'):
+                    session_events.append(event)
+
+            # Then, if there is at least one permitted entity in the events list, we pack them
+            # and plublish it to the redis pipeline
+            if len(session_events):
+                packs = [msgpack.packb(session_event.to_dict()) for session_event in session_events]
+                event_queue_key = 'eventqueue:%s' % session.redis_key
+                logger.debug('Adding %d event pack(s) to the session event queue: %s' % (len(events), event_queue_key))
+                pipeline.lpush(event_queue_key, *packs)
+
+        # Finally we execute the redis pipeline
         logger.debug('Executing event queue command pipeline...')
         pipeline.execute()
         logger.debug('Event queue command pipeline executed')
