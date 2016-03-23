@@ -70,14 +70,14 @@ class GAPushController(GAController):
         context = GAContext(request=request, session=session)
         context.object = event.entity
 
-        operation_manager = GAOperationsController(context=context,
-                                                   logic_controller=self.core_controller.logic_controller,
-                                                   storage_controller=self.core_controller.storage_controller)
-        operation_manager.run()
+        # operation_manager = GAOperationsController(context=context,
+        #                                            logic_controller=self.core_controller.logic_controller,
+        #                                            storage_controller=self.core_controller.storage_controller)
+        # operation_manager.run()
 
-        if not context.has_errors:
-            logger.debug('Returning one event to session %s' % session.redis_key)
-            return event
+        # if not context.has_errors:
+        #     logger.debug('Returning one event to session %s' % session.redis_key)
+        return event
 
     def is_event_queue_empty(self, session):
         """

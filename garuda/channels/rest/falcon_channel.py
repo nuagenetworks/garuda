@@ -157,7 +157,8 @@ class GAFalconChannel(GAChannel):  # pragma: no cover
         self.core_controller.sessions_controller.set_session_listening_status(session=session, status=True)
 
         events = []
-
+        # event = self.core_controller.push_controller.get_next_event(session=session, timeout=self._push_timeout)
+        # events.append(event)
         while True:
 
             event = self.core_controller.push_controller.get_next_event(session=session, timeout=self._push_timeout)
